@@ -10,107 +10,82 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Annotation data - you can edit these in the HTML/JS
 const annotations = {
-    rule30: {
-        title: "Rule 30 Cellular Automaton",
+    "paradigm-shift": {
+        title: "Scientific Paradigm Shift",
         content: `
-            <p>Rule 30 is one of the most famous elementary cellular automata discovered by Wolfram. Despite its simple rule:</p>
+            <p>Wolfram's "New Kind of Science" represents a fundamental paradigm shift in scientific thinking:</p>
             <ul>
-                <li>111 → 0</li>
-                <li>110 → 0</li>
-                <li>101 → 0</li>
-                <li>100 → 1</li>
-                <li>011 → 1</li>
-                <li>010 → 1</li>
-                <li>001 → 1</li>
-                <li>000 → 0</li>
+                <li><strong>From Mathematical to Computational:</strong> Moving beyond traditional mathematical equations to computational rules</li>
+                <li><strong>From Reductionism to Emergence:</strong> Understanding how simple parts interact to create complex wholes</li>
+                <li><strong>From Continuous to Discrete:</strong> Viewing nature as fundamentally discrete rather than continuous</li>
+                <li><strong>From Deterministic Predictability:</strong> Accepting that simple rules can produce unpredictable complexity</li>
             </ul>
-            <p>Rule 30 generates patterns that appear completely random, yet are entirely deterministic. This challenges our intuitions about the relationship between simple rules and complex behavior.</p>
-            <p>Wolfram used Rule 30 as a random number generator in Mathematica for several years, demonstrating its practical applications.</p>
+            <p>This shift parallels other major scientific revolutions like those initiated by Copernicus, Newton, Darwin, and Einstein.</p>
         `
     },
-    biology: {
-        title: "Applications in Biology",
+    emergence: {
+        title: "Emergence from Simple Rules",
         content: `
-            <p>Wolfram's insights about simple rules generating complex behavior have profound implications for biology:</p>
+            <p>The central discovery that simple computational rules can produce immense complexity challenges fundamental assumptions about causation:</p>
             <ul>
-                <li><strong>Pattern Formation:</strong> How leopard spots, zebra stripes, and leaf venation patterns emerge</li>
-                <li><strong>Growth Processes:</strong> Tree branching, root systems, and neural network development</li>
-                <li><strong>Evolution:</strong> How complex organisms can arise from simple genetic programs</li>
-                <li><strong>Morphogenesis:</strong> The development of form and structure in living organisms</li>
+                <li><strong>Counterintuitive Results:</strong> Complexity doesn't require complex causes or elaborate plans</li>
+                <li><strong>Universal Phenomenon:</strong> This behavior appears across vastly different systems and domains</li>
+                <li><strong>Irreducible Complexity:</strong> The resulting patterns often cannot be predicted without running the computation</li>
+                <li><strong>Natural Implications:</strong> Suggests many natural phenomena arise from simple underlying rules</li>
             </ul>
-            <p>This suggests that many biological phenomena may be computational rather than purely chemical or physical processes.</p>
+            <p>Examples include weather patterns, biological growth, market dynamics, and social behaviors.</p>
         `
     },
-    physics: {
-        title: "Implications for Physics",
+    universality: {
+        title: "Universality in Complex Systems",
         content: `
-            <p>Wolfram proposes that the universe itself might be computational, with fundamental physical laws emerging from simple computational rules:</p>
+            <p>Universality refers to the remarkable finding that complex behavior is not rare but ubiquitous:</p>
             <ul>
-                <li><strong>Space and Time:</strong> May be discrete rather than continuous</li>
-                <li><strong>Quantum Mechanics:</strong> Uncertainty might arise from computational irreducibility</li>
-                <li><strong>Relativity:</strong> Speed of light limits might reflect computational constraints</li>
-                <li><strong>Conservation Laws:</strong> Could emerge from computational symmetries</li>
+                <li><strong>Independence from Details:</strong> Complex behavior arises regardless of specific system implementation</li>
+                <li><strong>Cross-Domain Patterns:</strong> Similar patterns appear in physics, biology, economics, and social systems</li>
+                <li><strong>Computational Universality:</strong> Many simple systems can perform arbitrary computations</li>
+                <li><strong>Threshold Behavior:</strong> Complexity emerges beyond a minimal threshold of rule sophistication</li>
             </ul>
-            <p>This "digital physics" approach suggests a fundamental revision of how we understand reality.</p>
+            <p>This universality suggests deep underlying principles governing complex systems across all of nature.</p>
         `
     },
-    computation: {
-        title: "Computation as Fundamental Framework",
+    "cellular-automata": {
+        title: "Cellular Automata",
         content: `
-            <p>Wolfram argues that computation provides a more fundamental framework for understanding nature than traditional mathematics:</p>
+            <p>Cellular automata are discrete models consisting of a grid of cells that evolve through time according to simple rules:</p>
             <ul>
-                <li><strong>Universality:</strong> Simple computational systems can be as powerful as any computer</li>
-                <li><strong>Irreducibility:</strong> Many computations cannot be shortened or predicted without running them</li>
-                <li><strong>Emergence:</strong> Complex behaviors arise naturally from simple computational processes</li>
-                <li><strong>Equivalence:</strong> Most complex systems exhibit equivalent computational sophistication</li>
+                <li><strong>Grid Structure:</strong> Regular arrangement of cells in one, two, or more dimensions</li>
+                <li><strong>Local Rules:</strong> Each cell's next state depends only on its current state and nearby neighbors</li>
+                <li><strong>Synchronous Updates:</strong> All cells update simultaneously at each time step</li>
+                <li><strong>Simple States:</strong> Cells typically have just two states (0/1, on/off, alive/dead)</li>
             </ul>
-            <p>This paradigm shift moves beyond equations to algorithmic thinking about natural phenomena.</p>
+            <p>Despite their simplicity, cellular automata can model complex phenomena including biological growth, physical processes, and computational systems.</p>
         `
     },
-    vonneumann: {
-        title: "John von Neumann's Contributions",
+    "computational-equivalence": {
+        title: "Principle of Computational Equivalence",
         content: `
-            <p>John von Neumann (1903-1957) laid crucial groundwork for computational science:</p>
+            <p>Wolfram's most ambitious hypothesis states that almost all systems perform computations of equivalent sophistication:</p>
             <ul>
-                <li><strong>Cellular Automata:</strong> Invented the concept in the 1940s to study self-reproduction</li>
-                <li><strong>Universal Constructor:</strong> Designed a theoretical machine that could replicate itself</li>
-                <li><strong>Computer Architecture:</strong> The "von Neumann architecture" still underlies modern computers</li>
-                <li><strong>Mathematical Foundations:</strong> Contributed to game theory, quantum mechanics, and set theory</li>
+                <li><strong>Universal Computation:</strong> Simple programs, human brains, and natural processes all achieve the same computational level</li>
+                <li><strong>Irreducibility:</strong> No system can predict another's behavior faster than running the computation</li>
+                <li><strong>Natural Intelligence:</strong> Intelligence emerges naturally from computational processes, not special complexity</li>
+                <li><strong>Limits to Science:</strong> Some phenomena may be fundamentally unpredictable due to computational irreducibility</li>
             </ul>
-            <p>Von Neumann recognized that computation could be a tool for scientific discovery, not just calculation.</p>
+            <p>This principle implies fundamental limits to knowledge while suggesting intelligence and complexity are far more common than traditionally believed.</p>
         `
     },
-    "elementary-ca": {
-        title: "Elementary Cellular Automata",
+    "wolfram-timeline": {
+        title: "Wolfram's Scientific Journey",
         content: `
-            <p>Elementary cellular automata are the simplest class of cellular automata, operating on a one-dimensional array of cells with binary states (0 or 1).</p>
-            <p><strong>Key Properties:</strong></p>
+            <p>Stephen Wolfram's path to discovering this new kind of science began remarkably early:</p>
             <ul>
-                <li>Each cell looks at itself and its two immediate neighbors</li>
-                <li>There are 2³ = 8 possible local configurations</li>
-                <li>There are 2⁸ = 256 possible rules</li>
-                <li>Rules are numbered 0-255 in binary representation</li>
+                <li><strong>1972 (Age 12):</strong> First experiments with cellular automata inspired by physics textbook</li>
+                <li><strong>1974-1980s:</strong> Early work and academic publications, missed key discoveries initially</li>
+                <li><strong>1980s-1990s:</strong> Created Mathematica, gained independence to pursue fundamental research</li>
+                <li><strong>1990s-2002:</strong> Decade-long intensive research leading to "A New Kind of Science"</li>
             </ul>
-            <p>Despite their simplicity, these 256 rules exhibit an amazing variety of behaviors, from simple patterns to complex, seemingly random structures.</p>
-        `
-    },
-    class4: {
-        title: "Class 4 Cellular Automata",
-        content: `
-            <p>Wolfram classified cellular automata behavior into four classes:</p>
-            <ul>
-                <li><strong>Class 1:</strong> Evolution leads to homogeneous state</li>
-                <li><strong>Class 2:</strong> Evolution leads to simple stable or periodic structures</li>
-                <li><strong>Class 3:</strong> Evolution leads to chaotic, seemingly random patterns</li>
-                <li><strong>Class 4:</strong> Complex, interesting behavior with local structures</li>
-            </ul>
-            <p><strong>Class 4 systems are special because:</strong></p>
-            <ul>
-                <li>They exist at the "edge of chaos" between order and randomness</li>
-                <li>They can support complex computation and information processing</li>
-                <li>They often exhibit universal computation capabilities</li>
-                <li>Examples include Rule 110 and Conway's Game of Life</li>
-            </ul>
+            <p>His unique combination of early mathematical talent, technology development, and business success provided the freedom to pursue this ambitious intellectual project over decades.</p>
         `
     }
 };
