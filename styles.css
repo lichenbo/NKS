@@ -160,9 +160,13 @@ header {
     background: var(--secondary-bg);
 }
 
-/* Make outline and annotation columns subtle and scrollable */
+/* Make outline and annotation columns fixed to screen */
 .outline-column,
 .annotations-column {
+    position: sticky;
+    top: var(--spacing-lg);
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
     opacity: 0.7;
     transition: opacity var(--transition-fast);
     background: rgba(26, 26, 26, 0.6);
