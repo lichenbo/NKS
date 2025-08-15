@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initMarkdownRenderer();
     initChapterNavigation();
     initAnnotationSystem();
     initAnnotationContent();
-    
+
     // Load first chapter by default
     loadChapter('chapter1');
 });
@@ -100,21 +100,21 @@ function initMarkdownRenderer() {
 
 function initChapterNavigation() {
     const chapterLinks = document.querySelectorAll('.chapter-link');
-    
+
     chapterLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
-            
+
             // Remove active class from all links
             chapterLinks.forEach(l => l.classList.remove('active'));
-            
+
             // Add active class to clicked link
             this.classList.add('active');
-            
+
             // Load the selected chapter
             const targetChapter = this.getAttribute('data-chapter');
             loadChapter(targetChapter);
-            
+
             // Clear annotation content when switching chapters
             clearAnnotationContent();
         });
@@ -123,29 +123,29 @@ function initChapterNavigation() {
 
 async function loadChapter(chapterId) {
     const notesContent = document.getElementById('notes-content');
-    
+
     try {
         // Show loading state
         notesContent.innerHTML = '<div class="loading">Loading chapter content...</div>';
-        
+
         // Fetch the markdown file
         const response = await fetch(`chapters/${chapterId}.md`);
-        
+
         if (!response.ok) {
             throw new Error(`Chapter file not found: ${chapterId}.md`);
         }
-        
+
         const markdownText = await response.text();
-        
+
         // Process annotation links BEFORE markdown parsing
         const processedMarkdown = processAnnotationLinksInMarkdown(markdownText);
-        
+
         // Parse markdown to HTML
         let htmlContent = marked.parse(processedMarkdown);
-        
+
         // Display the content
         notesContent.innerHTML = htmlContent;
-        
+
     } catch (error) {
         console.error('Error loading chapter:', error);
         notesContent.innerHTML = `
@@ -176,18 +176,18 @@ function processAnnotationLinks(html) {
 
 function initAnnotationSystem() {
     // Add click event listeners to all annotation links
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target.classList.contains('annotation-link')) {
             e.preventDefault();
-            
+
             // Remove active class from all annotation links
             document.querySelectorAll('.annotation-link').forEach(link => {
                 link.classList.remove('active');
             });
-            
+
             // Add active class to clicked link
             e.target.classList.add('active');
-            
+
             // Get annotation data
             const annotationKey = e.target.getAttribute('data-annotation');
             showAnnotation(annotationKey);
@@ -201,13 +201,13 @@ let currentTyped = null;
 function showAnnotation(key) {
     const annotationContent = document.getElementById('annotation-content');
     const annotation = annotations[key];
-    
+
     // Destroy any existing Typed instance
     if (currentTyped) {
         currentTyped.destroy();
         currentTyped = null;
     }
-    
+
     if (annotation) {
         // Create the structure first
         annotationContent.innerHTML = `
@@ -216,24 +216,24 @@ function showAnnotation(key) {
                 <span id="typewriter-text"></span>
             </div>
         `;
-        
+
         // Convert HTML content to plain text for better typing effect
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = annotation.content;
         const plainText = tempDiv.textContent || tempDiv.innerText || '';
-        
+
         // Initialize Typed.js with error handling
         if (typeof Typed !== 'undefined') {
             currentTyped = new Typed('#typewriter-text', {
                 strings: [annotation.content], // Use HTML content directly
-                typeSpeed: 10,
+                typeSpeed: 1,
                 backSpeed: 0,
                 fadeOut: false,
                 showCursor: true,
                 cursorChar: '|',
                 autoInsertCss: true,
                 contentType: 'html', // Allow HTML content
-                onComplete: function() {
+                onComplete: function () {
                     // Optional: do something when typing is complete
                 }
             });
@@ -256,13 +256,13 @@ function clearAnnotationContent() {
         currentTyped.destroy();
         currentTyped = null;
     }
-    
+
     const annotationContent = document.getElementById('annotation-content');
     annotationContent.innerHTML = `
         <h3>Annotations</h3>
         <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
     `;
-    
+
     // Remove active class from all annotation links
     document.querySelectorAll('.annotation-link').forEach(link => {
         link.classList.remove('active');
@@ -278,23 +278,23 @@ function initAnnotationContent() {
 function initCellularAutomataBackground() {
     const canvas = document.getElementById('cellular-automata-bg');
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     // Cellular automata parameters
     const cellSize = 3;
     let cols, rows, grid, currentRow;
-    
+
     // Set canvas size
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         initAnimation();
     }
-    
+
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
+
     function initAnimation() {
         cols = Math.floor(canvas.width / cellSize);
         rows = Math.floor(canvas.height / cellSize);
@@ -302,52 +302,52 @@ function initCellularAutomataBackground() {
         grid[Math.floor(cols / 2)] = 1; // Start with center cell
         currentRow = 0;
     }
-    
+
     // Rule 30 implementation
     function applyRule30(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
         return [0, 1, 1, 1, 1, 0, 0, 0][pattern];
     }
-    
+
     const drawnRows = [];
-    
+
     function drawCellularAutomata() {
         // Only clear if starting over
         if (currentRow === 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawnRows.length = 0;
         }
-        
+
         // Store current row
         drawnRows[currentRow] = [...grid];
-        
+
         // Draw all stored rows
         for (let row = 0; row < drawnRows.length; row++) {
             for (let col = 0; col < cols; col++) {
                 if (drawnRows[row] && drawnRows[row][col] === 1) {
                     // Create gradient effect based on position and age
                     const distance = Math.sqrt(
-                        Math.pow(col - cols/2, 2) + Math.pow(row - currentRow/2, 2)
+                        Math.pow(col - cols / 2, 2) + Math.pow(row - currentRow / 2, 2)
                     );
-                    const maxDistance = Math.sqrt(cols*cols/4 + rows*rows/4);
+                    const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
                     const intensity = Math.max(0.2, 1 - distance / maxDistance);
-                    
+
                     // Age effect - older rows fade
                     const age = currentRow - row;
                     const ageFactor = Math.max(0.1, 1 - age / (rows * 0.3));
-                    
+
                     // Very subtle golden pattern
                     const alpha = intensity * ageFactor * 0.08;
                     const red = Math.floor(212 * intensity * ageFactor);
                     const green = Math.floor(175 * intensity * ageFactor);
                     const blue = Math.floor(55 * intensity * ageFactor);
-                    
+
                     ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
                     ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
                 }
             }
         }
-        
+
         // Calculate next generation
         if (currentRow < rows - 1) {
             const newGrid = new Array(cols).fill(0);
@@ -366,10 +366,10 @@ function initCellularAutomataBackground() {
             }, 2000);
         }
     }
-    
+
     // Initialize
     initAnimation();
-    
+
     // Animate very slowly for subtle effect
     setInterval(drawCellularAutomata, 200);
 }
