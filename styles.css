@@ -125,15 +125,18 @@ header {
 }
 
 /* ================================
-   MAIN LAYOUT
+   MAIN LAYOUT - Modern CSS Grid
    ================================ */
 .three-column-layout {
-    display: block;
+    display: grid;
+    grid-template-columns: 240px 1fr 240px;
+    grid-template-areas: "sidebar-left content sidebar-right";
+    gap: var(--spacing-lg);
     max-width: 1600px;
     margin: 0 auto;
     min-height: calc(100vh - 180px);
+    padding: var(--spacing-lg);
     position: relative;
-    padding: var(--spacing-lg) 0;
 }
 
 /* ================================
@@ -158,51 +161,43 @@ header {
     background: var(--secondary-bg);
 }
 
-/* Make outline and annotation columns fixed to screen - only for desktop */
-@media (min-width: 769px) {
-    nav.outline-column.glass-panel {
-        position: fixed !important;
-        left: var(--spacing-lg) !important;
-        top: 200px !important;
-        width: 220px !important;
-        max-height: calc(100vh - 220px) !important;
-        overflow-y: auto;
-        opacity: 0.7;
-        transition: opacity var(--transition-fast);
-        background: rgba(26, 26, 26, 0.6);
-        border-color: rgba(51, 51, 51, 0.6);
-        z-index: 10;
-        transform: none !important; /* Override any AOS transforms */
-    }
-
-    aside.annotations-column.glass-panel {
-        position: fixed !important;
-        right: var(--spacing-lg) !important;
-        top: 200px !important;
-        width: 220px !important;
-        max-height: calc(100vh - 220px) !important;
-        overflow-y: auto;
-        opacity: 0.7;
-        transition: opacity var(--transition-fast);
-        background: rgba(26, 26, 26, 0.6);
-        border-color: rgba(51, 51, 51, 0.6);
-        z-index: 10;
-        transform: none !important; /* Override any AOS transforms */
-    }
-    
-    nav.outline-column.glass-panel:hover,
-    aside.annotations-column.glass-panel:hover {
-        opacity: 1;
-        background: var(--panel-bg);
-        border-color: var(--border-subtle);
-    }
+/* Grid area assignments */
+.outline-column {
+    grid-area: sidebar-left;
+    position: sticky;
+    top: var(--spacing-lg);
+    height: fit-content;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+    background: rgba(26, 26, 26, 0.6);
+    border-color: rgba(51, 51, 51, 0.6);
 }
 
-/* Main content column - no restrictions */
 .notes-column {
-    /* No sticky positioning - allows natural scrolling */
+    grid-area: content;
     background: var(--primary-bg);
-    margin: 0 260px; /* Leave space for fixed side panels */
+}
+
+.annotations-column {
+    grid-area: sidebar-right;
+    position: sticky;
+    top: var(--spacing-lg);
+    height: fit-content;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+    background: rgba(26, 26, 26, 0.6);
+    border-color: rgba(51, 51, 51, 0.6);
+}
+
+.outline-column:hover,
+.annotations-column:hover {
+    opacity: 1;
+    background: var(--panel-bg);
+    border-color: var(--border-subtle);
 }
 
 .notes-column .main-content-area {
@@ -493,14 +488,16 @@ header {
    ================================ */
 @media (max-width: 1400px) {
     .three-column-layout {
-        grid-template-columns: 260px 1fr 320px;
+        grid-template-columns: 220px 1fr 240px;
+        gap: var(--spacing-md);
     }
 }
 
 @media (max-width: 1200px) {
     .three-column-layout {
-        grid-template-columns: 220px 1fr 260px;
+        grid-template-columns: 200px 1fr 220px;
         padding: var(--spacing-md);
+        gap: var(--spacing-sm);
     }
     
     .book-title {
@@ -510,8 +507,8 @@ header {
 
 @media (max-width: 1024px) {
     .three-column-layout {
-        grid-template-columns: 200px 1fr 240px;
-        gap: var(--spacing-md);
+        grid-template-columns: 180px 1fr 200px;
+        gap: var(--spacing-sm);
     }
     
     header {
@@ -533,7 +530,8 @@ header {
 
 @media (max-width: 900px) {
     .three-column-layout {
-        grid-template-columns: 180px 1fr 220px;
+        grid-template-columns: 160px 1fr 180px;
+        gap: var(--spacing-xs);
     }
     
     .panel-header {
@@ -552,29 +550,24 @@ header {
 
 @media (max-width: 768px) {
     .three-column-layout {
-        grid-template-columns: 1fr;
-        height: auto;
-        gap: var(--spacing-sm);
+        display: block;
         padding: var(--spacing-sm);
+    }
+    
+    .outline-column,
+    .annotations-column {
+        position: static;
+        max-height: 300px;
+        margin-bottom: var(--spacing-md);
+        opacity: 1;
+    }
+    
+    .notes-column {
+        min-height: 60vh;
     }
     
     .glass-panel {
         border-radius: 12px;
-    }
-    
-    .outline-column {
-        order: 1;
-        max-height: 300px;
-    }
-    
-    .notes-column {
-        order: 2;
-        min-height: 60vh;
-    }
-    
-    .annotations-column {
-        order: 3;
-        min-height: 200px;
     }
     
     .chapter-list {
