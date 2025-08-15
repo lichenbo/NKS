@@ -373,3 +373,114 @@ function initCellularAutomataBackground() {
     // Animate very slowly for subtle effect
     setInterval(drawCellularAutomata, 200);
 }
+
+// Header Cellular Automata Animation
+function initHeaderCellularAutomata() {
+    const canvas = document.getElementById('header-cellular-automata');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Cellular automata parameters
+    const cellSize = 2;
+    let cols, rows, grid, currentRow;
+    let fadeDirection = 1; // 1 for fade in, -1 for fade out
+    let globalAlpha = 0.3;
+    
+    // Set canvas size to header dimensions
+    function resizeCanvas() {
+        const header = canvas.parentElement;
+        canvas.width = header.clientWidth;
+        canvas.height = header.clientHeight;
+        initAnimation();
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    function initAnimation() {
+        cols = Math.floor(canvas.width / cellSize);
+        rows = Math.floor(canvas.height / cellSize);
+        grid = new Array(cols).fill(0);
+        grid[Math.floor(cols / 2)] = 1; // Start with center cell
+        currentRow = 0;
+    }
+    
+    // Rule 30 implementation
+    function applyRule30(left, center, right) {
+        const pattern = left * 4 + center * 2 + right;
+        return [0, 1, 1, 1, 1, 0, 0, 0][pattern];
+    }
+    
+    const drawnRows = [];
+    
+    function drawHeaderCellularAutomata() {
+        // Update global fade
+        globalAlpha += fadeDirection * 0.01;
+        if (globalAlpha >= 0.6) {
+            fadeDirection = -1;
+        } else if (globalAlpha <= 0.2) {
+            fadeDirection = 1;
+        }
+        
+        // Only clear if starting over
+        if (currentRow === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawnRows.length = 0;
+        }
+        
+        // Store current row
+        drawnRows[currentRow] = [...grid];
+        
+        // Draw all stored rows
+        for (let row = 0; row < drawnRows.length; row++) {
+            for (let col = 0; col < cols; col++) {
+                if (drawnRows[row] && drawnRows[row][col] === 1) {
+                    // Create gradient effect based on position and age
+                    const distance = Math.sqrt(
+                        Math.pow(col - cols / 2, 2) + Math.pow(row - currentRow / 2, 2)
+                    );
+                    const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
+                    const intensity = Math.max(0.3, 1 - distance / maxDistance);
+                    
+                    // Age effect - older rows fade
+                    const age = currentRow - row;
+                    const ageFactor = Math.max(0.2, 1 - age / (rows * 0.4));
+                    
+                    // Golden pattern with breathing effect
+                    const alpha = intensity * ageFactor * globalAlpha;
+                    const red = Math.floor(212 * intensity * ageFactor);
+                    const green = Math.floor(175 * intensity * ageFactor);
+                    const blue = Math.floor(55 * intensity * ageFactor);
+                    
+                    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                    ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
+                }
+            }
+        }
+        
+        // Calculate next generation
+        if (currentRow < rows - 1) {
+            const newGrid = new Array(cols).fill(0);
+            for (let i = 0; i < cols; i++) {
+                const left = grid[i - 1] || 0;
+                const center = grid[i];
+                const right = grid[i + 1] || 0;
+                newGrid[i] = applyRule30(left, center, right);
+            }
+            grid = newGrid;
+            currentRow++;
+        } else {
+            // Reset and start over
+            setTimeout(() => {
+                initAnimation();
+            }, 1500);
+        }
+    }
+    
+    // Initialize
+    initAnimation();
+    
+    // Animate faster for header effect
+    setInterval(drawHeaderCellularAutomata, 150);
+}
