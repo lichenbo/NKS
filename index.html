@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>My Content Portfolio</h1>
+        <p>A collection of interactive demos and content</p>
+    </header>
+
+    <main>
+        <section class="content-grid">
+            <div class="content-item">
+                <h3>Interactive Color Picker</h3>
+                <p>A simple color picker that shows RGB and HEX values</p>
+                <div class="demo-container">
+                    <input type="color" id="colorPicker" value="#3498db">
+                    <div id="colorInfo">
+                        <span id="hexValue">#3498db</span>
+                        <span id="rgbValue">rgb(52, 152, 219)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-item">
+                <h3>Text Counter</h3>
+                <p>Count characters and words in real-time</p>
+                <div class="demo-container">
+                    <textarea id="textInput" placeholder="Type something here..."></textarea>
+                    <div id="textStats">
+                        <span>Characters: <span id="charCount">0</span></span>
+                        <span>Words: <span id="wordCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-item">
+                <h3>Random Quote Generator</h3>
+                <p>Click to generate inspirational quotes</p>
+                <div class="demo-container">
+                    <blockquote id="quote">Click the button to get a quote!</blockquote>
+                    <button id="quoteBtn">Generate Quote</button>
+                </div>
+            </div>
+
+            <div class="content-item">
+                <h3>Simple Calculator</h3>
+                <p>Basic arithmetic operations</p>
+                <div class="demo-container">
+                    <div class="calculator">
+                        <input type="text" id="calcDisplay" readonly>
+                        <div class="calc-buttons">
+                            <button onclick="clearCalc()">C</button>
+                            <button onclick="appendToCalc('/')">/</button>
+                            <button onclick="appendToCalc('*')">*</button>
+                            <button onclick="deleteLast()">⌫</button>
+                            <button onclick="appendToCalc('7')">7</button>
+                            <button onclick="appendToCalc('8')">8</button>
+                            <button onclick="appendToCalc('9')">9</button>
+                            <button onclick="appendToCalc('-')">-</button>
+                            <button onclick="appendToCalc('4')">4</button>
+                            <button onclick="appendToCalc('5')">5</button>
+                            <button onclick="appendToCalc('6')">6</button>
+                            <button onclick="appendToCalc('+')">+</button>
+                            <button onclick="appendToCalc('1')">1</button>
+                            <button onclick="appendToCalc('2')">2</button>
+                            <button onclick="appendToCalc('3')">3</button>
+                            <button onclick="calculate()" rowspan="2">=</button>
+                            <button onclick="appendToCalc('0')" colspan="2">0</button>
+                            <button onclick="appendToCalc('.')">.</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Content Portfolio. Built with HTML, CSS, and JavaScript.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
