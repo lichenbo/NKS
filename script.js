@@ -195,21 +195,149 @@ function initAnnotationSystem() {
     });
 }
 
+// Global variable to track active typewriter timeout
+let typewriterTimeout = null;
+
 function showAnnotation(key) {
     const annotationContent = document.getElementById('annotation-content');
     const annotation = annotations[key];
     
+    // Cancel any existing typewriter effect
+    if (typewriterTimeout) {
+        clearTimeout(typewriterTimeout);
+        typewriterTimeout = null;
+    }
+    
     if (annotation) {
+        // Create the structure first
         annotationContent.innerHTML = `
             <div class="annotation-title">${annotation.title}</div>
-            <div class="annotation-text">${annotation.content}</div>
+            <div class="annotation-text" id="typewriter-text"></div>
         `;
+        
+        // Start typewriter effect for the content
+        typewriterEffect(annotation.content, document.getElementById('typewriter-text'));
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
             <p class="placeholder">The annotation "${key}" is not yet available. Add it to the annotations object in script.js</p>
         `;
     }
+}
+
+function typewriterEffect(htmlContent, targetElement) {
+    // Clear the target element
+    targetElement.innerHTML = '';
+    
+    // Create a temporary element to parse the HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Extract text nodes while preserving structure
+    const textNodes = [];
+    const tagQueue = [];
+    
+    function extractTextNodes(node, currentTags = []) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.textContent.trim()) {
+                textNodes.push({
+                    text: node.textContent,
+                    tags: [...currentTags]
+                });
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagInfo = {
+                tagName: node.tagName.toLowerCase(),
+                attributes: Array.from(node.attributes).reduce((acc, attr) => {
+                    acc[attr.name] = attr.value;
+                    return acc;
+                }, {})
+            };
+            
+            const newTags = [...currentTags, tagInfo];
+            
+            for (let child of node.childNodes) {
+                extractTextNodes(child, newTags);
+            }
+        }
+    }
+    
+    extractTextNodes(tempDiv);
+    
+    // Flatten all text with tags into individual characters
+    const characters = [];
+    textNodes.forEach(textNode => {
+        const chars = textNode.text.split('');
+        chars.forEach((char, index) => {
+            characters.push({
+                char: char,
+                tags: textNode.tags,
+                isFirstOfNode: index === 0,
+                isLastOfNode: index === chars.length - 1
+            });
+        });
+    });
+    
+    let currentIndex = 0;
+    let currentHTML = '';
+    const openTags = [];
+    
+    function typeNextCharacter() {
+        if (currentIndex >= characters.length) {
+            // Close any remaining open tags
+            while (openTags.length > 0) {
+                const tag = openTags.pop();
+                currentHTML += `</${tag.tagName}>`;
+            }
+            targetElement.innerHTML = currentHTML;
+            return;
+        }
+        
+        const charData = characters[currentIndex];
+        
+        // If this is the first character of a text node, open necessary tags
+        if (charData.isFirstOfNode) {
+            charData.tags.forEach(tag => {
+                const attrs = Object.entries(tag.attributes)
+                    .map(([key, value]) => `${key}="${value}"`)
+                    .join(' ');
+                const attrString = attrs ? ` ${attrs}` : '';
+                currentHTML += `<${tag.tagName}${attrString}>`;
+                openTags.push(tag);
+            });
+        }
+        
+        // Add the character
+        currentHTML += charData.char;
+        
+        // If this is the last character of a text node, close tags in reverse order
+        if (charData.isLastOfNode) {
+            for (let i = charData.tags.length - 1; i >= 0; i--) {
+                const tag = charData.tags[i];
+                currentHTML += `</${tag.tagName}>`;
+                openTags.pop();
+            }
+        }
+        
+        // Update the display
+        targetElement.innerHTML = currentHTML + '<span class="typewriter-cursor">|</span>';
+        
+        currentIndex++;
+        
+        // Variable speed: faster for spaces, slower for punctuation
+        let delay = 25; // Base speed
+        if (charData.char === ' ') {
+            delay = 15; // Faster for spaces
+        } else if (['.', '!', '?', ':', ';'].includes(charData.char)) {
+            delay = 200; // Pause at punctuation
+        } else if ([','].includes(charData.char)) {
+            delay = 100; // Short pause at commas
+        }
+        
+        typewriterTimeout = setTimeout(typeNextCharacter, delay);
+    }
+    
+    typeNextCharacter();
 }
 
 function clearAnnotationContent() {

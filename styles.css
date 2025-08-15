@@ -532,6 +532,37 @@ header:hover::after {
     opacity: 0.7;
 }
 
+/* Typewriter effect styles */
+.typewriter-cursor {
+    color: var(--accent-gold);
+    font-weight: bold;
+    animation: blink 0.8s infinite;
+    margin-left: 1px;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+}
+
+@keyframes blink {
+    0%, 45% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50%, 100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+/* Smooth transition for annotation text */
+.annotation-text {
+    transition: all var(--transition-fast);
+}
+
+/* Enhanced visual feedback during typing */
+#typewriter-text {
+    min-height: 1.5em;
+    position: relative;
+}
+
 /* ================================
    LOADING AND ERROR STATES
    ================================ */
