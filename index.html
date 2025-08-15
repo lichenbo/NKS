@@ -3,85 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Portfolio</title>
+    <title>A New Kind of Science - Notes</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>My Content Portfolio</h1>
-        <p>A collection of interactive demos and content</p>
+        <h1>A New Kind of Science</h1>
+        <p>Personal notes and annotations on Stephen Wolfram's exploration of computational science</p>
     </header>
 
-    <main>
-        <section class="content-grid">
-            <div class="content-item">
-                <h3>Interactive Color Picker</h3>
-                <p>A simple color picker that shows RGB and HEX values</p>
-                <div class="demo-container">
-                    <input type="color" id="colorPicker" value="#3498db">
-                    <div id="colorInfo">
-                        <span id="hexValue">#3498db</span>
-                        <span id="rgbValue">rgb(52, 152, 219)</span>
-                    </div>
+    <main class="three-column-layout">
+        <!-- Left Column: Outline -->
+        <nav class="outline-column">
+            <h2>Outline</h2>
+            <ul class="chapter-list">
+                <li><a href="#chapter1" class="chapter-link active" data-chapter="chapter1">Chapter 1: The Foundations for a New Kind of Science</a></li>
+                <li><a href="#chapter2" class="chapter-link" data-chapter="chapter2">Chapter 2: The Crucial Experiment</a></li>
+                <li><a href="#chapter3" class="chapter-link" data-chapter="chapter3">Chapter 3: The World of Simple Programs</a></li>
+                <li><a href="#chapter4" class="chapter-link" data-chapter="chapter4">Chapter 4: Systems Based on Numbers</a></li>
+                <li><a href="#chapter5" class="chapter-link" data-chapter="chapter5">Chapter 5: Two Dimensions and Beyond</a></li>
+                <li><a href="#chapter6" class="chapter-link" data-chapter="chapter6">Chapter 6: Starting from Randomness</a></li>
+                <li><a href="#chapter7" class="chapter-link" data-chapter="chapter7">Chapter 7: Mechanisms in Programs and Nature</a></li>
+                <li><a href="#chapter8" class="chapter-link" data-chapter="chapter8">Chapter 8: Implications for Everyday Systems</a></li>
+                <li><a href="#chapter9" class="chapter-link" data-chapter="chapter9">Chapter 9: Fundamental Physics</a></li>
+                <li><a href="#chapter10" class="chapter-link" data-chapter="chapter10">Chapter 10: Processes of Perception and Analysis</a></li>
+                <li><a href="#chapter11" class="chapter-link" data-chapter="chapter11">Chapter 11: The Notion of Computation</a></li>
+                <li><a href="#chapter12" class="chapter-link" data-chapter="chapter12">Chapter 12: The Principle of Computational Equivalence</a></li>
+            </ul>
+        </nav>
+
+        <!-- Middle Column: Notes -->
+        <section class="notes-column">
+            <div class="chapter-content" id="chapter1" style="display: block;">
+                <h2>Chapter 1: The Foundations for a New Kind of Science</h2>
+                
+                <div class="note-section">
+                    <h3>Simple Rules, Complex Behavior</h3>
+                    <p>Wolfram introduces the central thesis that simple computational rules can generate remarkably complex behavior. This challenges traditional mathematical approaches that assume simple rules lead to simple outcomes.</p>
+                    
+                    <p>Key insight: <a href="#" class="annotation-link" data-annotation="rule30">Rule 30</a> demonstrates how a trivial cellular automaton rule can produce patterns that appear random despite being completely deterministic.</p>
+                    
+                    <p>The implications extend beyond computer science into <a href="#" class="annotation-link" data-annotation="biology">biology</a>, <a href="#" class="annotation-link" data-annotation="physics">physics</a>, and other natural sciences.</p>
+                </div>
+
+                <div class="note-section">
+                    <h3>Traditional Science vs. Computational Approach</h3>
+                    <p>Traditional science has focused on mathematical equations, often seeking simple formulas to describe complex phenomena. Wolfram argues this approach is fundamentally limited.</p>
+                    
+                    <p>The computational approach suggests that <a href="#" class="annotation-link" data-annotation="computation">computation</a> itself is a more fundamental framework for understanding nature than mathematics.</p>
+                </div>
+
+                <div class="note-section">
+                    <h3>Historical Context</h3>
+                    <p>Wolfram traces how computational thinking emerged, from <a href="#" class="annotation-link" data-annotation="vonneumann">von Neumann's</a> work on cellular automata to the development of computer science.</p>
+                    
+                    <p>The chapter establishes why this "new kind of science" was not possible before the computer age.</p>
                 </div>
             </div>
 
-            <div class="content-item">
-                <h3>Text Counter</h3>
-                <p>Count characters and words in real-time</p>
-                <div class="demo-container">
-                    <textarea id="textInput" placeholder="Type something here..."></textarea>
-                    <div id="textStats">
-                        <span>Characters: <span id="charCount">0</span></span>
-                        <span>Words: <span id="wordCount">0</span></span>
-                    </div>
+            <div class="chapter-content" id="chapter2" style="display: none;">
+                <h2>Chapter 2: The Crucial Experiment</h2>
+                
+                <div class="note-section">
+                    <h3>Elementary Cellular Automata</h3>
+                    <p>Wolfram systematically explores all 256 possible <a href="#" class="annotation-link" data-annotation="elementary-ca">elementary cellular automata</a>, revealing four classes of behavior.</p>
+                    
+                    <p>This systematic approach demonstrates how computational experiments can reveal universal patterns in simple systems.</p>
+                </div>
+
+                <div class="note-section">
+                    <h3>Class 4 Behavior</h3>
+                    <p>The discovery of <a href="#" class="annotation-link" data-annotation="class4">Class 4 automata</a> - systems that are neither too simple nor too random - suggests a new category of complex systems at the "edge of chaos".</p>
                 </div>
             </div>
 
-            <div class="content-item">
-                <h3>Random Quote Generator</h3>
-                <p>Click to generate inspirational quotes</p>
-                <div class="demo-container">
-                    <blockquote id="quote">Click the button to get a quote!</blockquote>
-                    <button id="quoteBtn">Generate Quote</button>
+            <div class="chapter-content" id="chapter3" style="display: none;">
+                <h2>Chapter 3: The World of Simple Programs</h2>
+                
+                <div class="note-section">
+                    <h3>Exploring Program Space</h3>
+                    <p>Wolfram expands beyond cellular automata to explore other simple computational systems, establishing that complex behavior is ubiquitous across different types of programs.</p>
                 </div>
             </div>
 
-            <div class="content-item">
-                <h3>Simple Calculator</h3>
-                <p>Basic arithmetic operations</p>
-                <div class="demo-container">
-                    <div class="calculator">
-                        <input type="text" id="calcDisplay" readonly>
-                        <div class="calc-buttons">
-                            <button onclick="clearCalc()">C</button>
-                            <button onclick="appendToCalc('/')">/</button>
-                            <button onclick="appendToCalc('*')">*</button>
-                            <button onclick="deleteLast()">⌫</button>
-                            <button onclick="appendToCalc('7')">7</button>
-                            <button onclick="appendToCalc('8')">8</button>
-                            <button onclick="appendToCalc('9')">9</button>
-                            <button onclick="appendToCalc('-')">-</button>
-                            <button onclick="appendToCalc('4')">4</button>
-                            <button onclick="appendToCalc('5')">5</button>
-                            <button onclick="appendToCalc('6')">6</button>
-                            <button onclick="appendToCalc('+')">+</button>
-                            <button onclick="appendToCalc('1')">1</button>
-                            <button onclick="appendToCalc('2')">2</button>
-                            <button onclick="appendToCalc('3')">3</button>
-                            <button onclick="calculate()" rowspan="2">=</button>
-                            <button onclick="appendToCalc('0')" colspan="2">0</button>
-                            <button onclick="appendToCalc('.')">.</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Additional chapters would continue here -->
         </section>
-    </main>
 
-    <footer>
-        <p>&copy; 2025 Content Portfolio. Built with HTML, CSS, and JavaScript.</p>
-    </footer>
+        <!-- Right Column: Annotations -->
+        <aside class="annotations-column">
+            <div id="annotation-content">
+                <h3>Annotations</h3>
+                <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
+            </div>
+        </aside>
+    </main>
 
     <script src="script.js"></script>
 </body>

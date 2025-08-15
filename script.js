@@ -1,103 +1,192 @@
 document.addEventListener('DOMContentLoaded', function() {
-    initColorPicker();
-    initTextCounter();
-    initQuoteGenerator();
-    initCalculator();
+    initChapterNavigation();
+    initAnnotationSystem();
 });
 
-function initColorPicker() {
-    const colorPicker = document.getElementById('colorPicker');
-    const hexValue = document.getElementById('hexValue');
-    const rgbValue = document.getElementById('rgbValue');
-
-    function updateColorInfo(color) {
-        hexValue.textContent = color;
-        const rgb = hexToRgb(color);
-        rgbValue.textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+// Annotation data
+const annotations = {
+    rule30: {
+        title: "Rule 30 Cellular Automaton",
+        content: `
+            <p>Rule 30 is one of the most famous elementary cellular automata discovered by Wolfram. Despite its simple rule:</p>
+            <ul>
+                <li>111 → 0</li>
+                <li>110 → 0</li>
+                <li>101 → 0</li>
+                <li>100 → 1</li>
+                <li>011 → 1</li>
+                <li>010 → 1</li>
+                <li>001 → 1</li>
+                <li>000 → 0</li>
+            </ul>
+            <p>Rule 30 generates patterns that appear completely random, yet are entirely deterministic. This challenges our intuitions about the relationship between simple rules and complex behavior.</p>
+            <p>Wolfram used Rule 30 as a random number generator in Mathematica for several years, demonstrating its practical applications.</p>
+        `
+    },
+    biology: {
+        title: "Applications in Biology",
+        content: `
+            <p>Wolfram's insights about simple rules generating complex behavior have profound implications for biology:</p>
+            <ul>
+                <li><strong>Pattern Formation:</strong> How leopard spots, zebra stripes, and leaf venation patterns emerge</li>
+                <li><strong>Growth Processes:</strong> Tree branching, root systems, and neural network development</li>
+                <li><strong>Evolution:</strong> How complex organisms can arise from simple genetic programs</li>
+                <li><strong>Morphogenesis:</strong> The development of form and structure in living organisms</li>
+            </ul>
+            <p>This suggests that many biological phenomena may be computational rather than purely chemical or physical processes.</p>
+        `
+    },
+    physics: {
+        title: "Implications for Physics",
+        content: `
+            <p>Wolfram proposes that the universe itself might be computational, with fundamental physical laws emerging from simple computational rules:</p>
+            <ul>
+                <li><strong>Space and Time:</strong> May be discrete rather than continuous</li>
+                <li><strong>Quantum Mechanics:</strong> Uncertainty might arise from computational irreducibility</li>
+                <li><strong>Relativity:</strong> Speed of light limits might reflect computational constraints</li>
+                <li><strong>Conservation Laws:</strong> Could emerge from computational symmetries</li>
+            </ul>
+            <p>This "digital physics" approach suggests a fundamental revision of how we understand reality.</p>
+        `
+    },
+    computation: {
+        title: "Computation as Fundamental Framework",
+        content: `
+            <p>Wolfram argues that computation provides a more fundamental framework for understanding nature than traditional mathematics:</p>
+            <ul>
+                <li><strong>Universality:</strong> Simple computational systems can be as powerful as any computer</li>
+                <li><strong>Irreducibility:</strong> Many computations cannot be shortened or predicted without running them</li>
+                <li><strong>Emergence:</strong> Complex behaviors arise naturally from simple computational processes</li>
+                <li><strong>Equivalence:</strong> Most complex systems exhibit equivalent computational sophistication</li>
+            </ul>
+            <p>This paradigm shift moves beyond equations to algorithmic thinking about natural phenomena.</p>
+        `
+    },
+    vonneumann: {
+        title: "John von Neumann's Contributions",
+        content: `
+            <p>John von Neumann (1903-1957) laid crucial groundwork for computational science:</p>
+            <ul>
+                <li><strong>Cellular Automata:</strong> Invented the concept in the 1940s to study self-reproduction</li>
+                <li><strong>Universal Constructor:</strong> Designed a theoretical machine that could replicate itself</li>
+                <li><strong>Computer Architecture:</strong> The "von Neumann architecture" still underlies modern computers</li>
+                <li><strong>Mathematical Foundations:</strong> Contributed to game theory, quantum mechanics, and set theory</li>
+            </ul>
+            <p>Von Neumann recognized that computation could be a tool for scientific discovery, not just calculation.</p>
+        `
+    },
+    "elementary-ca": {
+        title: "Elementary Cellular Automata",
+        content: `
+            <p>Elementary cellular automata are the simplest class of cellular automata, operating on a one-dimensional array of cells with binary states (0 or 1).</p>
+            <p><strong>Key Properties:</strong></p>
+            <ul>
+                <li>Each cell looks at itself and its two immediate neighbors</li>
+                <li>There are 2³ = 8 possible local configurations</li>
+                <li>There are 2⁸ = 256 possible rules</li>
+                <li>Rules are numbered 0-255 in binary representation</li>
+            </ul>
+            <p>Despite their simplicity, these 256 rules exhibit an amazing variety of behaviors, from simple patterns to complex, seemingly random structures.</p>
+        `
+    },
+    class4: {
+        title: "Class 4 Cellular Automata",
+        content: `
+            <p>Wolfram classified cellular automata behavior into four classes:</p>
+            <ul>
+                <li><strong>Class 1:</strong> Evolution leads to homogeneous state</li>
+                <li><strong>Class 2:</strong> Evolution leads to simple stable or periodic structures</li>
+                <li><strong>Class 3:</strong> Evolution leads to chaotic, seemingly random patterns</li>
+                <li><strong>Class 4:</strong> Complex, interesting behavior with local structures</li>
+            </ul>
+            <p><strong>Class 4 systems are special because:</strong></p>
+            <ul>
+                <li>They exist at the "edge of chaos" between order and randomness</li>
+                <li>They can support complex computation and information processing</li>
+                <li>They often exhibit universal computation capabilities</li>
+                <li>Examples include Rule 110 and Conway's Game of Life</li>
+            </ul>
+        `
     }
+};
 
-    colorPicker.addEventListener('input', function() {
-        updateColorInfo(this.value);
+function initChapterNavigation() {
+    const chapterLinks = document.querySelectorAll('.chapter-link');
+    const chapterContents = document.querySelectorAll('.chapter-content');
+    
+    chapterLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            chapterLinks.forEach(l => l.classList.remove('active'));
+            
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // Hide all chapter contents
+            chapterContents.forEach(content => content.style.display = 'none');
+            
+            // Show selected chapter content
+            const targetChapter = this.getAttribute('data-chapter');
+            const targetContent = document.getElementById(targetChapter);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+            }
+            
+            // Clear annotation content when switching chapters
+            clearAnnotationContent();
+        });
     });
-
-    function hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
-    }
 }
 
-function initTextCounter() {
-    const textInput = document.getElementById('textInput');
-    const charCount = document.getElementById('charCount');
-    const wordCount = document.getElementById('wordCount');
-
-    function updateCounts() {
-        const text = textInput.value;
-        charCount.textContent = text.length;
-        
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-        wordCount.textContent = words.length;
-    }
-
-    textInput.addEventListener('input', updateCounts);
-}
-
-function initQuoteGenerator() {
-    const quotes = [
-        "The only way to do great work is to love what you do. - Steve Jobs",
-        "Innovation distinguishes between a leader and a follower. - Steve Jobs",
-        "Life is what happens to you while you're busy making other plans. - John Lennon",
-        "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-        "It is during our darkest moments that we must focus to see the light. - Aristotle",
-        "The only impossible journey is the one you never begin. - Tony Robbins",
-        "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill",
-        "The way to get started is to quit talking and begin doing. - Walt Disney",
-        "Don't let yesterday take up too much of today. - Will Rogers",
-        "You learn more from failure than from success. Don't let it stop you. Failure builds character. - Unknown"
-    ];
-
-    const quoteElement = document.getElementById('quote');
-    const quoteBtn = document.getElementById('quoteBtn');
-
-    quoteBtn.addEventListener('click', function() {
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        quoteElement.textContent = quotes[randomIndex];
+function initAnnotationSystem() {
+    // Add click event listeners to all annotation links
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('annotation-link')) {
+            e.preventDefault();
+            
+            // Remove active class from all annotation links
+            document.querySelectorAll('.annotation-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active class to clicked link
+            e.target.classList.add('active');
+            
+            // Get annotation data
+            const annotationKey = e.target.getAttribute('data-annotation');
+            showAnnotation(annotationKey);
+        }
     });
 }
 
-function initCalculator() {
-    window.calcDisplay = document.getElementById('calcDisplay');
-    window.currentInput = '';
-}
-
-function appendToCalc(value) {
-    window.currentInput += value;
-    window.calcDisplay.value = window.currentInput;
-}
-
-function clearCalc() {
-    window.currentInput = '';
-    window.calcDisplay.value = '';
-}
-
-function deleteLast() {
-    window.currentInput = window.currentInput.slice(0, -1);
-    window.calcDisplay.value = window.currentInput;
-}
-
-function calculate() {
-    try {
-        if (window.currentInput.trim() === '') return;
-        
-        const result = Function('"use strict"; return (' + window.currentInput + ')')();
-        window.calcDisplay.value = result;
-        window.currentInput = result.toString();
-    } catch (error) {
-        window.calcDisplay.value = 'Error';
-        window.currentInput = '';
+function showAnnotation(key) {
+    const annotationContent = document.getElementById('annotation-content');
+    const annotation = annotations[key];
+    
+    if (annotation) {
+        annotationContent.innerHTML = `
+            <div class="annotation-title">${annotation.title}</div>
+            <div class="annotation-text">${annotation.content}</div>
+        `;
+    } else {
+        annotationContent.innerHTML = `
+            <h3>Annotation Not Found</h3>
+            <p class="placeholder">The annotation "${key}" is not yet available.</p>
+        `;
     }
+}
+
+function clearAnnotationContent() {
+    const annotationContent = document.getElementById('annotation-content');
+    annotationContent.innerHTML = `
+        <h3>Annotations</h3>
+        <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
+    `;
+    
+    // Remove active class from all annotation links
+    document.querySelectorAll('.annotation-link').forEach(link => {
+        link.classList.remove('active');
+    });
 }
