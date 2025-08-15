@@ -130,6 +130,7 @@ header p {
     cursor: pointer;
     transition: color 0.2s ease;
     font-weight: 500;
+    display: inline;
 }
 
 .annotation-link:hover {
