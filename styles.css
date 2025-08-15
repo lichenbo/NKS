@@ -129,10 +129,10 @@ header {
    ================================ */
 .three-column-layout {
     display: grid;
-    grid-template-columns: 240px 1fr 240px;
+    grid-template-columns: minmax(280px, 320px) 1fr minmax(280px, 320px);
     grid-template-areas: "sidebar-left content sidebar-right";
     gap: var(--spacing-lg);
-    max-width: 1600px;
+    max-width: 1800px;
     margin: 0 auto;
     min-height: calc(100vh - 180px);
     padding: var(--spacing-lg);
@@ -486,16 +486,30 @@ header {
 /* ================================
    RESPONSIVE DESIGN
    ================================ */
+@media (min-width: 1600px) {
+    .three-column-layout {
+        grid-template-columns: minmax(320px, 380px) 1fr minmax(320px, 380px);
+        max-width: 2000px;
+    }
+}
+
+@media (min-width: 2000px) {
+    .three-column-layout {
+        grid-template-columns: minmax(380px, 420px) 1fr minmax(380px, 420px);
+        max-width: 2400px;
+    }
+}
+
 @media (max-width: 1400px) {
     .three-column-layout {
-        grid-template-columns: 220px 1fr 240px;
+        grid-template-columns: minmax(240px, 280px) 1fr minmax(240px, 280px);
         gap: var(--spacing-md);
     }
 }
 
 @media (max-width: 1200px) {
     .three-column-layout {
-        grid-template-columns: 200px 1fr 220px;
+        grid-template-columns: minmax(200px, 240px) 1fr minmax(200px, 240px);
         padding: var(--spacing-md);
         gap: var(--spacing-sm);
     }
@@ -507,7 +521,7 @@ header {
 
 @media (max-width: 1024px) {
     .three-column-layout {
-        grid-template-columns: 180px 1fr 200px;
+        grid-template-columns: minmax(180px, 200px) 1fr minmax(180px, 200px);
         gap: var(--spacing-sm);
     }
     
@@ -530,7 +544,7 @@ header {
 
 @media (max-width: 900px) {
     .three-column-layout {
-        grid-template-columns: 160px 1fr 180px;
+        grid-template-columns: minmax(160px, 180px) 1fr minmax(160px, 180px);
         gap: var(--spacing-xs);
     }
     
