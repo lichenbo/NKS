@@ -128,14 +128,12 @@ header {
    MAIN LAYOUT
    ================================ */
 .three-column-layout {
-    display: grid;
-    grid-template-columns: 240px 1fr 280px;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-lg);
+    display: block;
     max-width: 1600px;
     margin: 0 auto;
     min-height: calc(100vh - 180px);
-    align-items: start;
+    position: relative;
+    padding: var(--spacing-lg) 0;
 }
 
 /* ================================
@@ -161,16 +159,32 @@ header {
 }
 
 /* Make outline and annotation columns fixed to screen */
-.outline-column,
-.annotations-column {
-    position: sticky;
-    top: var(--spacing-lg);
-    max-height: calc(100vh - 100px);
+.outline-column {
+    position: fixed;
+    left: var(--spacing-lg);
+    top: 200px;
+    width: 220px;
+    max-height: calc(100vh - 220px);
     overflow-y: auto;
     opacity: 0.7;
     transition: opacity var(--transition-fast);
     background: rgba(26, 26, 26, 0.6);
     border-color: rgba(51, 51, 51, 0.6);
+    z-index: 10;
+}
+
+.annotations-column {
+    position: fixed;
+    right: var(--spacing-lg);
+    top: 200px;
+    width: 220px;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+    background: rgba(26, 26, 26, 0.6);
+    border-color: rgba(51, 51, 51, 0.6);
+    z-index: 10;
 }
 
 .outline-column:hover,
@@ -184,6 +198,7 @@ header {
 .notes-column {
     /* No sticky positioning - allows natural scrolling */
     background: var(--primary-bg);
+    margin: 0 260px; /* Leave space for fixed side panels */
 }
 
 .notes-column .main-content-area {
@@ -293,6 +308,7 @@ header {
 }
 
 /* Markdown content styling - optimized for reading */
+.notes-column h1,
 .main-content-area h1 {
     font-size: 2.2rem;
     font-weight: 600;
@@ -302,6 +318,7 @@ header {
     padding-bottom: var(--spacing-md);
 }
 
+.notes-column h2,
 .main-content-area h2 {
     font-size: 1.6rem;
     font-weight: 500;
@@ -311,6 +328,7 @@ header {
     padding-bottom: var(--spacing-sm);
 }
 
+.notes-column h3,
 .main-content-area h3 {
     font-size: 1.3rem;
     font-weight: 500;
@@ -318,6 +336,7 @@ header {
     color: var(--text-primary);
 }
 
+.notes-column p,
 .main-content-area p {
     margin-bottom: var(--spacing-lg);
     color: var(--text-secondary);
@@ -325,22 +344,26 @@ header {
     line-height: 1.8;
 }
 
+.notes-column ul, .notes-column ol,
 .main-content-area ul, .main-content-area ol {
     margin: var(--spacing-lg) 0;
     padding-left: var(--spacing-xl);
     color: var(--text-secondary);
 }
 
+.notes-column li,
 .main-content-area li {
     margin-bottom: var(--spacing-sm);
     line-height: 1.7;
 }
 
+.notes-column strong,
 .main-content-area strong {
     color: var(--text-primary);
     font-weight: 600;
 }
 
+.notes-column code,
 .main-content-area code {
     background: var(--secondary-bg);
     color: var(--accent-gold);
