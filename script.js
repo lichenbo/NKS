@@ -222,20 +222,25 @@ function showAnnotation(key) {
         tempDiv.innerHTML = annotation.content;
         const plainText = tempDiv.textContent || tempDiv.innerText || '';
         
-        // Initialize Typed.js
-        currentTyped = new Typed('#typewriter-text', {
-            strings: [annotation.content], // Use HTML content directly
-            typeSpeed: 30,
-            backSpeed: 0,
-            fadeOut: false,
-            showCursor: true,
-            cursorChar: '|',
-            autoInsertCss: true,
-            contentType: 'html', // Allow HTML content
-            onComplete: function() {
-                // Optional: do something when typing is complete
-            }
-        });
+        // Initialize Typed.js with error handling
+        if (typeof Typed !== 'undefined') {
+            currentTyped = new Typed('#typewriter-text', {
+                strings: [annotation.content], // Use HTML content directly
+                typeSpeed: 30,
+                backSpeed: 0,
+                fadeOut: false,
+                showCursor: true,
+                cursorChar: '|',
+                autoInsertCss: true,
+                contentType: 'html', // Allow HTML content
+                onComplete: function() {
+                    // Optional: do something when typing is complete
+                }
+            });
+        } else {
+            // Fallback: display content immediately if Typed.js is not available
+            document.getElementById('typewriter-text').innerHTML = annotation.content;
+        }
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
@@ -247,7 +252,7 @@ function showAnnotation(key) {
 
 function clearAnnotationContent() {
     // Destroy any existing Typed instance
-    if (currentTyped) {
+    if (currentTyped && typeof currentTyped.destroy === 'function') {
         currentTyped.destroy();
         currentTyped = null;
     }
