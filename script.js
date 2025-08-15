@@ -237,6 +237,10 @@ function initCellularAutomataBackground() {
     
     const ctx = canvas.getContext('2d');
     
+    // Cellular automata parameters
+    const cellSize = 3;
+    let cols, rows, grid, currentRow;
+    
     // Set canvas size
     function resizeCanvas() {
         canvas.width = window.innerWidth;
@@ -246,10 +250,6 @@ function initCellularAutomataBackground() {
     
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
-    // Cellular automata parameters
-    const cellSize = 3;
-    let cols, rows, grid, currentRow;
     
     function initAnimation() {
         cols = Math.floor(canvas.width / cellSize);
