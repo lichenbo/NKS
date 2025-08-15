@@ -184,36 +184,26 @@ async function loadChapter(chapterId) {
 }
 
 function processAnnotationLinksInMarkdown(markdown) {
-    console.log('Processing annotation links in Markdown:', markdown);
     // Convert [text](annotation:key) to HTML before markdown parsing
-    const processed = markdown.replace(
+    return markdown.replace(
         /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
         '<span class="annotation-link" data-annotation="$2">$1</span>'
     );
-    console.log('Processed Markdown:', processed);
-    return processed;
 }
 
 function processAnnotationLinks(html) {
-    console.log('Processing annotation links in HTML:', html);
     // Convert [text](annotation:key) to clickable annotation links
-    const processed = html.replace(
+    return html.replace(
         /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
         '<a href="#" class="annotation-link" data-annotation="$2">$1</a>'
     );
-    console.log('Processed HTML:', processed);
-    return processed;
 }
 
 function initAnnotationSystem() {
     // Add click event listeners to all annotation links
     document.addEventListener('click', function(e) {
-        console.log('Click detected on:', e.target);
-        console.log('Has annotation-link class:', e.target.classList.contains('annotation-link'));
-        
         if (e.target.classList.contains('annotation-link')) {
             e.preventDefault();
-            console.log('Annotation link clicked!');
             
             // Remove active class from all annotation links
             document.querySelectorAll('.annotation-link').forEach(link => {
@@ -225,31 +215,25 @@ function initAnnotationSystem() {
             
             // Get annotation data
             const annotationKey = e.target.getAttribute('data-annotation');
-            console.log('Annotation key:', annotationKey);
             showAnnotation(annotationKey);
         }
     });
 }
 
 function showAnnotation(key) {
-    console.log('showAnnotation called with key:', key);
     const annotationContent = document.getElementById('annotation-content');
-    console.log('annotationContent element:', annotationContent);
     const annotation = annotations[key];
-    console.log('Found annotation:', annotation);
     
     if (annotation) {
         annotationContent.innerHTML = `
             <div class="annotation-title">${annotation.title}</div>
             <div class="annotation-text">${annotation.content}</div>
         `;
-        console.log('Annotation content updated');
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
             <p class="placeholder">The annotation "${key}" is not yet available. Add it to the annotations object in script.js</p>
         `;
-        console.log('Annotation not found, showing error message');
     }
 }
 

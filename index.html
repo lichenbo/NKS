@@ -4,19 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A New Kind of Science - Notes</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Particles.js for background effects -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <!-- Main Styles -->
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>A New Kind of Science</h1>
-        <p>Personal notes and annotations on Stephen Wolfram's exploration of computational science</p>
+    <!-- Animated background -->
+    <div id="particles-js"></div>
+    
+    <!-- Background grid pattern -->
+    <div class="grid-background"></div>
+    
+    <header data-aos="fade-down">
+        <div class="header-content">
+            <h1 class="glitch-text">A New Kind of Science</h1>
+            <p class="subtitle">Personal notes and annotations on Stephen Wolfram's exploration of computational science</p>
+            <div class="header-divider"></div>
+        </div>
     </header>
 
-    <main class="three-column-layout">
+    <main class="three-column-layout" data-aos="fade-up"  data-aos-delay="200">
         <!-- Left Column: Outline -->
-        <nav class="outline-column">
-            <h2>Outline</h2>
+        <nav class="outline-column glass-panel" data-aos="fade-right" data-aos-delay="300">
+            <div class="panel-header">
+                <h2><span class="icon">📊</span>Outline</h2>
+            </div>
             <ul class="chapter-list">
                 <li><a href="#chapter1" class="chapter-link active" data-chapter="chapter1">Chapter 1: The Foundations for a New Kind of Science</a></li>
                 <li><a href="#chapter2" class="chapter-link" data-chapter="chapter2">Chapter 2: The Crucial Experiment</a></li>
@@ -34,21 +60,79 @@
         </nav>
 
         <!-- Middle Column: Notes -->
-        <section class="notes-column">
-            <div id="notes-content">
+        <section class="notes-column glass-panel" data-aos="fade-up" data-aos-delay="400">
+            <div class="panel-header">
+                <h2><span class="icon">📖</span>Notes</h2>
+            </div>
+            <div id="notes-content" class="content-area">
                 <div class="loading">Loading chapter content...</div>
             </div>
         </section>
 
         <!-- Right Column: Annotations -->
-        <aside class="annotations-column">
-            <div id="annotation-content">
-                <h3>Annotations</h3>
+        <aside class="annotations-column glass-panel" data-aos="fade-left" data-aos-delay="500">
+            <div class="panel-header">
+                <h2><span class="icon">🔬</span>Annotations</h2>
+            </div>
+            <div id="annotation-content" class="content-area">
                 <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
             </div>
         </aside>
     </main>
 
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
     <script src="script.js"></script>
+    
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out-cubic',
+            once: true,
+            offset: 50
+        });
+        
+        // Initialize particles background
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: ['#00ffff', '#ff00ff', '#ffff00'] },
+                shape: { type: 'circle' },
+                opacity: { value: 0.3, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#00ffff',
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: 'none',
+                    random: false,
+                    straight: false,
+                    out_mode: 'out',
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'repulse' },
+                    onclick: { enable: true, mode: 'push' },
+                    resize: true
+                },
+                modes: {
+                    repulse: { distance: 100, duration: 0.4 },
+                    push: { particles_nb: 4 }
+                }
+            },
+            retina_detect: true
+        });
+    </script>
 </body>
 </html>
