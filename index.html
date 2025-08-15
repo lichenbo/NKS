@@ -13,8 +13,6 @@
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
-    <!-- Particles.js for background effects -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     
     <!-- Main Styles -->
     <link rel="stylesheet" href="styles.css">
@@ -23,16 +21,17 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- Animated background -->
-    <div id="particles-js"></div>
+    <!-- Cellular Automata Background -->
+    <canvas id="cellular-automata-bg"></canvas>
     
-    <!-- Background grid pattern -->
-    <div class="grid-background"></div>
+    <!-- Fractal overlay -->
+    <div class="fractal-overlay"></div>
     
     <header data-aos="fade-down">
         <div class="header-content">
-            <h1 class="glitch-text">A New Kind of Science</h1>
-            <p class="subtitle">Personal notes and annotations on Stephen Wolfram's exploration of computational science</p>
+            <div class="author-name">Stephen Wolfram</div>
+            <h1 class="book-title">A New Kind of Science</h1>
+            <p class="subtitle">Personal notes and annotations</p>
             <div class="header-divider"></div>
         </div>
     </header>
@@ -94,45 +93,8 @@
             offset: 50
         });
         
-        // Initialize particles background
-        particlesJS('particles-js', {
-            particles: {
-                number: { value: 80, density: { enable: true, value_area: 800 } },
-                color: { value: ['#00ffff', '#ff00ff', '#ffff00'] },
-                shape: { type: 'circle' },
-                opacity: { value: 0.3, random: true },
-                size: { value: 3, random: true },
-                line_linked: {
-                    enable: true,
-                    distance: 150,
-                    color: '#00ffff',
-                    opacity: 0.2,
-                    width: 1
-                },
-                move: {
-                    enable: true,
-                    speed: 2,
-                    direction: 'none',
-                    random: false,
-                    straight: false,
-                    out_mode: 'out',
-                    bounce: false
-                }
-            },
-            interactivity: {
-                detect_on: 'canvas',
-                events: {
-                    onhover: { enable: true, mode: 'repulse' },
-                    onclick: { enable: true, mode: 'push' },
-                    resize: true
-                },
-                modes: {
-                    repulse: { distance: 100, duration: 0.4 },
-                    push: { particles_nb: 4 }
-                }
-            },
-            retina_detect: true
-        });
+        // Initialize cellular automata background
+        initCellularAutomataBackground();
     </script>
 </body>
 </html>

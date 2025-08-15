@@ -254,3 +254,103 @@ function clearAnnotationContent() {
 function initAnnotationContent() {
     clearAnnotationContent();
 }
+
+// Cellular Automata Background Animation
+function initCellularAutomataBackground() {
+    const canvas = document.getElementById('cellular-automata-bg');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initAnimation();
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Cellular automata parameters
+    const cellSize = 3;
+    let cols, rows, grid, currentRow;
+    
+    function initAnimation() {
+        cols = Math.floor(canvas.width / cellSize);
+        rows = Math.floor(canvas.height / cellSize);
+        grid = new Array(cols).fill(0);
+        grid[Math.floor(cols / 2)] = 1; // Start with center cell
+        currentRow = 0;
+    }
+    
+    // Rule 30 implementation
+    function applyRule30(left, center, right) {
+        const pattern = left * 4 + center * 2 + right;
+        return [0, 1, 1, 1, 1, 0, 0, 0][pattern];
+    }
+    
+    const drawnRows = [];
+    
+    function drawCellularAutomata() {
+        // Only clear if starting over
+        if (currentRow === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawnRows.length = 0;
+        }
+        
+        // Store current row
+        drawnRows[currentRow] = [...grid];
+        
+        // Draw all stored rows
+        for (let row = 0; row < drawnRows.length; row++) {
+            for (let col = 0; col < cols; col++) {
+                if (drawnRows[row] && drawnRows[row][col] === 1) {
+                    // Create gradient effect based on position and age
+                    const distance = Math.sqrt(
+                        Math.pow(col - cols/2, 2) + Math.pow(row - currentRow/2, 2)
+                    );
+                    const maxDistance = Math.sqrt(cols*cols/4 + rows*rows/4);
+                    const intensity = Math.max(0.2, 1 - distance / maxDistance);
+                    
+                    // Age effect - older rows fade
+                    const age = currentRow - row;
+                    const ageFactor = Math.max(0.1, 1 - age / (rows * 0.3));
+                    
+                    // Golden color gradient inspired by book cover
+                    const alpha = intensity * ageFactor * 0.6;
+                    const red = Math.floor(255 * intensity * ageFactor);
+                    const green = Math.floor(179 * intensity * ageFactor);
+                    const blue = Math.floor(102 * intensity * ageFactor * 0.3);
+                    
+                    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                    ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
+                }
+            }
+        }
+        
+        // Calculate next generation
+        if (currentRow < rows - 1) {
+            const newGrid = new Array(cols).fill(0);
+            for (let i = 0; i < cols; i++) {
+                const left = grid[i - 1] || 0;
+                const center = grid[i];
+                const right = grid[i + 1] || 0;
+                newGrid[i] = applyRule30(left, center, right);
+            }
+            grid = newGrid;
+            currentRow++;
+        } else {
+            // Reset and start over
+            setTimeout(() => {
+                initAnimation();
+            }, 2000);
+        }
+    }
+    
+    // Initialize
+    initAnimation();
+    
+    // Animate slowly for elegant effect
+    setInterval(drawCellularAutomata, 100);
+}
