@@ -194,6 +194,12 @@ header p {
 }
 
 /* Responsive design */
+@media (max-width: 1200px) {
+    .three-column-layout {
+        grid-template-columns: 220px 1fr 280px;
+    }
+}
+
 @media (max-width: 1024px) {
     .three-column-layout {
         grid-template-columns: 200px 1fr 250px;
@@ -209,6 +215,21 @@ header p {
     
     .notes-column {
         padding: 1.5rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .three-column-layout {
+        grid-template-columns: 180px 1fr 220px;
+    }
+    
+    .outline-column {
+        padding: 1rem;
+    }
+    
+    .chapter-link {
+        padding: 0.5rem;
+        font-size: 0.85rem;
     }
 }
 
