@@ -532,23 +532,24 @@ header:hover::after {
     opacity: 0.7;
 }
 
-/* Typewriter effect styles */
-.typewriter-cursor {
-    color: var(--accent-gold);
+/* Typed.js cursor styling */
+.typed-cursor {
+    color: var(--accent-gold) !important;
     font-weight: bold;
-    animation: blink 0.8s infinite;
-    margin-left: 1px;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+    animation: blink 0.8s infinite;
+}
+
+.typed-cursor.typed-cursor--blink {
+    animation: blink 0.8s infinite;
 }
 
 @keyframes blink {
     0%, 45% {
         opacity: 1;
-        transform: scale(1);
     }
     50%, 100% {
         opacity: 0;
-        transform: scale(0.8);
     }
 }
 
@@ -561,6 +562,7 @@ header:hover::after {
 #typewriter-text {
     min-height: 1.5em;
     position: relative;
+    display: inline;
 }
 
 /* ================================
