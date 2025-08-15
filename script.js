@@ -226,7 +226,7 @@ function showAnnotation(key) {
         if (typeof Typed !== 'undefined') {
             currentTyped = new Typed('#typewriter-text', {
                 strings: [annotation.content], // Use HTML content directly
-                typeSpeed: 30,
+                typeSpeed: 10,
                 backSpeed: 0,
                 fadeOut: false,
                 showCursor: true,
