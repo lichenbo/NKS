@@ -1,9 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
+    initMarkdownRenderer();
     initChapterNavigation();
     initAnnotationSystem();
+    
+    // Load first chapter by default
+    loadChapter('chapter1');
 });
 
-// Annotation data
+// Annotation data - you can edit these in the HTML/JS
 const annotations = {
     rule30: {
         title: "Rule 30 Cellular Automaton",
@@ -110,9 +114,16 @@ const annotations = {
     }
 };
 
+function initMarkdownRenderer() {
+    // Configure marked for our annotation syntax
+    marked.setOptions({
+        breaks: true,
+        gfm: true
+    });
+}
+
 function initChapterNavigation() {
     const chapterLinks = document.querySelectorAll('.chapter-link');
-    const chapterContents = document.querySelectorAll('.chapter-content');
     
     chapterLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -124,20 +135,59 @@ function initChapterNavigation() {
             // Add active class to clicked link
             this.classList.add('active');
             
-            // Hide all chapter contents
-            chapterContents.forEach(content => content.style.display = 'none');
-            
-            // Show selected chapter content
+            // Load the selected chapter
             const targetChapter = this.getAttribute('data-chapter');
-            const targetContent = document.getElementById(targetChapter);
-            if (targetContent) {
-                targetContent.style.display = 'block';
-            }
+            loadChapter(targetChapter);
             
             // Clear annotation content when switching chapters
             clearAnnotationContent();
         });
     });
+}
+
+async function loadChapter(chapterId) {
+    const notesContent = document.getElementById('notes-content');
+    
+    try {
+        // Show loading state
+        notesContent.innerHTML = '<div class="loading">Loading chapter content...</div>';
+        
+        // Fetch the markdown file
+        const response = await fetch(`chapters/${chapterId}.md`);
+        
+        if (!response.ok) {
+            throw new Error(`Chapter file not found: ${chapterId}.md`);
+        }
+        
+        const markdownText = await response.text();
+        
+        // Parse markdown to HTML
+        let htmlContent = marked.parse(markdownText);
+        
+        // Process annotation links
+        htmlContent = processAnnotationLinks(htmlContent);
+        
+        // Display the content
+        notesContent.innerHTML = htmlContent;
+        
+    } catch (error) {
+        console.error('Error loading chapter:', error);
+        notesContent.innerHTML = `
+            <div class="error">
+                <h2>Error Loading Chapter</h2>
+                <p>Could not load <code>${chapterId}.md</code></p>
+                <p>Please make sure the file exists in the <code>chapters/</code> directory.</p>
+            </div>
+        `;
+    }
+}
+
+function processAnnotationLinks(html) {
+    // Convert [text](annotation:key) to clickable annotation links
+    return html.replace(
+        /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
+        '<a href="#" class="annotation-link" data-annotation="$2">$1</a>'
+    );
 }
 
 function initAnnotationSystem() {
@@ -173,7 +223,7 @@ function showAnnotation(key) {
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
-            <p class="placeholder">The annotation "${key}" is not yet available.</p>
+            <p class="placeholder">The annotation "${key}" is not yet available. Add it to the annotations object in script.js</p>
         `;
     }
 }

@@ -193,6 +193,34 @@ header p {
     margin-bottom: 0.25rem;
 }
 
+/* Loading and error states */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.error {
+    padding: 2rem;
+    background: #ffebee;
+    border: 1px solid #e57373;
+    border-radius: 6px;
+    color: #c62828;
+}
+
+.error h2 {
+    color: #c62828;
+    margin-bottom: 1rem;
+}
+
+.error code {
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
 /* Responsive design */
 @media (max-width: 1200px) {
     .three-column-layout {
