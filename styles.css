@@ -83,6 +83,87 @@ header {
     text-align: center;
     background: var(--secondary-bg);
     border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated header background inspired by book cover */
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 300%;
+    height: 100%;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        transparent 30%,
+        rgba(212, 175, 55, 0.03) 35%,
+        rgba(212, 175, 55, 0.08) 40%,
+        rgba(212, 175, 55, 0.12) 45%,
+        rgba(212, 175, 55, 0.08) 50%,
+        rgba(212, 175, 55, 0.03) 55%,
+        transparent 60%,
+        transparent 100%
+    );
+    animation: headerFlow 20s linear infinite;
+    z-index: 0;
+}
+
+/* Subtle particle effect overlay */
+header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 40% 60%, rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 60% 40%, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px, 30px 30px, 40px 40px, 35px 35px;
+    animation: particleFloat 30s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes headerFlow {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(0%);
+    }
+}
+
+@keyframes particleFloat {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.6;
+    }
+    25% {
+        transform: translate(10px, -5px) rotate(90deg);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(-5px, 10px) rotate(180deg);
+        opacity: 0.4;
+    }
+    75% {
+        transform: translate(-10px, -10px) rotate(270deg);
+        opacity: 0.7;
+    }
+}
+
+/* Interactive hover effect */
+header:hover::before {
+    animation-duration: 8s;
+}
+
+header:hover::after {
+    animation-duration: 15s;
 }
 
 .header-content {
@@ -106,6 +187,12 @@ header {
     color: var(--text-primary);
     letter-spacing: 1px;
     line-height: 1.2;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    transition: text-shadow var(--transition-medium);
+}
+
+.book-title:hover {
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
 }
 
 .subtitle {
