@@ -2,20 +2,18 @@
    CSS CUSTOM PROPERTIES (VARIABLES)
    ================================ */
 :root {
-    /* Colors inspired by the book cover */
+    /* Clean academic color palette */
     --primary-bg: #000000;
-    --secondary-bg: #0a0a0a;
-    --accent-gold: #ffb366;
-    --accent-orange: #ff8833;
-    --accent-red: #cc3366;
-    --accent-warm: #ff9944;
+    --secondary-bg: #111111;
+    --panel-bg: #1a1a1a;
+    --accent-gold: #d4af37;
+    --accent-red: #c53030;
     --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-muted: #888888;
-    --text-accent: #ffb366;
-    --glass-bg: rgba(0, 0, 0, 0.7);
-    --glass-border: rgba(255, 179, 102, 0.2);
-    --shadow-warm: 0 0 20px rgba(255, 179, 102, 0.15);
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-subtle: #333333;
+    --border-accent: #d4af37;
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.3);
     
     /* Typography */
     --font-primary: 'Inter', sans-serif;
@@ -74,68 +72,17 @@ body {
 }
 
 .fractal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background: 
-        radial-gradient(circle at 20% 80%, rgba(255, 179, 102, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 136, 51, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(204, 51, 102, 0.03) 0%, transparent 50%);
-    pointer-events: none;
-}
-
-/* Subtle breathing animation for the fractal overlay */
-.fractal-overlay::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(ellipse at center, transparent 20%, rgba(255, 179, 102, 0.02) 80%);
-    animation: breathe 8s ease-in-out infinite;
-}
-
-@keyframes breathe {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); }
+    display: none; /* Remove fractal overlay for cleaner look */
 }
 
 /* ================================
    HEADER STYLES
    ================================ */
 header {
-    position: relative;
     padding: var(--spacing-xl) var(--spacing-lg);
     text-align: center;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--glass-border);
-    overflow: hidden;
-}
-
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 179, 102, 0.1), 
-        transparent);
-    animation: subtleScan 6s ease-in-out infinite;
-}
-
-@keyframes subtleScan {
-    0% { left: -100%; }
-    50% { left: 100%; }
-    100% { left: 100%; }
+    background: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .header-content {
@@ -144,48 +91,37 @@ header::before {
 }
 
 .author-name {
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 500;
     color: var(--accent-red);
     margin-bottom: var(--spacing-xs);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
 .book-title {
-    font-size: 2.8rem;
-    font-weight: 400;
+    font-size: 2.5rem;
+    font-weight: 300;
     margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
-    letter-spacing: 2px;
-    line-height: 1.1;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+    line-height: 1.2;
 }
 
 .subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary);
+    font-size: 0.95rem;
+    color: var(--text-muted);
     margin-bottom: var(--spacing-md);
     font-weight: 300;
-    letter-spacing: 0.5px;
     font-style: italic;
 }
 
 .header-divider {
     height: 1px;
-    width: 120px;
+    width: 80px;
     margin: 0 auto;
-    background: linear-gradient(90deg, 
-        transparent, 
-        var(--accent-gold), 
-        transparent);
-    border-radius: 1px;
-    animation: gentlePulse 3s ease-in-out infinite;
-}
-
-@keyframes gentlePulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; }
+    background: var(--accent-gold);
+    opacity: 0.6;
 }
 
 /* ================================
@@ -205,41 +141,22 @@ header::before {
    GLASS PANEL COMPONENTS
    ================================ */
 .glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
     padding: 0;
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-warm);
-    transition: all var(--transition-medium);
-}
-
-.glass-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent, 
-        var(--accent-gold), 
-        transparent);
-    opacity: 0.4;
+    box-shadow: var(--shadow-subtle);
+    transition: border-color var(--transition-fast);
 }
 
 .glass-panel:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-warm);
-    border-color: rgba(255, 179, 102, 0.3);
+    border-color: var(--border-accent);
 }
 
 .panel-header {
     padding: var(--spacing-md);
-    border-bottom: 1px solid var(--glass-border);
-    background: rgba(255, 179, 102, 0.03);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--secondary-bg);
 }
 
 .panel-header h2 {
@@ -274,13 +191,12 @@ header::before {
 }
 
 .content-area::-webkit-scrollbar-thumb {
-    background: var(--accent-gold);
+    background: var(--border-subtle);
     border-radius: 3px;
-    opacity: 0.7;
 }
 
 .content-area::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-orange);
+    background: var(--accent-gold);
 }
 
 /* ================================
@@ -305,50 +221,25 @@ header::before {
     padding: var(--spacing-sm);
     text-decoration: none;
     color: var(--text-secondary);
-    border-radius: 8px;
+    border-radius: 4px;
     transition: all var(--transition-fast);
     font-size: 0.9rem;
     line-height: 1.4;
     font-weight: 400;
-    border: 1px solid transparent;
-    position: relative;
-    overflow: hidden;
-}
-
-.chapter-link::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 179, 102, 0.1), 
-        transparent);
-    transition: left var(--transition-medium);
+    border-left: 3px solid transparent;
 }
 
 .chapter-link:hover {
     color: var(--text-primary);
-    background: rgba(255, 179, 102, 0.08);
-    border-color: var(--accent-gold);
-    transform: translateX(4px);
-    box-shadow: 0 4px 15px rgba(255, 179, 102, 0.2);
-}
-
-.chapter-link:hover::before {
-    left: 100%;
+    background: var(--secondary-bg);
+    border-left-color: var(--accent-gold);
 }
 
 .chapter-link.active {
-    background: linear-gradient(135deg, 
-        var(--accent-gold), 
-        var(--accent-orange));
-    color: var(--primary-bg);
+    background: var(--secondary-bg);
+    color: var(--text-primary);
+    border-left-color: var(--accent-gold);
     font-weight: 500;
-    box-shadow: 0 6px 20px rgba(255, 179, 102, 0.3);
-    border-color: var(--accent-gold);
 }
 
 /* ================================
@@ -374,31 +265,19 @@ header::before {
 }
 
 .notes-column h2 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 500;
     margin: var(--spacing-lg) 0 var(--spacing-md) 0;
     color: var(--accent-gold);
-    position: relative;
-    padding-left: var(--spacing-md);
-}
-
-.notes-column h2::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 100%;
-    background: linear-gradient(180deg, var(--accent-gold), var(--accent-orange));
-    border-radius: 2px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: var(--spacing-xs);
 }
 
 .notes-column h3 {
     font-size: 1.2rem;
     font-weight: 500;
     margin: var(--spacing-md) 0 var(--spacing-sm) 0;
-    color: var(--accent-warm);
+    color: var(--text-primary);
 }
 
 .notes-column p {
@@ -424,13 +303,13 @@ header::before {
 }
 
 .notes-column code {
-    background: rgba(255, 179, 102, 0.1);
+    background: var(--secondary-bg);
     color: var(--accent-gold);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: var(--font-mono);
     font-size: 0.9em;
-    border: 1px solid rgba(255, 179, 102, 0.2);
+    border: 1px solid var(--border-subtle);
 }
 
 /* ================================
@@ -438,46 +317,24 @@ header::before {
    ================================ */
 .annotation-link {
     color: var(--accent-gold);
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-color: transparent;
     cursor: pointer;
     transition: all var(--transition-fast);
     font-weight: 500;
-    display: inline;
-    position: relative;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(255, 179, 102, 0.1);
-    border: 1px solid transparent;
-}
-
-.annotation-link::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--accent-gold);
-    transition: width var(--transition-fast);
+    padding: 1px 2px;
+    border-radius: 2px;
 }
 
 .annotation-link:hover {
-    color: var(--primary-bg);
-    background: var(--accent-gold);
-    border-color: var(--accent-gold);
-    box-shadow: 0 4px 15px rgba(255, 179, 102, 0.4);
-    transform: translateY(-1px);
-}
-
-.annotation-link:hover::before {
-    width: 100%;
+    text-decoration-color: var(--accent-gold);
+    background: var(--secondary-bg);
 }
 
 .annotation-link.active {
-    background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+    background: var(--accent-gold);
     color: var(--primary-bg);
-    border-color: var(--accent-orange);
-    box-shadow: 0 6px 20px rgba(255, 136, 51, 0.4);
+    text-decoration: none;
 }
 
 /* ================================
@@ -533,12 +390,11 @@ header::before {
 .loading {
     text-align: center;
     padding: var(--spacing-xl);
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-style: italic;
-    background: rgba(255, 179, 102, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 179, 102, 0.1);
-    animation: gentlePulse 2s ease-in-out infinite;
+    background: var(--secondary-bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
 }
 
 .error {
@@ -557,13 +413,13 @@ header::before {
 }
 
 .error code {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--secondary-bg);
     color: var(--accent-gold);
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: var(--font-mono);
     font-size: 0.9rem;
-    border: 1px solid rgba(255, 179, 102, 0.2);
+    border: 1px solid var(--border-subtle);
 }
 
 /* ================================
@@ -706,8 +562,8 @@ header::before {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.glow {
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+.highlight {
+    border-color: var(--accent-gold);
 }
 
 /* ================================

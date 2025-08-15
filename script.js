@@ -317,11 +317,11 @@ function initCellularAutomataBackground() {
                     const age = currentRow - row;
                     const ageFactor = Math.max(0.1, 1 - age / (rows * 0.3));
                     
-                    // Golden color gradient inspired by book cover
-                    const alpha = intensity * ageFactor * 0.6;
-                    const red = Math.floor(255 * intensity * ageFactor);
-                    const green = Math.floor(179 * intensity * ageFactor);
-                    const blue = Math.floor(102 * intensity * ageFactor * 0.3);
+                    // Very subtle golden pattern
+                    const alpha = intensity * ageFactor * 0.08;
+                    const red = Math.floor(212 * intensity * ageFactor);
+                    const green = Math.floor(175 * intensity * ageFactor);
+                    const blue = Math.floor(55 * intensity * ageFactor);
                     
                     ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
                     ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
@@ -351,6 +351,6 @@ function initCellularAutomataBackground() {
     // Initialize
     initAnimation();
     
-    // Animate slowly for elegant effect
-    setInterval(drawCellularAutomata, 100);
+    // Animate very slowly for subtle effect
+    setInterval(drawCellularAutomata, 200);
 }
