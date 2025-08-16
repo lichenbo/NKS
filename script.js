@@ -206,7 +206,7 @@ async function showAnnotation(key) {
         if (typeof Typed !== 'undefined') {
             currentTyped = new Typed('#typewriter-text', {
                 strings: [annotation.content], // Use HTML content directly
-                typeSpeed: 1,
+                typeSpeed: 10, // Much faster typing (was 1ms, now 10ms per character)
                 backSpeed: 0,
                 fadeOut: false,
                 showCursor: true,
