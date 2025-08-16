@@ -557,6 +557,25 @@ header {
     font-weight: 600;
 }
 
+.annotation-text a {
+    color: var(--accent-gold);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: all var(--transition-fast);
+    font-weight: 500;
+}
+
+.annotation-text a:hover {
+    text-decoration-color: var(--accent-gold);
+    color: var(--text-primary);
+}
+
+/* Initially disable pointer events during typing animation */
+#typewriter-text a {
+    pointer-events: none;
+    cursor: default;
+}
+
 .placeholder {
     color: var(--text-secondary);
     font-style: italic;

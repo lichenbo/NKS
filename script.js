@@ -151,7 +151,12 @@ async function loadAnnotation(key) {
         }
 
         const markdownText = await response.text();
-        const htmlContent = marked.parse(markdownText);
+        let htmlContent = marked.parse(markdownText);
+        
+        // Process external links to open in new tab
+        htmlContent = htmlContent.replace(/<a href="https?:\/\/[^"]*"/g, function(match) {
+            return match + ' target="_blank" rel="noopener noreferrer"';
+        });
 
         // Extract title from the first heading
         const titleMatch = markdownText.match(/^#\s+(.+)$/m);
@@ -209,12 +214,14 @@ async function showAnnotation(key) {
                 autoInsertCss: true,
                 contentType: 'html', // Allow HTML content
                 onComplete: function () {
-                    // Optional: do something when typing is complete
+                    // Make links clickable after typing is complete
+                    enableAnnotationLinks();
                 }
             });
         } else {
             // Fallback: display content immediately if Typed.js is not available
             document.getElementById('typewriter-text').innerHTML = annotation.content;
+            enableAnnotationLinks();
         }
     } else {
         annotationContent.innerHTML = `
@@ -224,6 +231,14 @@ async function showAnnotation(key) {
     }
 }
 
+function enableAnnotationLinks() {
+    // Enable all links within the annotation text
+    const annotationLinks = document.querySelectorAll('#typewriter-text a');
+    annotationLinks.forEach(link => {
+        link.style.pointerEvents = 'auto';
+        link.style.cursor = 'pointer';
+    });
+}
 
 function clearAnnotationContent() {
     // Destroy any existing Typed instance
