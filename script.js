@@ -7,6 +7,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load first chapter by default
     loadChapter('chapter1');
+    
+    // Handle floating annotation responsive behavior
+    window.addEventListener('resize', debounce(() => {
+        const floatingAnnotation = document.getElementById('floating-annotation');
+        if (floatingAnnotation && !floatingAnnotation.classList.contains('hidden')) {
+            // Check if we should switch between mobile and desktop annotation
+            const shouldFloat = shouldUseFloatingAnnotations();
+            
+            if (!shouldFloat) {
+                // Switch to desktop annotation
+                floatingAnnotation.classList.add('hidden');
+                
+                // Get current annotation key from active link
+                const activeLink = document.querySelector('.annotation-link.active');
+                if (activeLink) {
+                    const annotationKey = activeLink.getAttribute('data-annotation');
+                    showDesktopAnnotation(annotationKey);
+                }
+            } else {
+                // Keep floating but reposition if needed
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                // Ensure annotation stays within viewport
+                let left = parseInt(floatingAnnotation.style.left) || 20;
+                let top = parseInt(floatingAnnotation.style.top) || 20;
+                
+                if (left + floatingAnnotation.offsetWidth > windowWidth) {
+                    left = windowWidth - floatingAnnotation.offsetWidth - 20;
+                }
+                if (top + floatingAnnotation.offsetHeight > windowHeight) {
+                    top = windowHeight - floatingAnnotation.offsetHeight - 20;
+                }
+                if (left < 20) left = 20;
+                if (top < 20) top = 20;
+                
+                floatingAnnotation.style.left = `${left}px`;
+                floatingAnnotation.style.top = `${top}px`;
+            }
+        }
+    }, 250));
 });
 
 // Cache for loaded annotations
@@ -116,9 +157,98 @@ function initAnnotationSystem() {
 
             // Get annotation data
             const annotationKey = e.target.getAttribute('data-annotation');
-            showAnnotation(annotationKey);
+            showAnnotation(annotationKey, e.target);
         }
     });
+    
+    // Initialize floating annotation controls
+    initFloatingAnnotationControls();
+}
+
+function initFloatingAnnotationControls() {
+    const floatingAnnotation = document.getElementById('floating-annotation');
+    const minimizeBtn = document.getElementById('minimize-annotation');
+    const closeBtn = document.getElementById('close-annotation');
+    
+    // Minimize functionality
+    minimizeBtn.addEventListener('click', function() {
+        floatingAnnotation.classList.toggle('minimized');
+    });
+    
+    // Close functionality
+    closeBtn.addEventListener('click', function() {
+        floatingAnnotation.classList.add('hidden');
+        
+        // Destroy any existing Typed instance
+        if (currentTyped) {
+            currentTyped.destroy();
+            currentTyped = null;
+        }
+        
+        // Remove active class from all annotation links
+        document.querySelectorAll('.annotation-link').forEach(link => {
+            link.classList.remove('active');
+        });
+    });
+    
+    // Make floating annotation draggable (optional enhancement)
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    
+    const header = document.querySelector('.floating-annotation-header');
+    
+    // Mouse events for desktop dragging
+    header.addEventListener('mousedown', startDrag);
+    
+    // Touch events for mobile dragging
+    header.addEventListener('touchstart', startDrag);
+    
+    function startDrag(e) {
+        isDragging = true;
+        const rect = floatingAnnotation.getBoundingClientRect();
+        const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        
+        dragOffsetX = clientX - rect.left;
+        dragOffsetY = clientY - rect.top;
+        
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        
+        e.preventDefault();
+    }
+    
+    function onMove(e) {
+        if (!isDragging) return;
+        
+        const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        
+        const left = clientX - dragOffsetX;
+        const top = clientY - dragOffsetY;
+        
+        // Keep within viewport bounds
+        const maxLeft = window.innerWidth - floatingAnnotation.offsetWidth;
+        const maxTop = window.innerHeight - floatingAnnotation.offsetHeight;
+        
+        floatingAnnotation.style.left = `${Math.max(0, Math.min(left, maxLeft))}px`;
+        floatingAnnotation.style.top = `${Math.max(0, Math.min(top, maxTop))}px`;
+        
+        if (e.type === 'touchmove') {
+            e.preventDefault();
+        }
+    }
+    
+    function onEnd() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+    }
 }
 
 // Global variable to track active Typed instance
@@ -142,6 +272,11 @@ function debounce(func, wait) {
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+}
+
+// Check if device should use floating annotations (mobile/small tablets)
+function shouldUseFloatingAnnotations() {
+    return window.innerWidth <= 768 || isMobile();
 }
 
 // Prevent animation restarts during mobile scrolling
@@ -223,7 +358,16 @@ async function loadAnnotation(key) {
     }
 }
 
-async function showAnnotation(key) {
+async function showAnnotation(key, clickedElement = null) {
+    // Check if we should use floating annotation
+    if (shouldUseFloatingAnnotations()) {
+        await showFloatingAnnotation(key, clickedElement);
+    } else {
+        await showDesktopAnnotation(key);
+    }
+}
+
+async function showDesktopAnnotation(key) {
     const annotationContent = document.getElementById('annotation-content');
 
     // Destroy any existing Typed instance
@@ -281,6 +425,83 @@ async function showAnnotation(key) {
     }
 }
 
+async function showFloatingAnnotation(key, clickedElement) {
+    const floatingAnnotation = document.getElementById('floating-annotation');
+    const floatingContent = document.getElementById('floating-annotation-content');
+    const floatingTitle = document.querySelector('.floating-annotation-title');
+
+    // Destroy any existing Typed instance
+    if (currentTyped) {
+        currentTyped.destroy();
+        currentTyped = null;
+    }
+
+    // Show loading state
+    floatingContent.innerHTML = `
+        <div class="loading">Loading annotation...</div>
+    `;
+    floatingTitle.textContent = 'Loading...';
+
+    const annotation = await loadAnnotation(key);
+
+    if (annotation) {
+        // Set title
+        floatingTitle.textContent = annotation.title;
+
+        // Create the structure first
+        floatingContent.innerHTML = `
+            <div class="annotation-text">
+                <span id="floating-typewriter-text"></span>
+            </div>
+        `;
+
+        // Position the floating window near the clicked element
+        if (clickedElement) {
+            positionFloatingAnnotation(floatingAnnotation, clickedElement);
+        }
+
+        // Show the floating annotation
+        floatingAnnotation.classList.remove('hidden', 'minimized');
+
+        // Initialize Typed.js with error handling
+        if (typeof Typed !== 'undefined') {
+            // Start checking for links during typing
+            startLinkMonitoring('#floating-typewriter-text');
+            
+            currentTyped = new Typed('#floating-typewriter-text', {
+                strings: [annotation.content], // Use HTML content directly
+                typeSpeed: 10, // Much faster typing
+                backSpeed: 0,
+                fadeOut: false,
+                showCursor: true,
+                cursorChar: '|',
+                autoInsertCss: true,
+                contentType: 'html', // Allow HTML content
+                onComplete: function () {
+                    // Stop monitoring and make sure all links are clickable
+                    stopLinkMonitoring();
+                    enableFloatingAnnotationLinks();
+                }
+            });
+        } else {
+            // Fallback: display content immediately if Typed.js is not available
+            document.getElementById('floating-typewriter-text').innerHTML = annotation.content;
+            enableFloatingAnnotationLinks();
+        }
+    } else {
+        floatingTitle.textContent = 'Annotation Not Found';
+        floatingContent.innerHTML = `
+            <p class="placeholder">The annotation "${key}" could not be loaded.</p>
+        `;
+        
+        // Position and show even for errors
+        if (clickedElement) {
+            positionFloatingAnnotation(floatingAnnotation, clickedElement);
+        }
+        floatingAnnotation.classList.remove('hidden', 'minimized');
+    }
+}
+
 function enableAnnotationLinks() {
     // Enable all links within the annotation text
     const annotationLinks = document.querySelectorAll('#typewriter-text a');
@@ -290,7 +511,48 @@ function enableAnnotationLinks() {
     });
 }
 
-function startLinkMonitoring() {
+function enableFloatingAnnotationLinks() {
+    // Enable all links within the floating annotation text
+    const annotationLinks = document.querySelectorAll('#floating-typewriter-text a');
+    annotationLinks.forEach(link => {
+        link.style.pointerEvents = 'auto';
+        link.style.cursor = 'pointer';
+    });
+}
+
+function positionFloatingAnnotation(floatingAnnotation, clickedElement) {
+    const rect = clickedElement.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // Calculate initial position below the clicked element
+    let left = rect.left;
+    let top = rect.bottom + 10;
+    
+    // Ensure the annotation doesn't go off-screen horizontally
+    const annotationWidth = Math.min(300, windowWidth * 0.85);
+    if (left + annotationWidth > windowWidth - 20) {
+        left = windowWidth - annotationWidth - 20;
+    }
+    if (left < 20) {
+        left = 20;
+    }
+    
+    // Ensure the annotation doesn't go off-screen vertically
+    const annotationHeight = Math.min(400, windowHeight * 0.6);
+    if (top + annotationHeight > windowHeight - 20) {
+        // Position above the clicked element instead
+        top = rect.top - annotationHeight - 10;
+        if (top < 20) {
+            top = 20; // Fallback to top of screen
+        }
+    }
+    
+    floatingAnnotation.style.left = `${left}px`;
+    floatingAnnotation.style.top = `${top}px`;
+}
+
+function startLinkMonitoring(selector = '#typewriter-text') {
     // Clear any existing interval
     if (linkCheckInterval) {
         clearInterval(linkCheckInterval);
@@ -298,7 +560,11 @@ function startLinkMonitoring() {
     
     // Check for new links every 50ms during typing
     linkCheckInterval = setInterval(() => {
-        enableAnnotationLinks();
+        if (selector === '#floating-typewriter-text') {
+            enableFloatingAnnotationLinks();
+        } else {
+            enableAnnotationLinks();
+        }
     }, 50);
 }
 
@@ -319,6 +585,7 @@ function clearAnnotationContent() {
         currentTyped = null;
     }
 
+    // Clear desktop annotation content
     const annotationContent = document.getElementById('annotation-content');
     const annotationsTitle = translations[currentLanguage]['annotations'] || 'Annotations';
     const placeholderText = translations[currentLanguage]['annotation-placeholder'] || 'Click on any highlighted link in the notes to view detailed annotations and additional context.';
@@ -327,6 +594,12 @@ function clearAnnotationContent() {
         <h3>${annotationsTitle}</h3>
         <p class="placeholder">${placeholderText}</p>
     `;
+
+    // Hide floating annotation if it exists
+    const floatingAnnotation = document.getElementById('floating-annotation');
+    if (floatingAnnotation) {
+        floatingAnnotation.classList.add('hidden');
+    }
 
     // Remove active class from all annotation links
     document.querySelectorAll('.annotation-link').forEach(link => {
