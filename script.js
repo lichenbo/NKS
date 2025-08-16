@@ -401,7 +401,7 @@ function initHeaderCellularAutomata() {
     const headerRuleKeys = Object.keys(headerRules);
     let headerRuleIndex = Math.floor(Math.random() * headerRuleKeys.length); // Start with random rule
     let headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
-    let headerRuleName = headerRuleKeys[headerRuleIndex];
+    headerRuleName = headerRuleKeys[headerRuleIndex]; // Update global variable
     
     // Apply current cellular automata rule
     function applyHeaderRule(left, center, right) {
@@ -522,8 +522,7 @@ function updateHeaderRuleIndicator() {
     if (headerRuleText) {
         const headerText = translations[currentLanguage]['rule-header'] || 'Header';
         const ruleText = translations[currentLanguage]['rule'] || 'Rule';
-        const ruleName = typeof headerRuleName !== 'undefined' ? headerRuleName : '110';
-        headerRuleText.textContent = `${headerText}: ${ruleText} ${ruleName}`;
+        headerRuleText.textContent = `${headerText}: ${ruleText} ${headerRuleName}`;
     }
 }
 
@@ -531,6 +530,9 @@ function updateRuleIndicators() {
     updateBackgroundRuleIndicator();
     updateHeaderRuleIndicator();
 }
+
+// Global variables for cellular automata
+let headerRuleName = '110'; // Default value
 
 // Language System
 let currentLanguage = localStorage.getItem('nks-language') || 'en';
