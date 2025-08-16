@@ -123,6 +123,7 @@ function initAnnotationSystem() {
 
 // Global variable to track active Typed instance
 let currentTyped = null;
+let linkCheckInterval = null;
 
 async function loadAnnotation(key) {
     // Create a cache key that includes language
@@ -204,6 +205,9 @@ async function showAnnotation(key) {
 
         // Initialize Typed.js with error handling
         if (typeof Typed !== 'undefined') {
+            // Start checking for links during typing
+            startLinkMonitoring();
+            
             currentTyped = new Typed('#typewriter-text', {
                 strings: [annotation.content], // Use HTML content directly
                 typeSpeed: 10, // Much faster typing (was 1ms, now 10ms per character)
@@ -214,7 +218,8 @@ async function showAnnotation(key) {
                 autoInsertCss: true,
                 contentType: 'html', // Allow HTML content
                 onComplete: function () {
-                    // Make links clickable after typing is complete
+                    // Stop monitoring and make sure all links are clickable
+                    stopLinkMonitoring();
                     enableAnnotationLinks();
                 }
             });
@@ -240,7 +245,29 @@ function enableAnnotationLinks() {
     });
 }
 
+function startLinkMonitoring() {
+    // Clear any existing interval
+    if (linkCheckInterval) {
+        clearInterval(linkCheckInterval);
+    }
+    
+    // Check for new links every 50ms during typing
+    linkCheckInterval = setInterval(() => {
+        enableAnnotationLinks();
+    }, 50);
+}
+
+function stopLinkMonitoring() {
+    if (linkCheckInterval) {
+        clearInterval(linkCheckInterval);
+        linkCheckInterval = null;
+    }
+}
+
 function clearAnnotationContent() {
+    // Stop link monitoring
+    stopLinkMonitoring();
+    
     // Destroy any existing Typed instance
     if (currentTyped && typeof currentTyped.destroy === 'function') {
         currentTyped.destroy();
