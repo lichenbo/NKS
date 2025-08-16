@@ -8,12 +8,12 @@ In the early 1980s, Wolfram conducted what he calls "the crucial experiment" - a
 
 ### Rule 30: The Breakthrough
 
-The most significant discovery was **Rule 30**, a cellular automaton that defied all expectations. Despite having an extremely simple rule - each cell's next state depends only on itself and its two immediate neighbors according to a basic lookup table - Rule 30 produces patterns that appear completely random and unpredictable.
+The most significant discovery was **[Rule 30](annotation:rule-30)**, a cellular automaton that defied all expectations. Despite having an extremely simple rule - each cell's next state depends only on itself and its two immediate neighbors according to a basic lookup table - Rule 30 produces patterns that appear completely random and unpredictable.
 
 Key characteristics of Rule 30:
 - **Simple local rule**: Only three cells determine the next state
 - **Complex global behavior**: Generates seemingly random patterns  
-- **Irreducible complexity**: Cannot be simplified or predicted without running the full computation
+- **[Irreducible complexity](annotation:computational-irreducibility)**: Cannot be simplified or predicted without running the full computation
 - **Sensitivity to initial conditions**: Tiny changes lead to dramatically different outcomes
 
 ## The Unexpected Nature of Complexity
@@ -29,17 +29,17 @@ Rule 30 demolished these assumptions by demonstrating that [emergence of complex
 
 ### The Randomness Paradox
 
-One of the most startling aspects of Rule 30 is its ability to generate what appears to be true randomness from completely deterministic rules. This discovery has profound implications:
+One of the most startling aspects of Rule 30 is its ability to generate what appears to be true randomness from completely deterministic rules. This [randomness paradox](annotation:randomness-paradox) has profound implications:
 
-- **Deterministic chaos**: Perfect predictability at the rule level, complete unpredictability at the pattern level
-- **Computational irreducibility**: The only way to determine the pattern after many steps is to run the computation
+- **[Deterministic chaos](annotation:deterministic-chaos)**: Perfect predictability at the rule level, complete unpredictability at the pattern level
+- **[Computational irreducibility](annotation:computational-irreducibility)**: The only way to determine the pattern after many steps is to run the computation
 - **Source of randomness in nature**: Suggests that apparent randomness in natural phenomena may arise from simple underlying deterministic processes
 
 ## Methodology: The Systematic Approach
 
 ### Exhaustive Exploration
 
-Wolfram's approach was methodical and comprehensive:
+Wolfram's [systematic methodology](annotation:scientific-methodology) was methodical and comprehensive:
 
 1. **Enumeration**: Cataloged all possible elementary cellular automata rules (256 total)
 2. **Classification**: Grouped rules by their behavioral patterns
@@ -48,7 +48,7 @@ Wolfram's approach was methodical and comprehensive:
 
 ### The Four Classes of Behavior
 
-Through this systematic exploration, Wolfram identified four fundamental classes of cellular automata behavior:
+Through this systematic exploration, Wolfram identified [four fundamental classes](annotation:cellular-automata-classification) of cellular automata behavior:
 
 1. **Class I**: Evolution leads to uniform state
 2. **Class II**: Evolution leads to simple periodic structures  
