@@ -91,8 +91,8 @@ Since this is a static HTML/CSS/JS project with no build system:
 - Rule indicators in header show current background and header rules with language support
 
 ### Annotation System
-- **Desktop & Tablet Mode**: Annotations display in right sidebar with typewriter effect
-- **Mobile Phone Mode (≤480px)**: Inline annotations insert directly into document flow
+- **Desktop Mode (≥769px)**: Annotations display in right sidebar with typewriter effect
+- **Tablet & Mobile Mode (≤768px)**: Inline annotations insert directly into document flow
 - **Inline Annotation Behavior**:
   - Insert immediately after paragraph/element containing clicked link
   - Push down subsequent content naturally (occupy document space)
@@ -113,8 +113,8 @@ Since this is a static HTML/CSS/JS project with no build system:
 ### Responsive Design
 - Mobile-first approach with breakpoints at 480px, 768px, 900px, 1024px, 1200px, 1400px
 - Three-column layout collapses to stacked layout on tablets and below (≤768px)
-- Annotations column is hidden only on mobile phones (≤480px) since inline annotations are used
-- Tablets (481px-768px) keep the annotation sidebar like desktop for better UX
+- Annotations column is hidden in stacked layout (≤768px) to prevent duplication
+- JavaScript handles annotation display: sidebar (≥769px) or inline (≤768px)
 - Outline panel becomes non-sticky on tablets/mobile with reduced max-height
 - Chapter navigation becomes grid layout on mobile for better touch interaction
 

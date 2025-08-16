@@ -146,9 +146,9 @@ function isMobile() {
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
 }
 
-// Check if device should use inline annotations (mobile phones only)
+// Check if device should use inline annotations (stacked layout)
 function shouldUseInlineAnnotations() {
-    return window.innerWidth <= 480 || isMobile();
+    return window.innerWidth <= 768;
 }
 
 // Prevent animation restarts during mobile scrolling

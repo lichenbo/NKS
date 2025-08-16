@@ -766,12 +766,15 @@ header {
         padding: var(--spacing-sm);
     }
 
-    .outline-column,
-    .annotations-column {
+    .outline-column {
         position: static;
         max-height: 300px;
         margin-bottom: var(--spacing-md);
         opacity: 1;
+    }
+
+    .annotations-column {
+        display: none;
     }
 
     .notes-column {
@@ -818,10 +821,6 @@ header {
     .three-column-layout {
         padding: var(--spacing-xs);
         gap: var(--spacing-xs);
-    }
-
-    .annotations-column {
-        display: none;
     }
 
     .chapter-list {
@@ -999,7 +998,7 @@ header {
     border: 1px solid var(--border-subtle);
     border-radius: 50%;
     cursor: pointer;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -1032,15 +1031,10 @@ header {
     color: var(--primary-bg);
 }
 
-/* Show scroll-to-top button only on mobile phones */
-@media (min-width: 481px) {
+/* Mobile and tablet specific styles for scroll-to-top */
+@media (max-width: 768px) {
     .scroll-to-top {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .scroll-to-top {
+        display: flex;
         bottom: 12px;
         right: 12px;
         width: 40px;
