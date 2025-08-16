@@ -89,11 +89,19 @@ Since this is a static HTML/CSS/JS project with no build system:
 - Both use golden color scheme with gradient and age-based fading effects
 - Rule indicators in header show current background and header rules with language support
 
-### Annotation Processing
-- Annotation links are processed BEFORE markdown parsing to maintain proper HTML structure
-- Uses pattern `[text](annotation:key)` converted to `<span class="annotation-link" data-annotation="key">text</span>`
-- Typewriter effect supports HTML content with proper cursor styling
-- Active annotation links are highlighted with golden background
+### Annotation System
+- **Desktop Mode**: Annotations display in right sidebar with typewriter effect
+- **Mobile Mode (≤768px)**: Inline annotations insert directly into document flow
+- **Inline Annotation Behavior**:
+  - Insert immediately after paragraph/element containing clicked link
+  - Push down subsequent content naturally (occupy document space)
+  - Stay fixed with content during scrolling (not floating overlays)
+  - Single instance: remove existing annotations before creating new ones
+  - Expand/collapse toggle button (−/+) for content control
+  - Smooth auto-scroll to bring annotation into view
+- **Processing**: Links use pattern `[text](annotation:key)` converted to `<span class="annotation-link" data-annotation="key">text</span>`
+- **Content**: Typewriter effect supports HTML content with proper cursor styling
+- **Visual**: Active annotation links highlighted with golden background
 
 ### Language Implementation
 - Fallback system: Chinese content falls back to English if translation doesn't exist

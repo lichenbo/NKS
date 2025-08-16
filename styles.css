@@ -853,59 +853,56 @@ header {
 }
 
 /* ================================
-   FLOATING ANNOTATION WINDOW
+   INLINE ANNOTATION BOXES
    ================================ */
-.floating-annotation {
-    position: fixed;
+.inline-annotation {
+    margin: var(--spacing-md) 0;
     background: var(--panel-bg);
     border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
-    max-width: 90vw;
-    max-height: 70vh;
-    min-width: 300px;
+    border-radius: 8px;
     overflow: hidden;
     transition: all var(--transition-medium);
-    transform-origin: top left;
+    animation: slideDown 0.3s ease-out;
 }
 
-.floating-annotation.minimized {
-    transform: scale(0.8);
-    opacity: 0.7;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        margin: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+        margin: var(--spacing-md) 0;
+    }
 }
 
-.floating-annotation.minimized .floating-annotation-content {
-    display: none;
+.inline-annotation.collapsed {
+    max-height: 0;
+    margin: 0;
+    opacity: 0;
+    overflow: hidden;
 }
 
-.floating-annotation-header {
+.inline-annotation-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-sm);
     background: var(--secondary-bg);
     border-bottom: 1px solid var(--border-subtle);
-    cursor: move;
+    cursor: pointer;
     user-select: none;
 }
 
-.floating-annotation-title {
+.inline-annotation-title {
     font-weight: 600;
     color: var(--accent-gold);
     font-size: 0.9rem;
 }
 
-.floating-annotation-controls {
-    display: flex;
-    gap: var(--spacing-xs);
-    pointer-events: auto;
-    z-index: 10;
-    position: relative;
-}
-
-.control-btn {
+.inline-annotation-toggle {
     background: transparent;
     border: 1px solid var(--border-subtle);
     color: var(--text-secondary);
@@ -919,69 +916,66 @@ header {
     font-size: 14px;
     font-weight: bold;
     transition: all var(--transition-fast);
-    position: relative;
-    z-index: 10;
-    pointer-events: auto;
 }
 
-.control-btn:hover {
+.inline-annotation-toggle:hover {
     background: var(--accent-gold);
     color: var(--primary-bg);
     border-color: var(--accent-gold);
 }
 
-.floating-annotation-content {
+.inline-annotation-content {
     padding: var(--spacing-md);
-    overflow-y: auto;
-    max-height: calc(70vh - 60px);
     color: var(--text-primary);
     line-height: 1.6;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-.floating-annotation-content h3 {
+.inline-annotation-content h3 {
     color: var(--accent-gold);
     margin-bottom: var(--spacing-sm);
     font-size: 1.1rem;
 }
 
-.floating-annotation-content p {
+.inline-annotation-content p {
     margin-bottom: var(--spacing-sm);
 }
 
-.floating-annotation-content ul {
+.inline-annotation-content ul {
     padding-left: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
 }
 
-.floating-annotation-content li {
+.inline-annotation-content li {
     margin-bottom: var(--spacing-xs);
 }
 
-.floating-annotation-content a {
+.inline-annotation-content a {
     color: var(--accent-gold);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color var(--transition-fast);
 }
 
-.floating-annotation-content a:hover {
+.inline-annotation-content a:hover {
     border-bottom-color: var(--accent-gold);
 }
 
 /* Mobile-specific styles */
 @media (max-width: 768px) {
-    .floating-annotation {
-        min-width: 280px;
-        max-width: 85vw;
-        max-height: 60vh;
+    .inline-annotation {
+        margin: var(--spacing-sm) 0;
+        border-radius: 6px;
     }
     
-    .floating-annotation-content {
-        max-height: calc(60vh - 60px);
+    .inline-annotation-content {
+        padding: var(--spacing-sm);
         font-size: 0.9rem;
+        max-height: 300px;
     }
     
-    .control-btn {
+    .inline-annotation-toggle {
         width: 28px;
         height: 28px;
         font-size: 16px;
