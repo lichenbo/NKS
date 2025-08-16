@@ -146,9 +146,9 @@ function isMobile() {
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
 }
 
-// Check if device should use floating annotations (mobile/small tablets)
-function shouldUseFloatingAnnotations() {
-    return window.innerWidth <= 768 || isMobile();
+// Check if device should use inline annotations (mobile phones only)
+function shouldUseInlineAnnotations() {
+    return window.innerWidth <= 480 || isMobile();
 }
 
 // Prevent animation restarts during mobile scrolling
@@ -231,8 +231,8 @@ async function loadAnnotation(key) {
 }
 
 async function showAnnotation(key, clickedElement = null) {
-    // Check if we should use inline annotation for mobile or desktop sidebar
-    if (shouldUseFloatingAnnotations()) {
+    // Check if we should use inline annotation for mobile phones or desktop sidebar
+    if (shouldUseInlineAnnotations()) {
         await showInlineAnnotation(key, clickedElement);
     } else {
         await showDesktopAnnotation(key);

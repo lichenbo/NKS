@@ -80,6 +80,7 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Annotation linking system** connecting main content to detailed explanations with active state
 - **Complete bilingual support** with seamless language switching
 - **Sticky sidebar panels** for outline and annotations with custom scrollbars
+- **Mobile scroll-to-top button** for improved navigation on mobile devices
 
 ## Technical Notes
 
@@ -90,8 +91,8 @@ Since this is a static HTML/CSS/JS project with no build system:
 - Rule indicators in header show current background and header rules with language support
 
 ### Annotation System
-- **Desktop Mode**: Annotations display in right sidebar with typewriter effect
-- **Mobile Mode (≤768px)**: Inline annotations insert directly into document flow
+- **Desktop & Tablet Mode**: Annotations display in right sidebar with typewriter effect
+- **Mobile Phone Mode (≤480px)**: Inline annotations insert directly into document flow
 - **Inline Annotation Behavior**:
   - Insert immediately after paragraph/element containing clicked link
   - Push down subsequent content naturally (occupy document space)
@@ -111,10 +112,19 @@ Since this is a static HTML/CSS/JS project with no build system:
 
 ### Responsive Design
 - Mobile-first approach with breakpoints at 480px, 768px, 900px, 1024px, 1200px, 1400px
-- Three-column layout collapses to stacked layout on mobile (768px and below)
-- Annotations column is hidden on mobile (≤768px) since inline annotations are used instead
-- Outline panel becomes non-sticky on mobile with reduced max-height
+- Three-column layout collapses to stacked layout on tablets and below (≤768px)
+- Annotations column is hidden only on mobile phones (≤480px) since inline annotations are used
+- Tablets (481px-768px) keep the annotation sidebar like desktop for better UX
+- Outline panel becomes non-sticky on tablets/mobile with reduced max-height
 - Chapter navigation becomes grid layout on mobile for better touch interaction
+
+### Mobile Navigation Enhancement
+- **Scroll-to-Top Button**: Fixed circular button in bottom-right corner (mobile phones only ≤480px)
+- **Smart Visibility**: Appears only after scrolling 300px down from top
+- **Responsive Sizing**: 50px (tablet) → 45px (mobile) → 40px (small mobile)
+- **Smooth Behavior**: Throttled scroll detection and smooth scroll animation
+- **Visual Design**: Glass-morphism with golden hover effects matching site theme
+- **Touch-Friendly**: Adequate size for mobile touch targets with hover feedback
 
 ## Dependencies
 
