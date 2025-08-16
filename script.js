@@ -461,7 +461,7 @@ function initHeaderCellularAutomata() {
 }
 
 // Language System
-let currentLanguage = 'en';
+let currentLanguage = 'zh';
 
 const translations = {
     en: {
@@ -512,7 +512,7 @@ function initLanguageSystem() {
     const languageBtn = document.getElementById('language-btn');
     
     // Load saved language preference
-    const savedLanguage = localStorage.getItem('nks-language') || 'en';
+    const savedLanguage = localStorage.getItem('nks-language') || 'zh';
     currentLanguage = savedLanguage;
     updateLanguageButton();
     
