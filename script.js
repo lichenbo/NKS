@@ -347,10 +347,7 @@ function initCellularAutomataBackground() {
     }
 
     // Initialize background rule indicator
-    const bgRuleText = document.getElementById('bg-rule-text');
-    if (bgRuleText) {
-        bgRuleText.textContent = `BG: Rule 30`;
-    }
+    updateBackgroundRuleIndicator();
     
     // Initialize
     initAnimation();
@@ -426,10 +423,7 @@ function initHeaderCellularAutomata() {
         console.log(`Header: Switching to Rule ${headerRuleName}`);
         
         // Update header rule indicator
-        const headerRuleText = document.getElementById('header-rule-text');
-        if (headerRuleText) {
-            headerRuleText.textContent = `Header: Rule ${headerRuleName}`;
-        }
+        updateHeaderRuleIndicator();
         
         // Reset animation for new rule
         initAnimation();
@@ -504,16 +498,37 @@ function initHeaderCellularAutomata() {
     }
     
     // Initialize header rule indicator
-    const headerRuleText = document.getElementById('header-rule-text');
-    if (headerRuleText) {
-        headerRuleText.textContent = `Header: Rule ${headerRuleName}`;
-    }
+    updateHeaderRuleIndicator();
     
     // Initialize
     initAnimation();
     
     // Animate faster for header effect
     setInterval(drawHeaderCellularAutomata, 150);
+}
+
+// Rule indicator update functions
+function updateBackgroundRuleIndicator() {
+    const bgRuleText = document.getElementById('bg-rule-text');
+    if (bgRuleText) {
+        const bgText = translations[currentLanguage]['rule-bg'] || 'BG';
+        const ruleText = translations[currentLanguage]['rule'] || 'Rule';
+        bgRuleText.textContent = `${bgText}: ${ruleText} 30`;
+    }
+}
+
+function updateHeaderRuleIndicator() {
+    const headerRuleText = document.getElementById('header-rule-text');
+    if (headerRuleText) {
+        const headerText = translations[currentLanguage]['rule-header'] || 'Header';
+        const ruleText = translations[currentLanguage]['rule'] || 'Rule';
+        headerRuleText.textContent = `${headerText}: ${ruleText} ${headerRuleName}`;
+    }
+}
+
+function updateRuleIndicators() {
+    updateBackgroundRuleIndicator();
+    updateHeaderRuleIndicator();
 }
 
 // Language System
@@ -540,7 +555,10 @@ const translations = {
         'chapter10': 'Chapter 10: Processes of Perception and Analysis',
         'chapter11': 'Chapter 11: The Notion of Computation',
         'chapter12': 'Chapter 12: The Principle of Computational Equivalence',
-        'loading': 'Loading chapter content...'
+        'loading': 'Loading chapter content...',
+        'rule-bg': 'BG',
+        'rule-header': 'Header',
+        'rule': 'Rule'
     },
     zh: {
         author: '斯蒂芬·沃尔夫拉姆',
@@ -562,7 +580,10 @@ const translations = {
         'chapter10': '第10章：感知和分析过程',
         'chapter11': '第11章：计算的概念',
         'chapter12': '第12章：计算等价性原理',
-        'loading': '正在加载章节内容...'
+        'loading': '正在加载章节内容...',
+        'rule-bg': '背景',
+        'rule-header': '标题',
+        'rule': '规则'
     }
 };
 
@@ -581,6 +602,9 @@ function initLanguageSystem() {
         // Update annotation content to show correct language
         clearAnnotationContent();
         
+        // Update rule indicators to show correct language
+        updateRuleIndicators();
+        
         // Reload current chapter with new language
         const activeChapter = document.querySelector('.chapter-link.active');
         if (activeChapter) {
@@ -591,6 +615,7 @@ function initLanguageSystem() {
     
     // Initialize with current language
     updatePageLanguage();
+    updateRuleIndicators();
 }
 
 function updateLanguageButton() {
