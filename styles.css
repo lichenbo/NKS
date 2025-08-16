@@ -14,18 +14,18 @@
     --border-subtle: #333333;
     --border-accent: #d4af37;
     --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.3);
-    
+
     /* Typography */
     --font-primary: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
-    
+
     /* Spacing */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
-    
+
     /* Transitions */
     --transition-fast: 0.2s ease;
     --transition-medium: 0.4s ease;
@@ -72,7 +72,8 @@ body {
 }
 
 .fractal-overlay {
-    display: none; /* Remove fractal overlay for cleaner look */
+    display: none;
+    /* Remove fractal overlay for cleaner look */
 }
 
 /* ================================
@@ -138,10 +139,26 @@ header {
 
 .header-divider {
     height: 1px;
-    width: 80px;
+    width: 120px;
     margin: 0 auto;
-    background: var(--accent-gold);
-    opacity: 0.6;
+    background: linear-gradient(90deg,
+            transparent,
+            var(--accent-gold),
+            transparent);
+    border-radius: 1px;
+    animation: gentlePulse 3s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
 }
 
 /* ================================
@@ -363,8 +380,10 @@ header {
     line-height: 1.8;
 }
 
-.notes-column ul, .notes-column ol,
-.main-content-area ul, .main-content-area ol {
+.notes-column ul,
+.notes-column ol,
+.main-content-area ul,
+.main-content-area ol {
     margin: var(--spacing-lg) 0;
     padding-left: var(--spacing-xl);
     color: var(--text-secondary);
@@ -478,10 +497,14 @@ header {
 }
 
 @keyframes blink {
-    0%, 45% {
+
+    0%,
+    45% {
         opacity: 1;
     }
-    50%, 100% {
+
+    50%,
+    100% {
         opacity: 0;
     }
 }
@@ -566,7 +589,7 @@ header {
         padding: var(--spacing-md);
         gap: var(--spacing-sm);
     }
-    
+
     .book-title {
         font-size: 2.2rem;
     }
@@ -577,19 +600,19 @@ header {
         grid-template-columns: minmax(180px, 200px) 1fr minmax(180px, 200px);
         gap: var(--spacing-sm);
     }
-    
+
     header {
         padding: var(--spacing-lg);
     }
-    
+
     .book-title {
         font-size: 1.8rem;
     }
-    
+
     .subtitle {
         font-size: 1rem;
     }
-    
+
     .main-content-area {
         font-size: 1rem;
     }
@@ -600,15 +623,15 @@ header {
         grid-template-columns: minmax(160px, 180px) 1fr minmax(160px, 180px);
         gap: var(--spacing-xs);
     }
-    
+
     .panel-header {
         padding: var(--spacing-xs) var(--spacing-sm);
     }
-    
+
     .content-area {
         padding: var(--spacing-sm);
     }
-    
+
     .chapter-link {
         padding: var(--spacing-xs);
         font-size: 0.85rem;
@@ -620,7 +643,7 @@ header {
         display: block;
         padding: var(--spacing-sm);
     }
-    
+
     .outline-column,
     .annotations-column {
         position: static;
@@ -628,34 +651,34 @@ header {
         margin-bottom: var(--spacing-md);
         opacity: 1;
     }
-    
+
     .notes-column {
         min-height: 60vh;
     }
-    
+
     .glass-panel {
         border-radius: 12px;
     }
-    
+
     .chapter-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: var(--spacing-xs);
     }
-    
+
     .chapter-list li {
         margin-bottom: 0;
     }
-    
+
     .chapter-link {
         padding: var(--spacing-xs) var(--spacing-sm);
         font-size: 0.8rem;
     }
-    
+
     .book-title {
         font-size: 1.5rem;
     }
-    
+
     header {
         padding: var(--spacing-md);
     }
@@ -665,16 +688,16 @@ header {
     .book-title {
         font-size: 1.2rem;
     }
-    
+
     .subtitle {
         font-size: 0.9rem;
     }
-    
+
     .three-column-layout {
         padding: var(--spacing-xs);
         gap: var(--spacing-xs);
     }
-    
+
     .chapter-list {
         grid-template-columns: 1fr;
     }
@@ -688,8 +711,15 @@ header {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .highlight {
@@ -700,6 +730,7 @@ header {
    ACCESSIBILITY
    ================================ */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
