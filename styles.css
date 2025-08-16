@@ -161,6 +161,49 @@ header {
     }
 }
 
+/* Language Toggle Button */
+.language-toggle {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: 10;
+}
+
+.language-btn {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-subtle);
+}
+
+.language-btn:hover {
+    background: var(--secondary-bg);
+    border-color: var(--accent-gold);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.language-btn:active {
+    transform: translateY(0);
+}
+
+.lang-text {
+    font-weight: 600;
+    color: var(--accent-gold);
+}
+
 /* ================================
    MAIN LAYOUT - Modern CSS Grid
    ================================ */
@@ -615,6 +658,16 @@ header {
 
     .main-content-area {
         font-size: 1rem;
+    }
+
+    .language-toggle {
+        top: var(--spacing-sm);
+        right: var(--spacing-sm);
+    }
+
+    .language-btn {
+        padding: var(--spacing-xs);
+        font-size: 0.8rem;
     }
 }
 

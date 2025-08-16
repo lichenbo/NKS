@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initChapterNavigation();
     initAnnotationSystem();
     initAnnotationContent();
+    initLanguageSystem();
 
     // Load first chapter by default
     loadChapter('chapter1');
@@ -47,10 +48,14 @@ async function loadChapter(chapterId) {
 
     try {
         // Show loading state
-        notesContent.innerHTML = '<div class="loading">Loading chapter content...</div>';
+        const loadingText = translations[currentLanguage]['loading'] || 'Loading chapter content...';
+        notesContent.innerHTML = `<div class="loading">${loadingText}</div>`;
 
+        // Determine file path based on current language
+        const filePath = currentLanguage === 'zh' ? `chapters/zh/${chapterId}.md` : `chapters/${chapterId}.md`;
+        
         // Fetch the markdown file
-        const response = await fetch(`chapters/${chapterId}.md`);
+        const response = await fetch(filePath);
 
         if (!response.ok) {
             throw new Error(`Chapter file not found: ${chapterId}.md`);
@@ -120,13 +125,27 @@ function initAnnotationSystem() {
 let currentTyped = null;
 
 async function loadAnnotation(key) {
+    // Create a cache key that includes language
+    const cacheKey = `${key}-${currentLanguage}`;
+    
     // Check cache first
-    if (annotationCache[key]) {
-        return annotationCache[key];
+    if (annotationCache[cacheKey]) {
+        return annotationCache[cacheKey];
     }
 
     try {
-        const response = await fetch(`annotations/${key}.md`);
+        // Try language-specific annotation first, fallback to English
+        let response;
+        if (currentLanguage === 'zh') {
+            response = await fetch(`annotations/zh/${key}.md`);
+            if (!response.ok) {
+                // Fallback to English version
+                response = await fetch(`annotations/${key}.md`);
+            }
+        } else {
+            response = await fetch(`annotations/${key}.md`);
+        }
+        
         if (!response.ok) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
@@ -143,8 +162,8 @@ async function loadAnnotation(key) {
             content: htmlContent
         };
 
-        // Cache the annotation
-        annotationCache[key] = annotation;
+        // Cache the annotation with language-specific key
+        annotationCache[cacheKey] = annotation;
         return annotation;
 
     } catch (error) {
@@ -439,4 +458,107 @@ function initHeaderCellularAutomata() {
     
     // Animate faster for header effect
     setInterval(drawHeaderCellularAutomata, 150);
+}
+
+// Language System
+let currentLanguage = 'en';
+
+const translations = {
+    en: {
+        author: 'Stephen Wolfram',
+        title: 'A New Kind of Science',
+        subtitle: 'Personal notes and annotations',
+        outline: 'Outline',
+        annotations: 'Annotations',
+        'annotation-placeholder': 'Click on any highlighted link in the notes to view detailed annotations and additional context.',
+        'chapter1': 'Chapter 1: The Foundations for a New Kind of Science',
+        'chapter2': 'Chapter 2: The Crucial Experiment',
+        'chapter3': 'Chapter 3: The World of Simple Programs',
+        'chapter4': 'Chapter 4: Systems Based on Numbers',
+        'chapter5': 'Chapter 5: Two Dimensions and Beyond',
+        'chapter6': 'Chapter 6: Starting from Randomness',
+        'chapter7': 'Chapter 7: Mechanisms in Programs and Nature',
+        'chapter8': 'Chapter 8: Implications for Everyday Systems',
+        'chapter9': 'Chapter 9: Fundamental Physics',
+        'chapter10': 'Chapter 10: Processes of Perception and Analysis',
+        'chapter11': 'Chapter 11: The Notion of Computation',
+        'chapter12': 'Chapter 12: The Principle of Computational Equivalence',
+        'loading': 'Loading chapter content...'
+    },
+    zh: {
+        author: '斯蒂芬·沃尔夫拉姆',
+        title: '一种新的科学',
+        subtitle: '个人笔记和注释',
+        outline: '大纲',
+        annotations: '注释',
+        'annotation-placeholder': '点击笔记中任何高亮链接以查看详细注释和额外内容。',
+        'chapter1': '第1章：新科学的基础',
+        'chapter2': '第2章：关键实验',
+        'chapter3': '第3章：简单程序的世界',
+        'chapter4': '第4章：基于数字的系统',
+        'chapter5': '第5章：二维及更高维度',
+        'chapter6': '第6章：从随机性开始',
+        'chapter7': '第7章：程序和自然界的机制',
+        'chapter8': '第8章：对日常系统的影响',
+        'chapter9': '第9章：基础物理学',
+        'chapter10': '第10章：感知和分析过程',
+        'chapter11': '第11章：计算的概念',
+        'chapter12': '第12章：计算等价性原理',
+        'loading': '正在加载章节内容...'
+    }
+};
+
+function initLanguageSystem() {
+    const languageBtn = document.getElementById('language-btn');
+    
+    // Load saved language preference
+    const savedLanguage = localStorage.getItem('nks-language') || 'en';
+    currentLanguage = savedLanguage;
+    updateLanguageButton();
+    
+    languageBtn.addEventListener('click', function() {
+        currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
+        localStorage.setItem('nks-language', currentLanguage);
+        updateLanguageButton();
+        updatePageLanguage();
+        
+        // Reload current chapter with new language
+        const activeChapter = document.querySelector('.chapter-link.active');
+        if (activeChapter) {
+            const chapterId = activeChapter.getAttribute('data-chapter');
+            loadChapter(chapterId);
+        }
+    });
+    
+    // Initialize with current language
+    updatePageLanguage();
+}
+
+function updateLanguageButton() {
+    const langText = document.querySelector('.lang-text');
+    langText.textContent = currentLanguage === 'en' ? '中文' : 'EN';
+}
+
+function updatePageLanguage() {
+    const elements = document.querySelectorAll('[data-i18n]');
+    
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
+            element.textContent = translations[currentLanguage][key];
+        }
+    });
+    
+    // Update chapter links text
+    updateChapterLinks();
+}
+
+function updateChapterLinks() {
+    const chapterLinks = document.querySelectorAll('.chapter-link');
+    chapterLinks.forEach(link => {
+        const chapterKey = link.getAttribute('data-chapter');
+        if (translations[currentLanguage] && translations[currentLanguage][chapterKey]) {
+            link.textContent = translations[currentLanguage][chapterKey];
+        }
+    });
 }

@@ -35,10 +35,15 @@
     
     <header data-aos="fade-down">
         <canvas id="header-cellular-automata"></canvas>
+        <div class="language-toggle">
+            <button id="language-btn" class="language-btn" aria-label="Switch language">
+                <span class="lang-text">中文</span>
+            </button>
+        </div>
         <div class="header-content">
-            <div class="author-name">Stephen Wolfram</div>
-            <h1 class="book-title">A New Kind of Science</h1>
-            <p class="subtitle">Personal notes and annotations</p>
+            <div class="author-name" data-i18n="author">Stephen Wolfram</div>
+            <h1 class="book-title" data-i18n="title">A New Kind of Science</h1>
+            <p class="subtitle" data-i18n="subtitle">Personal notes and annotations</p>
             <div class="header-divider"></div>
         </div>
     </header>
@@ -47,7 +52,7 @@
         <!-- Left Column: Outline -->
         <nav class="outline-column glass-panel">
             <div class="panel-header">
-                <h2><span class="icon">📊</span>Outline</h2>
+                <h2><span class="icon">📊</span><span data-i18n="outline">Outline</span></h2>
             </div>
             <ul class="chapter-list">
                 <li><a href="#chapter1" class="chapter-link active" data-chapter="chapter1">Chapter 1: The Foundations for a New Kind of Science</a></li>
@@ -75,10 +80,10 @@
         <!-- Right Column: Annotations -->
         <aside class="annotations-column glass-panel">
             <div class="panel-header">
-                <h2><span class="icon">🔬</span>Annotations</h2>
+                <h2><span class="icon">🔬</span><span data-i18n="annotations">Annotations</span></h2>
             </div>
             <div id="annotation-content" class="content-area">
-                <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
+                <p class="placeholder" data-i18n="annotation-placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
             </div>
         </aside>
     </main>
