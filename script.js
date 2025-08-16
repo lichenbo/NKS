@@ -53,7 +53,7 @@ async function loadChapter(chapterId) {
 
         // Determine file path based on current language
         const filePath = currentLanguage === 'zh' ? `chapters/zh/${chapterId}.md` : `chapters/${chapterId}.md`;
-        
+
         // Fetch the markdown file
         const response = await fetch(filePath);
 
@@ -127,7 +127,7 @@ let currentTyped = null;
 async function loadAnnotation(key) {
     // Create a cache key that includes language
     const cacheKey = `${key}-${currentLanguage}`;
-    
+
     // Check cache first
     if (annotationCache[cacheKey]) {
         return annotationCache[cacheKey];
@@ -145,14 +145,14 @@ async function loadAnnotation(key) {
         } else {
             response = await fetch(`annotations/${key}.md`);
         }
-        
+
         if (!response.ok) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
 
         const markdownText = await response.text();
         const htmlContent = marked.parse(markdownText);
-        
+
         // Extract title from the first heading
         const titleMatch = markdownText.match(/^#\s+(.+)$/m);
         const title = titleMatch ? titleMatch[1] : key.replace('-', ' ');
@@ -174,7 +174,7 @@ async function loadAnnotation(key) {
 
 async function showAnnotation(key) {
     const annotationContent = document.getElementById('annotation-content');
-    
+
     // Destroy any existing Typed instance
     if (currentTyped) {
         currentTyped.destroy();
@@ -235,7 +235,7 @@ function clearAnnotationContent() {
     const annotationContent = document.getElementById('annotation-content');
     const annotationsTitle = translations[currentLanguage]['annotations'] || 'Annotations';
     const placeholderText = translations[currentLanguage]['annotation-placeholder'] || 'Click on any highlighted link in the notes to view detailed annotations and additional context.';
-    
+
     annotationContent.innerHTML = `
         <h3>${annotationsTitle}</h3>
         <p class="placeholder">${placeholderText}</p>
@@ -283,7 +283,7 @@ function initCellularAutomataBackground() {
 
     // Background uses only Rule 30 (static)
     const rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
-    
+
     // Apply Rule 30 for background
     function applyRule30(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
@@ -348,7 +348,7 @@ function initCellularAutomataBackground() {
 
     // Initialize background rule indicator
     updateBackgroundRuleIndicator();
-    
+
     // Initialize
     initAnimation();
 
@@ -360,15 +360,15 @@ function initCellularAutomataBackground() {
 function initHeaderCellularAutomata() {
     const canvas = document.getElementById('header-cellular-automata');
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     // Cellular automata parameters
     const cellSize = 2;
     let cols, rows, grid, currentRow;
     let fadeDirection = 1; // 1 for fade in, -1 for fade out
     let globalAlpha = 0.3;
-    
+
     // Set canvas size to header dimensions
     function resizeCanvas() {
         const header = canvas.parentElement;
@@ -376,10 +376,10 @@ function initHeaderCellularAutomata() {
         canvas.height = header.clientHeight;
         initAnimation();
     }
-    
+
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
+
     function initAnimation() {
         cols = Math.floor(canvas.width / cellSize);
         rows = Math.floor(canvas.height / cellSize);
@@ -387,7 +387,7 @@ function initHeaderCellularAutomata() {
         grid[Math.floor(cols / 2)] = 1; // Start with center cell
         currentRow = 0;
     }
-    
+
     // Multiple cellular automata rules (same as background)
     const headerRules = {
         30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
@@ -397,18 +397,18 @@ function initHeaderCellularAutomata() {
         150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
         126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
     };
-    
+
     const headerRuleKeys = Object.keys(headerRules);
     let headerRuleIndex = Math.floor(Math.random() * headerRuleKeys.length); // Start with random rule
     let headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
     headerRuleName = headerRuleKeys[headerRuleIndex]; // Update global variable
-    
+
     // Apply current cellular automata rule
     function applyHeaderRule(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
         return headerCurrentRule[pattern];
     }
-    
+
     // Cycle to next rule (randomized)
     function cycleHeaderRule() {
         // Choose a random rule that's different from current one
@@ -416,23 +416,23 @@ function initHeaderCellularAutomata() {
         do {
             newRuleIndex = Math.floor(Math.random() * headerRuleKeys.length);
         } while (newRuleIndex === headerRuleIndex && headerRuleKeys.length > 1);
-        
+
         headerRuleIndex = newRuleIndex;
         headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
         headerRuleName = headerRuleKeys[headerRuleIndex];
         console.log(`Header: Switching to Rule ${headerRuleName}`);
-        
+
         // Update header rule indicator
         updateHeaderRuleIndicator();
-        
+
         // Reset animation for new rule
         initAnimation();
         drawnRows.length = 0;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-    
+
     const drawnRows = [];
-    
+
     function drawHeaderCellularAutomata() {
         // Update global fade
         globalAlpha += fadeDirection * 0.01;
@@ -441,16 +441,16 @@ function initHeaderCellularAutomata() {
         } else if (globalAlpha <= 0.2) {
             fadeDirection = 1;
         }
-        
+
         // Only clear if starting over
         if (currentRow === 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawnRows.length = 0;
         }
-        
+
         // Store current row
         drawnRows[currentRow] = [...grid];
-        
+
         // Draw all stored rows
         for (let row = 0; row < drawnRows.length; row++) {
             for (let col = 0; col < cols; col++) {
@@ -461,23 +461,23 @@ function initHeaderCellularAutomata() {
                     );
                     const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
                     const intensity = Math.max(0.3, 1 - distance / maxDistance);
-                    
+
                     // Age effect - older rows fade
                     const age = currentRow - row;
                     const ageFactor = Math.max(0.2, 1 - age / (rows * 0.4));
-                    
+
                     // Golden pattern with breathing effect
                     const alpha = intensity * ageFactor * globalAlpha;
                     const red = Math.floor(212 * intensity * ageFactor);
                     const green = Math.floor(175 * intensity * ageFactor);
                     const blue = Math.floor(55 * intensity * ageFactor);
-                    
+
                     ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
                     ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
                 }
             }
         }
-        
+
         // Calculate next generation for header
         if (currentRow < rows - 1) {
             const newGrid = new Array(cols).fill(0);
@@ -496,13 +496,13 @@ function initHeaderCellularAutomata() {
             }, 1800);
         }
     }
-    
+
     // Initialize header rule indicator
     updateHeaderRuleIndicator();
-    
+
     // Initialize
     initAnimation();
-    
+
     // Animate faster for header effect
     setInterval(drawHeaderCellularAutomata, 150);
 }
@@ -584,28 +584,28 @@ const translations = {
         'loading': '正在加载章节内容...',
         'rule-bg': '背景',
         'rule-header': '标题',
-        'rule': '规则'
+        'rule': '元胞自动机：规则'
     }
 };
 
 function initLanguageSystem() {
     const languageBtn = document.getElementById('language-btn');
-    
+
     // currentLanguage is already initialized from localStorage at top level
     updateLanguageButton();
-    
-    languageBtn.addEventListener('click', function() {
+
+    languageBtn.addEventListener('click', function () {
         currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
         localStorage.setItem('nks-language', currentLanguage);
         updateLanguageButton();
         updatePageLanguage();
-        
+
         // Update annotation content to show correct language
         clearAnnotationContent();
-        
+
         // Update rule indicators to show correct language
         updateRuleIndicators();
-        
+
         // Reload current chapter with new language
         const activeChapter = document.querySelector('.chapter-link.active');
         if (activeChapter) {
@@ -613,7 +613,7 @@ function initLanguageSystem() {
             loadChapter(chapterId);
         }
     });
-    
+
     // Initialize with current language
     updatePageLanguage();
     updateRuleIndicators();
@@ -626,14 +626,14 @@ function updateLanguageButton() {
 
 function updatePageLanguage() {
     const elements = document.querySelectorAll('[data-i18n]');
-    
+
     elements.forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (translations[currentLanguage] && translations[currentLanguage][key]) {
             element.textContent = translations[currentLanguage][key];
         }
     });
-    
+
     // Update chapter links text
     updateChapterLinks();
 }
