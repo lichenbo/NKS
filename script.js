@@ -646,7 +646,7 @@ function updateRuleIndicators() {
 let headerRuleName = '110'; // Default value
 
 // Language System
-let currentLanguage = localStorage.getItem('nks-language') || 'en';
+let currentLanguage = localStorage.getItem('nks-language') || 'zh';
 
 const translations = {
     en: {
