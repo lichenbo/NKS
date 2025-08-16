@@ -58,9 +58,12 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Annotation naming**: Use kebab-case naming (e.g., `cellular-automata.md`, `emergence.md`)
 - **Bilingual annotations**: Add corresponding files in `annotations/zh/` for Chinese versions
 - **Linking annotations**: Use `[text](annotation:key)` syntax in chapter markdown files
+- **Internal link restriction**: Annotation files should NOT contain internal annotation links `[text](annotation:key)` to prevent non-functional links
+- **External links only**: Only external links (http/https) are allowed in annotation files and will open in new tabs
 - **Annotation caching**: Annotations are cached by language in `annotationCache` object
 
 ### Language System
+- **Default language**: Application defaults to Chinese ('zh') for new users
 - **Language toggle**: Button in header switches between English ('en') and Chinese ('zh')
 - **Persistent language**: User's language preference is saved in localStorage as 'nks-language'
 - **Content loading**: System automatically loads correct language version of chapters and annotations
