@@ -204,6 +204,35 @@ header {
     color: var(--accent-gold);
 }
 
+/* Rule Indicator */
+.rule-indicator {
+    position: fixed;
+    bottom: var(--spacing-md);
+    left: var(--spacing-md);
+    z-index: 100;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    backdrop-filter: blur(10px);
+    transition: all var(--transition-fast);
+    opacity: 0.7;
+}
+
+.rule-indicator:hover {
+    opacity: 1;
+    border-color: var(--accent-gold);
+    transform: translateY(-2px);
+}
+
+#rule-text {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent-gold);
+    font-weight: 500;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+}
+
 /* ================================
    MAIN LAYOUT - Modern CSS Grid
    ================================ */
@@ -668,6 +697,16 @@ header {
     .language-btn {
         padding: var(--spacing-xs);
         font-size: 0.8rem;
+    }
+
+    .rule-indicator {
+        bottom: var(--spacing-sm);
+        left: var(--spacing-sm);
+        padding: 4px 8px;
+    }
+
+    #rule-text {
+        font-size: 0.7rem;
     }
 }
 

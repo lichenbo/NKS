@@ -281,10 +281,47 @@ function initCellularAutomataBackground() {
         currentRow = 0;
     }
 
-    // Rule 30 implementation
-    function applyRule30(left, center, right) {
+    // Multiple cellular automata rules
+    const rules = {
+        30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic - Random-looking patterns
+        90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal - Sierpinski triangle
+        110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex - Turing complete
+        184: [0, 0, 0, 1, 1, 0, 0, 1],  // Traffic flow simulation
+        54: [0, 1, 1, 0, 1, 1, 0, 0],   // Beautiful symmetric patterns
+        150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR pattern - additive
+        102: [0, 1, 1, 0, 0, 1, 1, 0],  // Copy pattern - replication
+        126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense chaotic pattern
+    };
+    
+    const ruleKeys = Object.keys(rules);
+    let currentRuleIndex = 0;
+    let currentRule = rules[ruleKeys[currentRuleIndex]];
+    let ruleName = ruleKeys[currentRuleIndex];
+    let cycleCount = 0;
+    
+    // Apply current cellular automata rule
+    function applyCellularAutomataRule(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
-        return [0, 1, 1, 1, 1, 0, 0, 0][pattern];
+        return currentRule[pattern];
+    }
+    
+    // Cycle to next rule
+    function cycleToNextRule() {
+        currentRuleIndex = (currentRuleIndex + 1) % ruleKeys.length;
+        currentRule = rules[ruleKeys[currentRuleIndex]];
+        ruleName = ruleKeys[currentRuleIndex];
+        console.log(`Background: Switching to Rule ${ruleName}`);
+        
+        // Update rule indicator
+        const ruleText = document.getElementById('rule-text');
+        if (ruleText) {
+            ruleText.textContent = `Rule ${ruleName}`;
+        }
+        
+        // Reset animation for new rule
+        initAnimation();
+        drawnRows.length = 0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     const drawnRows = [];
@@ -333,7 +370,7 @@ function initCellularAutomataBackground() {
                 const left = grid[i - 1] || 0;
                 const center = grid[i];
                 const right = grid[i + 1] || 0;
-                newGrid[i] = applyRule30(left, center, right);
+                newGrid[i] = applyCellularAutomataRule(left, center, right);
             }
             grid = newGrid;
             currentRow++;
@@ -345,6 +382,12 @@ function initCellularAutomataBackground() {
         }
     }
 
+    // Initialize rule indicator
+    const ruleText = document.getElementById('rule-text');
+    if (ruleText) {
+        ruleText.textContent = `Rule ${ruleName}`;
+    }
+    
     // Initialize
     initAnimation();
 
@@ -384,10 +427,38 @@ function initHeaderCellularAutomata() {
         currentRow = 0;
     }
     
-    // Rule 30 implementation
-    function applyRule30(left, center, right) {
+    // Multiple cellular automata rules (same as background)
+    const headerRules = {
+        30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
+        90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal 
+        110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex
+        54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric
+        150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
+        126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
+    };
+    
+    const headerRuleKeys = Object.keys(headerRules);
+    let headerRuleIndex = 2; // Start with different rule than background
+    let headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
+    let headerRuleName = headerRuleKeys[headerRuleIndex];
+    
+    // Apply current cellular automata rule
+    function applyHeaderRule(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
-        return [0, 1, 1, 1, 1, 0, 0, 0][pattern];
+        return headerCurrentRule[pattern];
+    }
+    
+    // Cycle to next rule
+    function cycleHeaderRule() {
+        headerRuleIndex = (headerRuleIndex + 1) % headerRuleKeys.length;
+        headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
+        headerRuleName = headerRuleKeys[headerRuleIndex];
+        console.log(`Header: Switching to Rule ${headerRuleName}`);
+        
+        // Reset animation for new rule
+        initAnimation();
+        drawnRows.length = 0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
     const drawnRows = [];
@@ -437,22 +508,22 @@ function initHeaderCellularAutomata() {
             }
         }
         
-        // Calculate next generation
+        // Calculate next generation for header
         if (currentRow < rows - 1) {
             const newGrid = new Array(cols).fill(0);
             for (let i = 0; i < cols; i++) {
                 const left = grid[i - 1] || 0;
                 const center = grid[i];
                 const right = grid[i + 1] || 0;
-                newGrid[i] = applyRule30(left, center, right);
+                newGrid[i] = applyHeaderRule(left, center, right);
             }
             grid = newGrid;
             currentRow++;
         } else {
-            // Reset and start over
+            // Cycle to next rule and restart
             setTimeout(() => {
-                initAnimation();
-            }, 1500);
+                cycleHeaderRule();
+            }, 1800);
         }
     }
     
