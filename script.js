@@ -167,28 +167,38 @@ function initAnnotationSystem() {
 
 function initFloatingAnnotationControls() {
     const floatingAnnotation = document.getElementById('floating-annotation');
-    const minimizeBtn = document.getElementById('minimize-annotation');
-    const closeBtn = document.getElementById('close-annotation');
     
-    // Minimize functionality
-    minimizeBtn.addEventListener('click', function() {
-        floatingAnnotation.classList.toggle('minimized');
-    });
+    if (!floatingAnnotation) {
+        console.error('Floating annotation element not found');
+        return;
+    }
     
-    // Close functionality
-    closeBtn.addEventListener('click', function() {
-        floatingAnnotation.classList.add('hidden');
-        
-        // Destroy any existing Typed instance
-        if (currentTyped) {
-            currentTyped.destroy();
-            currentTyped = null;
+    // Use event delegation for better reliability
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'minimize-annotation') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Minimize button clicked');
+            floatingAnnotation.classList.toggle('minimized');
         }
         
-        // Remove active class from all annotation links
-        document.querySelectorAll('.annotation-link').forEach(link => {
-            link.classList.remove('active');
-        });
+        if (e.target.id === 'close-annotation') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Close button clicked');
+            floatingAnnotation.classList.add('hidden');
+            
+            // Destroy any existing Typed instance
+            if (currentTyped) {
+                currentTyped.destroy();
+                currentTyped = null;
+            }
+            
+            // Remove active class from all annotation links
+            document.querySelectorAll('.annotation-link').forEach(link => {
+                link.classList.remove('active');
+            });
+        }
     });
     
     // Make floating annotation draggable (optional enhancement)
@@ -205,6 +215,11 @@ function initFloatingAnnotationControls() {
     header.addEventListener('touchstart', startDrag);
     
     function startDrag(e) {
+        // Don't start dragging if clicking on control buttons
+        if (e.target.classList.contains('control-btn') || e.target.closest('.floating-annotation-controls')) {
+            return;
+        }
+        
         isDragging = true;
         const rect = floatingAnnotation.getBoundingClientRect();
         const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;

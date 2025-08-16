@@ -888,6 +888,7 @@ header {
     background: var(--secondary-bg);
     border-bottom: 1px solid var(--border-subtle);
     cursor: move;
+    user-select: none;
 }
 
 .floating-annotation-title {
@@ -899,6 +900,9 @@ header {
 .floating-annotation-controls {
     display: flex;
     gap: var(--spacing-xs);
+    pointer-events: auto;
+    z-index: 10;
+    position: relative;
 }
 
 .control-btn {
@@ -915,6 +919,9 @@ header {
     font-size: 14px;
     font-weight: bold;
     transition: all var(--transition-fast);
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
 }
 
 .control-btn:hover {
