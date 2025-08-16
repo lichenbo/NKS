@@ -233,9 +233,12 @@ function clearAnnotationContent() {
     }
 
     const annotationContent = document.getElementById('annotation-content');
+    const annotationsTitle = translations[currentLanguage]['annotations'] || 'Annotations';
+    const placeholderText = translations[currentLanguage]['annotation-placeholder'] || 'Click on any highlighted link in the notes to view detailed annotations and additional context.';
+    
     annotationContent.innerHTML = `
-        <h3>Annotations</h3>
-        <p class="placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
+        <h3>${annotationsTitle}</h3>
+        <p class="placeholder">${placeholderText}</p>
     `;
 
     // Remove active class from all annotation links
