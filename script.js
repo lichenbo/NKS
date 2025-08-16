@@ -125,6 +125,51 @@ function initAnnotationSystem() {
 let currentTyped = null;
 let linkCheckInterval = null;
 
+// Debounce helper function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Mobile detection
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+}
+
+// Prevent animation restarts during mobile scrolling
+let isScrolling = false;
+let scrollTimeout;
+
+if (isMobile()) {
+    // Track scrolling state on mobile
+    document.addEventListener('touchstart', () => {
+        isScrolling = true;
+        clearTimeout(scrollTimeout);
+    });
+    
+    document.addEventListener('touchend', () => {
+        scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+        }, 150);
+    });
+    
+    document.addEventListener('scroll', () => {
+        isScrolling = true;
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+        }, 150);
+    });
+}
+
 async function loadAnnotation(key) {
     // Create a cache key that includes language
     const cacheKey = `${key}-${currentLanguage}`;
@@ -307,13 +352,25 @@ function initCellularAutomataBackground() {
 
     // Set canvas size
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        initAnimation();
+        // Skip resize during mobile scrolling to prevent animation restarts
+        if (isMobile() && isScrolling) {
+            return;
+        }
+        
+        const newWidth = window.innerWidth;
+        const newHeight = window.innerHeight;
+        
+        // Only resize and reinitialize if dimensions actually changed significantly
+        if (Math.abs(canvas.width - newWidth) > 50 || Math.abs(canvas.height - newHeight) > 50) {
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            initAnimation();
+        }
     }
 
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    // Debounce resize events to prevent excessive animation restarts
+    window.addEventListener('resize', debounce(resizeCanvas, 250));
 
     function initAnimation() {
         cols = Math.floor(canvas.width / cellSize);
@@ -413,14 +470,26 @@ function initHeaderCellularAutomata() {
 
     // Set canvas size to header dimensions
     function resizeCanvas() {
+        // Skip resize during mobile scrolling to prevent animation restarts
+        if (isMobile() && isScrolling) {
+            return;
+        }
+        
         const header = canvas.parentElement;
-        canvas.width = header.clientWidth;
-        canvas.height = header.clientHeight;
-        initAnimation();
+        const newWidth = header.clientWidth;
+        const newHeight = header.clientHeight;
+        
+        // Only resize and reinitialize if dimensions actually changed significantly
+        if (Math.abs(canvas.width - newWidth) > 20 || Math.abs(canvas.height - newHeight) > 20) {
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            initAnimation();
+        }
     }
 
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    // Debounce resize events to prevent excessive animation restarts
+    window.addEventListener('resize', debounce(resizeCanvas, 250));
 
     function initAnimation() {
         cols = Math.floor(canvas.width / cellSize);
