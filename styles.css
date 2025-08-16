@@ -206,31 +206,40 @@ header {
 
 /* Rule Indicator */
 .rule-indicator {
-    position: fixed;
-    bottom: var(--spacing-md);
+    position: absolute;
+    bottom: var(--spacing-sm);
     left: var(--spacing-md);
-    z-index: 100;
+    z-index: 10;
     background: var(--panel-bg);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: var(--spacing-xs) var(--spacing-sm);
     backdrop-filter: blur(10px);
     transition: all var(--transition-fast);
-    opacity: 0.7;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
 .rule-indicator:hover {
     opacity: 1;
     border-color: var(--accent-gold);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
-#rule-text {
+#bg-rule-text,
+#header-rule-text {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--accent-gold);
     font-weight: 500;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+}
+
+.rule-divider {
+    color: var(--border-subtle);
+    font-weight: 300;
 }
 
 /* ================================
@@ -700,13 +709,15 @@ header {
     }
 
     .rule-indicator {
-        bottom: var(--spacing-sm);
+        bottom: var(--spacing-xs);
         left: var(--spacing-sm);
         padding: 4px 8px;
+        gap: 4px;
     }
 
-    #rule-text {
-        font-size: 0.7rem;
+    #bg-rule-text,
+    #header-rule-text {
+        font-size: 0.65rem;
     }
 }
 

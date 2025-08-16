@@ -312,10 +312,10 @@ function initCellularAutomataBackground() {
         ruleName = ruleKeys[currentRuleIndex];
         console.log(`Background: Switching to Rule ${ruleName}`);
         
-        // Update rule indicator
-        const ruleText = document.getElementById('rule-text');
-        if (ruleText) {
-            ruleText.textContent = `Rule ${ruleName}`;
+        // Update background rule indicator
+        const bgRuleText = document.getElementById('bg-rule-text');
+        if (bgRuleText) {
+            bgRuleText.textContent = `BG: Rule ${ruleName}`;
         }
         
         // Reset animation for new rule
@@ -382,10 +382,10 @@ function initCellularAutomataBackground() {
         }
     }
 
-    // Initialize rule indicator
-    const ruleText = document.getElementById('rule-text');
-    if (ruleText) {
-        ruleText.textContent = `Rule ${ruleName}`;
+    // Initialize background rule indicator
+    const bgRuleText = document.getElementById('bg-rule-text');
+    if (bgRuleText) {
+        bgRuleText.textContent = `BG: Rule ${ruleName}`;
     }
     
     // Initialize
@@ -454,6 +454,12 @@ function initHeaderCellularAutomata() {
         headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
         headerRuleName = headerRuleKeys[headerRuleIndex];
         console.log(`Header: Switching to Rule ${headerRuleName}`);
+        
+        // Update header rule indicator
+        const headerRuleText = document.getElementById('header-rule-text');
+        if (headerRuleText) {
+            headerRuleText.textContent = `Header: Rule ${headerRuleName}`;
+        }
         
         // Reset animation for new rule
         initAnimation();
@@ -525,6 +531,12 @@ function initHeaderCellularAutomata() {
                 cycleHeaderRule();
             }, 1800);
         }
+    }
+    
+    // Initialize header rule indicator
+    const headerRuleText = document.getElementById('header-rule-text');
+    if (headerRuleText) {
+        headerRuleText.textContent = `Header: Rule ${headerRuleName}`;
     }
     
     // Initialize
