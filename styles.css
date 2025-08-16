@@ -766,12 +766,15 @@ header {
         padding: var(--spacing-sm);
     }
 
-    .outline-column,
-    .annotations-column {
+    .outline-column {
         position: static;
         max-height: 300px;
         margin-bottom: var(--spacing-md);
         opacity: 1;
+    }
+    
+    .annotations-column {
+        display: none;
     }
 
     .notes-column {

@@ -112,7 +112,8 @@ Since this is a static HTML/CSS/JS project with no build system:
 ### Responsive Design
 - Mobile-first approach with breakpoints at 480px, 768px, 900px, 1024px, 1200px, 1400px
 - Three-column layout collapses to stacked layout on mobile (768px and below)
-- Sidebar panels become non-sticky on mobile with reduced max-height
+- Annotations column is hidden on mobile (≤768px) since inline annotations are used instead
+- Outline panel becomes non-sticky on mobile with reduced max-height
 - Chapter navigation becomes grid layout on mobile for better touch interaction
 
 ## Dependencies
