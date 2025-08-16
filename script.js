@@ -578,6 +578,9 @@ function initLanguageSystem() {
         updateLanguageButton();
         updatePageLanguage();
         
+        // Update annotation content to show correct language
+        clearAnnotationContent();
+        
         // Reload current chapter with new language
         const activeChapter = document.querySelector('.chapter-link.active');
         if (activeChapter) {
