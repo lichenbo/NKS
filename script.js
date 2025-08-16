@@ -8,87 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
     loadChapter('chapter1');
 });
 
-// Annotation data - you can edit these in the HTML/JS
-const annotations = {
-    "paradigm-shift": {
-        title: "Scientific Paradigm Shift",
-        content: `
-            <p>Wolfram's "New Kind of Science" represents a fundamental paradigm shift in scientific thinking:</p>
-            <ul>
-                <li><strong>From Mathematical to Computational:</strong> Moving beyond traditional mathematical equations to computational rules</li>
-                <li><strong>From Reductionism to Emergence:</strong> Understanding how simple parts interact to create complex wholes</li>
-                <li><strong>From Continuous to Discrete:</strong> Viewing nature as fundamentally discrete rather than continuous</li>
-                <li><strong>From Deterministic Predictability:</strong> Accepting that simple rules can produce unpredictable complexity</li>
-            </ul>
-            <p>This shift parallels other major scientific revolutions like those initiated by Copernicus, Newton, Darwin, and Einstein.</p>
-        `
-    },
-    emergence: {
-        title: "Emergence from Simple Rules",
-        content: `
-            <p>The central discovery that simple computational rules can produce immense complexity challenges fundamental assumptions about causation:</p>
-            <ul>
-                <li><strong>Counterintuitive Results:</strong> Complexity doesn't require complex causes or elaborate plans</li>
-                <li><strong>Universal Phenomenon:</strong> This behavior appears across vastly different systems and domains</li>
-                <li><strong>Irreducible Complexity:</strong> The resulting patterns often cannot be predicted without running the computation</li>
-                <li><strong>Natural Implications:</strong> Suggests many natural phenomena arise from simple underlying rules</li>
-            </ul>
-            <p>Examples include weather patterns, biological growth, market dynamics, and social behaviors.</p>
-        `
-    },
-    universality: {
-        title: "Universality in Complex Systems",
-        content: `
-            <p>Universality refers to the remarkable finding that complex behavior is not rare but ubiquitous:</p>
-            <ul>
-                <li><strong>Independence from Details:</strong> Complex behavior arises regardless of specific system implementation</li>
-                <li><strong>Cross-Domain Patterns:</strong> Similar patterns appear in physics, biology, economics, and social systems</li>
-                <li><strong>Computational Universality:</strong> Many simple systems can perform arbitrary computations</li>
-                <li><strong>Threshold Behavior:</strong> Complexity emerges beyond a minimal threshold of rule sophistication</li>
-            </ul>
-            <p>This universality suggests deep underlying principles governing complex systems across all of nature.</p>
-        `
-    },
-    "cellular-automata": {
-        title: "Cellular Automata",
-        content: `
-            <p>Cellular automata are discrete models consisting of a grid of cells that evolve through time according to simple rules:</p>
-            <ul>
-                <li><strong>Grid Structure:</strong> Regular arrangement of cells in one, two, or more dimensions</li>
-                <li><strong>Local Rules:</strong> Each cell's next state depends only on its current state and nearby neighbors</li>
-                <li><strong>Synchronous Updates:</strong> All cells update simultaneously at each time step</li>
-                <li><strong>Simple States:</strong> Cells typically have just two states (0/1, on/off, alive/dead)</li>
-            </ul>
-            <p>Despite their simplicity, cellular automata can model complex phenomena including biological growth, physical processes, and computational systems.</p>
-        `
-    },
-    "computational-equivalence": {
-        title: "Principle of Computational Equivalence",
-        content: `
-            <p>Wolfram's most ambitious hypothesis states that almost all systems perform computations of equivalent sophistication:</p>
-            <ul>
-                <li><strong>Universal Computation:</strong> Simple programs, human brains, and natural processes all achieve the same computational level</li>
-                <li><strong>Irreducibility:</strong> No system can predict another's behavior faster than running the computation</li>
-                <li><strong>Natural Intelligence:</strong> Intelligence emerges naturally from computational processes, not special complexity</li>
-                <li><strong>Limits to Science:</strong> Some phenomena may be fundamentally unpredictable due to computational irreducibility</li>
-            </ul>
-            <p>This principle implies fundamental limits to knowledge while suggesting intelligence and complexity are far more common than traditionally believed.</p>
-        `
-    },
-    "wolfram-timeline": {
-        title: "Wolfram's Scientific Journey",
-        content: `
-            <p>Stephen Wolfram's path to discovering this new kind of science began remarkably early:</p>
-            <ul>
-                <li><strong>1972 (Age 12):</strong> First experiments with cellular automata inspired by physics textbook</li>
-                <li><strong>1974-1980s:</strong> Early work and academic publications, missed key discoveries initially</li>
-                <li><strong>1980s-1990s:</strong> Created Mathematica, gained independence to pursue fundamental research</li>
-                <li><strong>1990s-2002:</strong> Decade-long intensive research leading to "A New Kind of Science"</li>
-            </ul>
-            <p>His unique combination of early mathematical talent, technology development, and business success provided the freedom to pursue this ambitious intellectual project over decades.</p>
-        `
-    }
-};
+// Cache for loaded annotations
+const annotationCache = {};
 
 function initMarkdownRenderer() {
     // Configure marked for our annotation syntax
@@ -198,15 +119,55 @@ function initAnnotationSystem() {
 // Global variable to track active Typed instance
 let currentTyped = null;
 
-function showAnnotation(key) {
-    const annotationContent = document.getElementById('annotation-content');
-    const annotation = annotations[key];
+async function loadAnnotation(key) {
+    // Check cache first
+    if (annotationCache[key]) {
+        return annotationCache[key];
+    }
 
+    try {
+        const response = await fetch(`annotations/${key}.md`);
+        if (!response.ok) {
+            throw new Error(`Annotation file not found: ${key}.md`);
+        }
+
+        const markdownText = await response.text();
+        const htmlContent = marked.parse(markdownText);
+        
+        // Extract title from the first heading
+        const titleMatch = markdownText.match(/^#\s+(.+)$/m);
+        const title = titleMatch ? titleMatch[1] : key.replace('-', ' ');
+
+        const annotation = {
+            title: title,
+            content: htmlContent
+        };
+
+        // Cache the annotation
+        annotationCache[key] = annotation;
+        return annotation;
+
+    } catch (error) {
+        console.error('Error loading annotation:', error);
+        return null;
+    }
+}
+
+async function showAnnotation(key) {
+    const annotationContent = document.getElementById('annotation-content');
+    
     // Destroy any existing Typed instance
     if (currentTyped) {
         currentTyped.destroy();
         currentTyped = null;
     }
+
+    // Show loading state
+    annotationContent.innerHTML = `
+        <div class="loading">Loading annotation...</div>
+    `;
+
+    const annotation = await loadAnnotation(key);
 
     if (annotation) {
         // Create the structure first
@@ -216,11 +177,6 @@ function showAnnotation(key) {
                 <span id="typewriter-text"></span>
             </div>
         `;
-
-        // Convert HTML content to plain text for better typing effect
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = annotation.content;
-        const plainText = tempDiv.textContent || tempDiv.innerText || '';
 
         // Initialize Typed.js with error handling
         if (typeof Typed !== 'undefined') {
@@ -244,7 +200,7 @@ function showAnnotation(key) {
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
-            <p class="placeholder">The annotation "${key}" is not yet available. Add it to the annotations object in script.js</p>
+            <p class="placeholder">The annotation "${key}" could not be loaded. Make sure the file "annotations/${key}.md" exists.</p>
         `;
     }
 }
