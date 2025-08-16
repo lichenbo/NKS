@@ -986,6 +986,86 @@ header {
 }
 
 /* ================================
+   SCROLL TO TOP BUTTON
+   ================================ */
+.scroll-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-subtle);
+}
+
+.scroll-to-top:hover {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+}
+
+.scroll-to-top.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+}
+
+.scroll-to-top-icon {
+    color: var(--text-secondary);
+    font-size: 20px;
+    font-weight: bold;
+    transition: color var(--transition-fast);
+}
+
+.scroll-to-top:hover .scroll-to-top-icon {
+    color: var(--primary-bg);
+}
+
+/* Show scroll-to-top button only on mobile/tablet */
+@media (min-width: 769px) {
+    .scroll-to-top {
+        display: none;
+    }
+}
+
+/* Mobile-specific scroll-to-top styles */
+@media (max-width: 768px) {
+    .scroll-to-top {
+        bottom: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .scroll-to-top-icon {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .scroll-to-top {
+        bottom: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .scroll-to-top-icon {
+        font-size: 16px;
+    }
+}
+
+/* ================================
    ACCESSIBILITY
    ================================ */
 @media (prefers-reduced-motion: reduce) {

@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initChapterNavigation();
     initAnnotationSystem();
     initAnnotationContent();
+    initScrollToTop();
 
     // Load first chapter by default
     loadChapter('chapter1');
@@ -490,6 +491,51 @@ function clearAnnotationContent() {
 // Initialize annotation content on page load
 function initAnnotationContent() {
     clearAnnotationContent();
+}
+
+// Initialize scroll-to-top functionality
+function initScrollToTop() {
+    const scrollToTopBtn = document.getElementById('scroll-to-top');
+    
+    if (!scrollToTopBtn) return;
+
+    // Show/hide button based on scroll position
+    function toggleScrollToTopButton() {
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        const showThreshold = 300; // Show button after scrolling 300px
+        
+        if (scrollY > showThreshold) {
+            scrollToTopBtn.classList.remove('hidden');
+        } else {
+            scrollToTopBtn.classList.add('hidden');
+        }
+    }
+
+    // Smooth scroll to top function
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // Add scroll event listener with throttling
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        scrollTimeout = setTimeout(toggleScrollToTopButton, 10);
+    });
+
+    // Add click event listener
+    scrollToTopBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        scrollToTop();
+    });
+
+    // Initial check
+    toggleScrollToTopButton();
 }
 
 // Cellular Automata Background Animation
