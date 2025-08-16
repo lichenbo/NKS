@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
     initMarkdownRenderer();
+    initLanguageSystem();  // Initialize language first
     initChapterNavigation();
     initAnnotationSystem();
     initAnnotationContent();
-    initLanguageSystem();
 
     // Load first chapter by default
     loadChapter('chapter1');
@@ -517,7 +517,7 @@ function initHeaderCellularAutomata() {
 }
 
 // Language System
-let currentLanguage = 'zh';
+let currentLanguage = localStorage.getItem('nks-language') || 'en';
 
 const translations = {
     en: {
@@ -569,9 +569,7 @@ const translations = {
 function initLanguageSystem() {
     const languageBtn = document.getElementById('language-btn');
     
-    // Load saved language preference
-    const savedLanguage = localStorage.getItem('nks-language') || 'zh';
-    currentLanguage = savedLanguage;
+    // currentLanguage is already initialized from localStorage at top level
     updateLanguageButton();
     
     languageBtn.addEventListener('click', function() {
