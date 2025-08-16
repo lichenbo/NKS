@@ -402,7 +402,7 @@ function initHeaderCellularAutomata() {
     };
     
     const headerRuleKeys = Object.keys(headerRules);
-    let headerRuleIndex = 2; // Start with different rule than background
+    let headerRuleIndex = Math.floor(Math.random() * headerRuleKeys.length); // Start with random rule
     let headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
     let headerRuleName = headerRuleKeys[headerRuleIndex];
     
@@ -412,9 +412,15 @@ function initHeaderCellularAutomata() {
         return headerCurrentRule[pattern];
     }
     
-    // Cycle to next rule
+    // Cycle to next rule (randomized)
     function cycleHeaderRule() {
-        headerRuleIndex = (headerRuleIndex + 1) % headerRuleKeys.length;
+        // Choose a random rule that's different from current one
+        let newRuleIndex;
+        do {
+            newRuleIndex = Math.floor(Math.random() * headerRuleKeys.length);
+        } while (newRuleIndex === headerRuleIndex && headerRuleKeys.length > 1);
+        
+        headerRuleIndex = newRuleIndex;
         headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
         headerRuleName = headerRuleKeys[headerRuleIndex];
         console.log(`Header: Switching to Rule ${headerRuleName}`);
