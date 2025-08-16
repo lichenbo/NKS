@@ -281,47 +281,13 @@ function initCellularAutomataBackground() {
         currentRow = 0;
     }
 
-    // Multiple cellular automata rules
-    const rules = {
-        30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic - Random-looking patterns
-        90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal - Sierpinski triangle
-        110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex - Turing complete
-        184: [0, 0, 0, 1, 1, 0, 0, 1],  // Traffic flow simulation
-        54: [0, 1, 1, 0, 1, 1, 0, 0],   // Beautiful symmetric patterns
-        150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR pattern - additive
-        102: [0, 1, 1, 0, 0, 1, 1, 0],  // Copy pattern - replication
-        126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense chaotic pattern
-    };
+    // Background uses only Rule 30 (static)
+    const rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
     
-    const ruleKeys = Object.keys(rules);
-    let currentRuleIndex = 0;
-    let currentRule = rules[ruleKeys[currentRuleIndex]];
-    let ruleName = ruleKeys[currentRuleIndex];
-    let cycleCount = 0;
-    
-    // Apply current cellular automata rule
-    function applyCellularAutomataRule(left, center, right) {
+    // Apply Rule 30 for background
+    function applyRule30(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
-        return currentRule[pattern];
-    }
-    
-    // Cycle to next rule
-    function cycleToNextRule() {
-        currentRuleIndex = (currentRuleIndex + 1) % ruleKeys.length;
-        currentRule = rules[ruleKeys[currentRuleIndex]];
-        ruleName = ruleKeys[currentRuleIndex];
-        console.log(`Background: Switching to Rule ${ruleName}`);
-        
-        // Update background rule indicator
-        const bgRuleText = document.getElementById('bg-rule-text');
-        if (bgRuleText) {
-            bgRuleText.textContent = `BG: Rule ${ruleName}`;
-        }
-        
-        // Reset animation for new rule
-        initAnimation();
-        drawnRows.length = 0;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return rule30[pattern];
     }
 
     const drawnRows = [];
@@ -370,22 +336,20 @@ function initCellularAutomataBackground() {
                 const left = grid[i - 1] || 0;
                 const center = grid[i];
                 const right = grid[i + 1] || 0;
-                newGrid[i] = applyCellularAutomataRule(left, center, right);
+                newGrid[i] = applyRule30(left, center, right);
             }
             grid = newGrid;
             currentRow++;
         } else {
-            // Reset and start over
-            setTimeout(() => {
-                initAnimation();
-            }, 2000);
+            // Background animation complete - stop here
+            // No more generations, pattern stays static
         }
     }
 
     // Initialize background rule indicator
     const bgRuleText = document.getElementById('bg-rule-text');
     if (bgRuleText) {
-        bgRuleText.textContent = `BG: Rule ${ruleName}`;
+        bgRuleText.textContent = `BG: Rule 30`;
     }
     
     // Initialize
