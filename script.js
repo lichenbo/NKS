@@ -522,7 +522,8 @@ function updateHeaderRuleIndicator() {
     if (headerRuleText) {
         const headerText = translations[currentLanguage]['rule-header'] || 'Header';
         const ruleText = translations[currentLanguage]['rule'] || 'Rule';
-        headerRuleText.textContent = `${headerText}: ${ruleText} ${headerRuleName}`;
+        const ruleName = typeof headerRuleName !== 'undefined' ? headerRuleName : '110';
+        headerRuleText.textContent = `${headerText}: ${ruleText} ${ruleName}`;
     }
 }
 
