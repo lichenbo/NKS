@@ -32,7 +32,7 @@ Unlike much of modern science, which relies on specialized technical knowledge, 
 
 Existing sciences, particularly physics, have focused on breaking systems down into underlying parts and analyzing them in detail. However, how these parts interact to produce overall complex behavior has remained a mystery.
 
-This reductionist approach, while successful in many domains, fails to capture the [emergent properties](annotation:emergence) that arise from the interactions between components.
+This [reductionist approach](annotation:reductionism), while successful in many domains, fails to capture the [emergent properties](annotation:emergence) that arise from the interactions between components.
 
 ### New Framework
 
@@ -44,7 +44,7 @@ This suggests a [universal principle](annotation:universality) underlying comple
 
 ### Thermodynamics
 
-Discoveries about simple programs offer a straightforward explanation for how thermodynamic behavior arises in physics, resolving over a century of confusion. The apparent randomness and irreversibility in thermodynamics may emerge from simple computational processes.
+Discoveries about simple programs offer a straightforward explanation for how [thermodynamic behavior](annotation:thermodynamics) arises in physics, resolving over a century of confusion. The apparent randomness and irreversibility in thermodynamics may emerge from simple computational processes.
 
 ### Biology
 
@@ -58,7 +58,7 @@ This expansion moves beyond traditional mathematical objects to include the vast
 
 ### Theoretical Physics
 
-Simple programs can capture essential mechanisms for physical phenomena previously deemed mysterious, contrasting with traditional methods that rely on continuous numbers and calculus. The book offers a serious possibility for finding a truly fundamental theory for the universe.
+Simple programs can capture essential mechanisms for physical phenomena previously deemed mysterious, contrasting with traditional methods that rely on continuous numbers and [calculus](annotation:calculus). The book offers a serious possibility for finding a truly fundamental theory for the universe.
 
 ### Social Sciences
 
@@ -98,15 +98,15 @@ Explores more general classes of programs, shedding new light on longstanding qu
 
 ### Cybernetics
 
-Offers methods to analyze complex behavior in biological systems, which traditional mathematical methods from the 1940s could not adequately address.
+Offers methods to analyze complex behavior in biological systems, which traditional [mathematical methods](annotation:mathematical-modeling) from the 1940s could not adequately address.
 
 ### Fractals
 
-While fractals identified nested shapes in nature, this book also finds systems producing much more complex, non-nested shapes that exhibit richer structural properties.
+While [fractals](annotation:fractals) identified nested shapes in nature, this book also finds systems producing much more complex, non-nested shapes that exhibit richer structural properties.
 
 ### General Systems Theory
 
-Provides methods that were lacking in the 1960s to study large networks and organizations, offering ways to resolve difficulties in understanding the Second Law of Thermodynamics.
+Provides methods that were lacking in the 1960s to study large networks and organizations, offering ways to resolve difficulties in understanding the [Second Law of Thermodynamics](annotation:second-law-thermodynamics).
 
 ## Wolfram's Personal Journey with the Science
 
@@ -118,7 +118,7 @@ This early exposure to computational systems shaped his later recognition of the
 
 ### Shift in Focus
 
-He initially pursued theoretical particle physics but later suspected deeper questions might require a new approach, leading him back to his computer experiments.
+He initially pursued [theoretical particle physics](annotation:particle-physics) but later suspected deeper questions might require a new approach, leading him back to his computer experiments.
 
 The limitations of traditional physics in explaining certain phenomena drove him to explore computational alternatives.
 
