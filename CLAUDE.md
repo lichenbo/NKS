@@ -22,6 +22,7 @@ This is a client-side web application that presents notes and annotations for St
   - Chapter navigation and loading system
   - Annotation system with typewriter effects and caching
   - Dual cellular automata animations (background Rule 30, header cycling through multiple rules)
+  - Conway's Game of Life demo implementation with 12 sample patterns
   - Markdown parsing with annotation link preprocessing
   - Complete internationalization system with localStorage persistence
 - `styles.css` - Modern CSS with:
@@ -31,8 +32,9 @@ This is a client-side web application that presents notes and annotations for St
   - Mobile-first responsive breakpoints
   - Dark theme with gold accents
 - `chapters/` - Chapter content as markdown files
+  - `intro-demo.md` - Interactive Conway's Game of Life demo (introduction page)
   - `chapter1.md`, `chapter2.md`, `chapter3.md` (English)
-  - `zh/chapter1.md`, `zh/chapter2.md`, `zh/chapter3.md` (Chinese)
+  - `zh/intro-demo.md`, `zh/chapter1.md`, `zh/chapter2.md`, `zh/chapter3.md` (Chinese)
 - `annotations/` - Annotation content as individual markdown files
   - Individual annotation files (e.g., `cellular-automata.md`, `emergence.md`, etc.)
   - `zh/` subdirectory for Chinese translations
@@ -71,6 +73,12 @@ Since this is a static HTML/CSS/JS project with no build system:
 
 ## Key Features
 
+- **Interactive Conway's Game of Life demo** as introduction page with 12 sample patterns:
+  - Glider, Blinker, Toad, Beacon (basic patterns)
+  - Pulsar, Pentadecathlon (oscillators)
+  - Lightweight Spaceship, Gosper Gun (spaceships/generators)
+  - Acorn, Diehard, R-Pentomino, Infinite Growth (complex/methuselah patterns)
+  - Full bilingual support with interactive controls and pattern library
 - **Responsive three-column layout** using CSS Grid with mobile breakpoints
 - **Dual cellular automata animations**:
   - Background: Static Rule 30 pattern with golden fade effect
@@ -89,6 +97,15 @@ Since this is a static HTML/CSS/JS project with no build system:
 - Header canvas cycles through different cellular automata rules with faster animation (150ms intervals)
 - Both use golden color scheme with gradient and age-based fading effects
 - Rule indicators in header show current background and header rules with language support
+
+### Conway's Game of Life Demo
+- **Interactive canvas** with mouse click cell toggling and visual feedback
+- **Control system**: Play/Pause, Step, Clear, Random, and speed controls (0.2x to 2x)
+- **Grid size options**: 20×20, 40×40, 100×100, 300×300 with active state management
+- **Pattern library**: 12 famous Conway patterns with emoji icons and bilingual names
+- **Game logic**: Complete implementation of Conway's rules with neighbor counting
+- **Responsive design**: Adapts to mobile with simplified controls and smaller canvas
+- **Bilingual support**: All UI elements and instructions available in English and Chinese
 
 ### Annotation System
 - **Desktop Mode (≥769px)**: Annotations display in right sidebar with typewriter effect
