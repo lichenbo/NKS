@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initAnnotationContent();
     initScrollToTop();
 
-    // Load first chapter by default
-    loadChapter('chapter1');
+    // Load intro demo by default
+    loadChapter('intro-demo');
 });
 
 // Cache for loaded annotations
@@ -194,6 +194,33 @@ async function loadChapter(chapterId) {
         // Show loading state
         const loadingText = translations[currentLanguage]['loading'] || 'Loading chapter content...';
         notesContent.innerHTML = `<div class="loading">${loadingText}</div>`;
+
+        // Handle special demo pages
+        if (chapterId === 'intro-demo') {
+            const response = await fetch('intro-demo.md');
+            
+            if (!response.ok) {
+                throw new Error(`Demo file not found: intro-demo.md`);
+            }
+
+            const markdownContent = await response.text();
+            
+            // Process the content as markdown to get proper formatting
+            const processedMarkdown = processAnnotationLinksInMarkdown(markdownContent);
+            const parsedContent = marked.parse(processedMarkdown);
+            
+            // Display the content
+            notesContent.innerHTML = parsedContent;
+            
+            // Initialize Game of Life if the required elements exist
+            setTimeout(() => {
+                if (document.getElementById('game-canvas')) {
+                    initGameOfLife();
+                }
+            }, 200);
+            
+            return;
+        }
 
         // Determine file path based on current language
         const filePath = currentLanguage === 'zh' ? `chapters/zh/${chapterId}.md` : `chapters/${chapterId}.md`;
@@ -1016,6 +1043,306 @@ const translations = {
         'rule': '元胞自动机：规则'
     }
 };
+
+// Game of Life implementation
+function initGameOfLife() {
+    if (window.gameOfLifeInstance) {
+        window.gameOfLifeInstance.cleanup();
+        window.gameOfLifeInstance = null;
+    }
+    
+    window.gameOfLifeInstance = new window.GameOfLife('game-canvas');
+}
+
+// Define GameOfLife class only if not already defined
+if (!window.GameOfLife) {
+    window.GameOfLife = class GameOfLife {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) {
+            console.error('Game of Life canvas not found:', canvasId);
+            return;
+        }
+        
+        this.ctx = this.canvas.getContext('2d');
+        this.gridSize = 30;
+        this.cellSize = 0;
+        this.grid = [];
+        this.nextGrid = [];
+        this.isPlaying = false;
+        this.interval = null;
+        this.speed = 200;
+        
+        this.setupCanvas();
+        this.initializeGrid();
+        this.setupEventListeners();
+        this.draw();
+    }
+    
+    setupCanvas() {
+        this.canvas.width = 600;
+        this.canvas.height = 400;
+        this.cellSize = Math.min(this.canvas.width / this.gridSize, this.canvas.height / this.gridSize);
+        
+        // Center the grid
+        this.offsetX = (this.canvas.width - this.gridSize * this.cellSize) / 2;
+        this.offsetY = (this.canvas.height - this.gridSize * this.cellSize) / 2;
+    }
+    
+    initializeGrid() {
+        this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+        this.nextGrid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+    }
+    
+    setupEventListeners() {
+        this.canvas.addEventListener('click', (e) => this.handleClick(e));
+        
+        const playBtn = document.getElementById('play-pause-btn');
+        const stepBtn = document.getElementById('step-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const randomBtn = document.getElementById('random-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedDisplay = document.getElementById('speed-display');
+        
+        if (playBtn) playBtn.addEventListener('click', () => this.togglePlay());
+        if (stepBtn) stepBtn.addEventListener('click', () => this.step());
+        if (clearBtn) clearBtn.addEventListener('click', () => this.clear());
+        if (randomBtn) randomBtn.addEventListener('click', () => this.randomize());
+        
+        if (speedSlider) {
+            speedSlider.addEventListener('input', (e) => {
+                this.speed = parseInt(e.target.value);
+                if (speedDisplay) speedDisplay.textContent = this.speed + 'ms';
+                if (this.isPlaying) {
+                    this.stop();
+                    this.play();
+                }
+            });
+        }
+        
+        const gridSmall = document.getElementById('grid-small');
+        const gridMedium = document.getElementById('grid-medium');
+        const gridLarge = document.getElementById('grid-large');
+        
+        if (gridSmall) gridSmall.addEventListener('click', () => this.setGridSize(20));
+        if (gridMedium) gridMedium.addEventListener('click', () => this.setGridSize(30));
+        if (gridLarge) gridLarge.addEventListener('click', () => this.setGridSize(40));
+        
+        document.querySelectorAll('.pattern-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.loadPattern(btn.dataset.pattern));
+        });
+    }
+    
+    handleClick(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left - this.offsetX;
+        const y = e.clientY - rect.top - this.offsetY;
+        
+        const col = Math.floor(x / this.cellSize);
+        const row = Math.floor(y / this.cellSize);
+        
+        if (col >= 0 && col < this.gridSize && row >= 0 && row < this.gridSize) {
+            this.grid[row][col] = !this.grid[row][col];
+            this.draw();
+        }
+    }
+    
+    togglePlay() {
+        if (this.isPlaying) {
+            this.stop();
+        } else {
+            this.play();
+        }
+    }
+    
+    play() {
+        this.isPlaying = true;
+        const playBtn = document.getElementById('play-pause-btn');
+        if (playBtn) playBtn.textContent = '⏸ Pause';
+        this.interval = setInterval(() => this.step(), this.speed);
+    }
+    
+    stop() {
+        this.isPlaying = false;
+        const playBtn = document.getElementById('play-pause-btn');
+        if (playBtn) playBtn.textContent = '▶ Play';
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+        }
+    }
+    
+    step() {
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                const neighbors = this.countNeighbors(row, col);
+                const isAlive = this.grid[row][col];
+                
+                if (isAlive) {
+                    this.nextGrid[row][col] = neighbors === 2 || neighbors === 3;
+                } else {
+                    this.nextGrid[row][col] = neighbors === 3;
+                }
+            }
+        }
+        
+        [this.grid, this.nextGrid] = [this.nextGrid, this.grid];
+        this.draw();
+    }
+    
+    countNeighbors(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                if (i === 0 && j === 0) continue;
+                
+                const newRow = row + i;
+                const newCol = col + j;
+                
+                if (newRow >= 0 && newRow < this.gridSize && 
+                    newCol >= 0 && newCol < this.gridSize && 
+                    this.grid[newRow][newCol]) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    
+    clear() {
+        this.stop();
+        this.initializeGrid();
+        this.draw();
+    }
+    
+    randomize() {
+        this.stop();
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                this.grid[row][col] = Math.random() < 0.3;
+            }
+        }
+        this.draw();
+    }
+    
+    setGridSize(size) {
+        this.stop();
+        this.gridSize = size;
+        this.cellSize = Math.min(this.canvas.width / this.gridSize, this.canvas.height / this.gridSize);
+        this.offsetX = (this.canvas.width - this.gridSize * this.cellSize) / 2;
+        this.offsetY = (this.canvas.height - this.gridSize * this.cellSize) / 2;
+        
+        document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+        if (size === 20) {
+            const btn = document.getElementById('grid-small');
+            if (btn) btn.classList.add('active');
+        } else if (size === 30) {
+            const btn = document.getElementById('grid-medium');
+            if (btn) btn.classList.add('active');
+        } else {
+            const btn = document.getElementById('grid-large');
+            if (btn) btn.classList.add('active');
+        }
+        
+        this.initializeGrid();
+        this.draw();
+    }
+    
+    loadPattern(pattern) {
+        this.clear();
+        const centerRow = Math.floor(this.gridSize / 2);
+        const centerCol = Math.floor(this.gridSize / 2);
+        
+        const patterns = {
+            glider: [[0,1,0], [0,0,1], [1,1,1]],
+            blinker: [[1], [1], [1]],
+            toad: [[0,1,1,1], [1,1,1,0]],
+            beacon: [[1,1,0,0], [1,1,0,0], [0,0,1,1], [0,0,1,1]],
+            'gosper-gun': [
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+                [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+                [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+            ],
+            pentadecathlon: [
+                [0,0,1,0,0,0,0,1,0,0],
+                [1,1,0,1,1,1,1,0,1,1],
+                [0,0,1,0,0,0,0,1,0,0]
+            ]
+        };
+        
+        const patternData = patterns[pattern];
+        if (!patternData) return;
+        
+        const startRow = centerRow - Math.floor(patternData.length / 2);
+        const startCol = centerCol - Math.floor(patternData[0].length / 2);
+        
+        for (let row = 0; row < patternData.length; row++) {
+            for (let col = 0; col < patternData[row].length; col++) {
+                const gridRow = startRow + row;
+                const gridCol = startCol + col;
+                
+                if (gridRow >= 0 && gridRow < this.gridSize && 
+                    gridCol >= 0 && gridCol < this.gridSize) {
+                    this.grid[gridRow][gridCol] = patternData[row][col] === 1;
+                }
+            }
+        }
+        
+        this.draw();
+    }
+    
+    draw() {
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw grid lines
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 0.5;
+        
+        for (let i = 0; i <= this.gridSize; i++) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.offsetX + i * this.cellSize, this.offsetY);
+            this.ctx.lineTo(this.offsetX + i * this.cellSize, this.offsetY + this.gridSize * this.cellSize);
+            this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.offsetX, this.offsetY + i * this.cellSize);
+            this.ctx.lineTo(this.offsetX + this.gridSize * this.cellSize, this.offsetY + i * this.cellSize);
+            this.ctx.stroke();
+        }
+        
+        // Draw live cells
+        this.ctx.fillStyle = '#ffd700';
+        for (let row = 0; row < this.gridSize; row++) {
+            for (let col = 0; col < this.gridSize; col++) {
+                if (this.grid[row][col]) {
+                    this.ctx.fillRect(
+                        this.offsetX + col * this.cellSize + 1,
+                        this.offsetY + row * this.cellSize + 1,
+                        this.cellSize - 2,
+                        this.cellSize - 2
+                    );
+                }
+            }
+        }
+    }
+    
+    cleanup() {
+        this.stop();
+        if (this.canvas) {
+            // Remove event listeners to prevent memory leaks
+            const newCanvas = this.canvas.cloneNode(true);
+            this.canvas.parentNode.replaceChild(newCanvas, this.canvas);
+        }
+    }
+    };
+}
 
 function initLanguageSystem() {
     const languageBtn = document.getElementById('language-btn');
