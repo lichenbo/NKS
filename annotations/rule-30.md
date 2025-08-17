@@ -6,6 +6,8 @@ Rule 30 is one of the most famous [elementary cellular automata](https://en.wiki
 
 Rule 30 operates on a one-dimensional array of cells, each of which can be either black (1) or white (0). The rule determines the next state of each cell based on its current state and the states of its two immediate neighbors.
 
+![Rule 30 Evolution Pattern](images/cellular-automata/rule-30-evolution.png)
+
 *See [Rule 30 visualization on Wikipedia](https://en.wikipedia.org/wiki/Rule_30) for cellular automaton patterns*
 
 The rule can be expressed as a simple lookup table:

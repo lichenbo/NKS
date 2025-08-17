@@ -2,6 +2,8 @@
 
 A Turing machine is a theoretical model of computation, first described by Alan Turing in 1936. It serves as a simple, abstract model of a general-purpose computer.
 
+![Turing Machine Structure](images/turing-machines/turing-machine-diagram-1.png)
+
 ## How It Works
 
 A Turing machine consists of:

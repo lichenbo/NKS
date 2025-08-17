@@ -2,6 +2,8 @@
 
 图灵机（Turing Machine）是一种计算的理论模型，由艾伦·图灵于1936年首次描述。它作为一个通用计算机的简单、抽象的模型。
 
+![图灵机结构](images/turing-machines/turing-machine-diagram-1.png)
+
 ## 工作原理
 
 图灵机由以下部分组成：

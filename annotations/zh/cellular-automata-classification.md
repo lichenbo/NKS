@@ -11,6 +11,8 @@
 - **例子**：规则0、8、32、40、128、136、160、168
 - **自然类比**：达到热平衡的系统
 
+![元胞自动机四类行为](images/cellular-automata/rule-30-pattern.svg)
+
 *参见[基本元胞自动机例子](https://mathworld.wolfram.com/ElementaryCellularAutomaton.html)查看I类行为*
 
 **典型行为**：
@@ -37,6 +39,8 @@
 - **例子**：规则18、22、30、46、134、146、150、182
 - **自然类比**：湍流流体、天气系统
 
+![规则30混沌演化](images/cellular-automata/rule-30-evolution.png)
+
 *参见[规则30例子](https://en.wikipedia.org/wiki/Rule_30)查看III类混沌行为*
 
 **典型行为**：
@@ -50,6 +54,8 @@
 - **图案**：局部结构、滑翔子、复杂相互作用
 - **例子**：规则54、110、124、137
 - **自然类比**：生命系统、计算、意识
+
+![规则110复杂结构](images/cellular-automata/rule-110-single-cell.png)
 
 *参见[规则110例子](https://en.wikipedia.org/wiki/Rule_110)查看IV类复杂行为*
 

@@ -11,6 +11,8 @@ Stephen Wolfram's systematic exploration of cellular automata led to a fundament
 - **Examples**: Rules 0, 8, 32, 40, 128, 136, 160, 168
 - **Natural analogy**: Systems that reach thermal equilibrium
 
+![Four Classes of Cellular Automata Behavior](images/cellular-automata/rule-30-pattern.svg)
+
 *See [Elementary Cellular Automaton examples](https://mathworld.wolfram.com/ElementaryCellularAutomaton.html) for Class I behavior*
 
 **Typical behavior**:
@@ -37,6 +39,8 @@ Stephen Wolfram's systematic exploration of cellular automata led to a fundament
 - **Examples**: Rules 18, 22, 30, 46, 134, 146, 150, 182
 - **Natural analogy**: Turbulent fluids, weather systems
 
+![Rule 30 Chaotic Evolution](images/cellular-automata/rule-30-evolution.png)
+
 *See [Rule 30 examples](https://en.wikipedia.org/wiki/Rule_30) for Class III chaotic behavior*
 
 **Typical behavior**:
@@ -50,6 +54,8 @@ Stephen Wolfram's systematic exploration of cellular automata led to a fundament
 - **Pattern**: Localized structures, gliders, complex interactions
 - **Examples**: Rules 54, 110, 124, 137
 - **Natural analogy**: Living systems, computation, consciousness
+
+![Rule 110 Complex Structures](images/cellular-automata/rule-110-single-cell.png)
 
 *See [Rule 110 examples](https://en.wikipedia.org/wiki/Rule_110) for Class IV complex behavior*
 
