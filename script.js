@@ -197,7 +197,7 @@ async function loadChapter(chapterId) {
 
         // Handle special demo pages
         if (chapterId === 'intro-demo') {
-            const filePath = currentLanguage === 'zh' ? 'zh/intro-demo.md' : 'intro-demo.md';
+            const filePath = currentLanguage === 'zh' ? 'chapters/zh/intro-demo.md' : 'chapters/intro-demo.md';
             const response = await fetch(filePath);
             
             if (!response.ok) {
