@@ -1160,6 +1160,24 @@ header {
     accent-color: var(--accent-gold);
 }
 
+.size-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent-gold);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+}
+
+.size-btn:hover {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.6);
+    transform: translateY(-1px);
+}
+
 .size-btn.active {
     background: rgba(212, 175, 55, 0.3);
     border-color: rgba(212, 175, 55, 0.7);
@@ -1237,8 +1255,29 @@ header {
         max-width: 100%;
     }
     
-    .control-btn, .pattern-btn {
+    .control-btn, .pattern-btn, .size-btn {
         font-size: 0.8rem;
         padding: 0.3rem 0.6rem;
     }
+}
+
+/* Game of Life Demo Link Styling */
+.game-of-life-container a,
+#notes-content a {
+    color: var(--accent-gold);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    transition: all var(--transition-fast);
+}
+
+.game-of-life-container a:hover,
+#notes-content a:hover {
+    color: #f4d03f;
+    border-bottom-color: rgba(212, 175, 55, 0.7);
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.game-of-life-container a:visited,
+#notes-content a:visited {
+    color: rgba(212, 175, 55, 0.8);
 }
