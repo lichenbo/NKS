@@ -65,19 +65,16 @@ Conway's Game of Life follows just **four simple rules**:
 ## 🌐 Explore More Interactive Demos
 
 ### Conway's Game of Life
-- [LifeWiki](https://www.conwaylife.com/wiki/Main_Page) - Comprehensive pattern database
-- [Golly](http://golly.sourceforge.net/) - Advanced Game of Life simulator
+- [Golly](https://golly.sourceforge.io/) - Advanced Game of Life simulator (cross-platform)
 - [Copy.sh Game of Life](https://copy.sh/life/) - Clean, fast online implementation
 - [LifeViewer](https://lazyslug.com/lifeviewer/) - Pattern viewer with RLE support
 
 ### Related Interactive Simulations
-- [Wolfram's Elementary Cellular Automata](https://www.wolfram.com/demonstrations/ElementaryCellularAutomata/) - Rule 30, 90, 110, and more
 - [Complexity Explorables](https://www.complexity-explorables.org/) - Interactive complex systems
 - [NetLogo Models](https://ccl.northwestern.edu/netlogo/models/) - Agent-based simulations
-- [Emergent Mind](https://emergentmind.com/) - Emergence and self-organization demos
-- [Fractals and Chaos](https://www.fractalus.com/ifswork/gallery.htm) - Interactive fractal generation
-- [Swarm Intelligence](https://rednuht.org/genetic_cars_2/) - Genetic algorithms and evolution
-- [Cellular Automata Viewer](https://devinacker.github.io/cellauto/) - Experiment with different CA rules
+- [Emergent Mind](https://emergentmind.com/) - AI research discovery platform
+- [Genetic Cars Evolution](https://rednuht.org/genetic_cars_2/) - Genetic algorithms and evolution
+- [Wolfram Demonstrations](https://demonstrations.wolfram.com/) - Mathematical and scientific demonstrations
 
 ## 🧠 Why This Matters
 

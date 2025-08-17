@@ -65,19 +65,16 @@
 ## 🌐 探索更多交互演示
 
 ### 康威的生命游戏
-- [LifeWiki](https://www.conwaylife.com/wiki/Main_Page) - 综合模式数据库
-- [Golly](http://golly.sourceforge.net/) - 高级生命游戏模拟器
+- [Golly](https://golly.sourceforge.io/) - 高级生命游戏模拟器（跨平台）
 - [Copy.sh 生命游戏](https://copy.sh/life/) - 简洁快速的在线实现
 - [LifeViewer](https://lazyslug.com/lifeviewer/) - 支持RLE格式的模式查看器
 
 ### 相关交互模拟
-- [沃尔夫勒姆的基本元胞自动机](https://www.wolfram.com/demonstrations/ElementaryCellularAutomata/) - 规则30、90、110等
 - [复杂性探索](https://www.complexity-explorables.org/) - 交互式复杂系统
 - [NetLogo模型](https://ccl.northwestern.edu/netlogo/models/) - 基于智能体的模拟
-- [涌现思维](https://emergentmind.com/) - 涌现和自组织演示
-- [分形与混沌](https://www.fractalus.com/ifswork/gallery.htm) - 交互式分形生成
-- [群体智能](https://rednuht.org/genetic_cars_2/) - 遗传算法和进化
-- [元胞自动机查看器](https://devinacker.github.io/cellauto/) - 实验不同的CA规则
+- [涌现思维](https://emergentmind.com/) - AI研究发现平台
+- [遗传汽车进化](https://rednuht.org/genetic_cars_2/) - 遗传算法和进化
+- [沃尔夫勒姆演示](https://demonstrations.wolfram.com/) - 数学和科学演示
 
 ## 🧠 为什么这很重要
 
