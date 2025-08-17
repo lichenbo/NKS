@@ -13,42 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
 // Cache for loaded annotations
 const annotationCache = {};
 
-// Image preloading cache
-const imageCache = new Map();
-
-// Preload an image and cache it aggressively
-function preloadImage(src) {
-    if (imageCache.has(src)) {
-        console.log('Image already cached:', src);
-        return imageCache.get(src);
-    }
-    
-    console.log('🔄 PRELOADING IMAGE:', src);
-    
-    // Create a preload link tag for better caching
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = src;
-    document.head.appendChild(link);
-    
-    // Also create an Image object for immediate caching
-    const img = new Image();
-    const promise = new Promise((resolve, reject) => {
-        img.onload = () => {
-            console.log('✅ Image preloaded successfully:', src);
-            resolve(img);
-        };
-        img.onerror = (error) => {
-            console.log('❌ Image preload failed:', src, error);
-            reject(error);
-        };
-    });
-    
-    img.src = src;
-    imageCache.set(src, promise);
-    return promise;
-}
 
 // Custom incremental typing that doesn't reset innerHTML
 class IncrementalTyper {
@@ -443,7 +407,7 @@ async function showDesktopAnnotation(key) {
             </div>
         `;
 
-        // Use custom incremental typing instead of Typed.js
+        // Use custom incremental typing
         // Start checking for links during typing
         startLinkMonitoring();
         
@@ -523,7 +487,7 @@ async function showInlineAnnotation(key, clickedElement) {
             </div>
         `;
 
-        // Use custom incremental typing instead of Typed.js
+        // Use custom incremental typing
         // Start checking for links during typing
         startLinkMonitoring(`#inline-typewriter-text-${key}`);
         
