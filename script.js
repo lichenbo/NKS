@@ -1142,10 +1142,12 @@ if (!window.GameOfLife) {
             });
         }
         
+        const gridSmallest = document.getElementById('grid-smallest');
         const gridSmall = document.getElementById('grid-small');
         const gridMedium = document.getElementById('grid-medium');
         const gridLarge = document.getElementById('grid-large');
         
+        if (gridSmallest) gridSmallest.addEventListener('click', () => this.setGridSize(20));
         if (gridSmall) gridSmall.addEventListener('click', () => this.setGridSize(40));
         if (gridMedium) gridMedium.addEventListener('click', () => this.setGridSize(100));
         if (gridLarge) gridLarge.addEventListener('click', () => this.setGridSize(300));
@@ -1261,7 +1263,10 @@ if (!window.GameOfLife) {
         this.offsetY = (this.canvas.height - this.gridSize * this.cellSize) / 2;
         
         document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-        if (size === 40) {
+        if (size === 20) {
+            const btn = document.getElementById('grid-smallest');
+            if (btn) btn.classList.add('active');
+        } else if (size === 40) {
             const btn = document.getElementById('grid-small');
             if (btn) btn.classList.add('active');
         } else if (size === 100) {
@@ -1286,6 +1291,27 @@ if (!window.GameOfLife) {
             blinker: [[1], [1], [1]],
             toad: [[0,1,1,1], [1,1,1,0]],
             beacon: [[1,1,0,0], [1,1,0,0], [0,0,1,1], [0,0,1,1]],
+            pulsar: [
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0]
+            ],
+            'lightweight-spaceship': [
+                [1,0,0,1,0],
+                [0,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,1]
+            ],
             'gosper-gun': [
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
@@ -1301,6 +1327,28 @@ if (!window.GameOfLife) {
                 [0,0,1,0,0,0,0,1,0,0],
                 [1,1,0,1,1,1,1,0,1,1],
                 [0,0,1,0,0,0,0,1,0,0]
+            ],
+            acorn: [
+                [0,1,0,0,0,0,0],
+                [0,0,0,1,0,0,0],
+                [1,1,0,0,1,1,1]
+            ],
+            diehard: [
+                [0,0,0,0,0,0,1,0],
+                [1,1,0,0,0,0,0,0],
+                [0,1,0,0,0,1,1,1]
+            ],
+            'r-pentomino': [
+                [0,1,1],
+                [1,1,0],
+                [0,1,0]
+            ],
+            'infinite-growth': [
+                [1,1,1,0,1],
+                [1,0,0,0,0],
+                [0,0,0,1,1],
+                [0,1,1,0,1],
+                [1,0,1,0,1]
             ]
         };
         

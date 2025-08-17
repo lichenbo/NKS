@@ -24,6 +24,7 @@
         </div>
         <div class="control-row">
             <label>Grid Size:</label>
+            <button id="grid-smallest" class="size-btn">20×20</button>
             <button id="grid-small" class="size-btn active">40×40</button>
             <button id="grid-medium" class="size-btn">100×100</button>
             <button id="grid-large" class="size-btn">300×300</button>
@@ -39,8 +40,14 @@
         <button class="pattern-btn" data-pattern="blinker">💫 Blinker</button>
         <button class="pattern-btn" data-pattern="toad">🐸 Toad</button>
         <button class="pattern-btn" data-pattern="beacon">🔆 Beacon</button>
+        <button class="pattern-btn" data-pattern="pulsar">🌟 Pulsar</button>
+        <button class="pattern-btn" data-pattern="lightweight-spaceship">🚀 LWSS</button>
         <button class="pattern-btn" data-pattern="gosper-gun">🔫 Gosper Gun</button>
         <button class="pattern-btn" data-pattern="pentadecathlon">⚡ Pentadecathlon</button>
+        <button class="pattern-btn" data-pattern="acorn">🌰 Acorn</button>
+        <button class="pattern-btn" data-pattern="diehard">💀 Diehard</button>
+        <button class="pattern-btn" data-pattern="r-pentomino">🔥 R-Pentomino</button>
+        <button class="pattern-btn" data-pattern="infinite-growth">📈 Infinite Growth</button>
     </div>
 </div>
 

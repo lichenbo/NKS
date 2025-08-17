@@ -24,6 +24,7 @@
         </div>
         <div class="control-row">
             <label>网格大小：</label>
+            <button id="grid-smallest" class="size-btn">20×20</button>
             <button id="grid-small" class="size-btn active">40×40</button>
             <button id="grid-medium" class="size-btn">100×100</button>
             <button id="grid-large" class="size-btn">300×300</button>
@@ -39,8 +40,14 @@
         <button class="pattern-btn" data-pattern="blinker">💫 闪烁子</button>
         <button class="pattern-btn" data-pattern="toad">🐸 蟾蜍</button>
         <button class="pattern-btn" data-pattern="beacon">🔆 信标</button>
+        <button class="pattern-btn" data-pattern="pulsar">🌟 脉冲星</button>
+        <button class="pattern-btn" data-pattern="lightweight-spaceship">🚀 轻型飞船</button>
         <button class="pattern-btn" data-pattern="gosper-gun">🔫 高斯帕机枪</button>
         <button class="pattern-btn" data-pattern="pentadecathlon">⚡ 十五格振荡子</button>
+        <button class="pattern-btn" data-pattern="acorn">🌰 橡子</button>
+        <button class="pattern-btn" data-pattern="diehard">💀 顽强生存</button>
+        <button class="pattern-btn" data-pattern="r-pentomino">🔥 R型五格骨牌</button>
+        <button class="pattern-btn" data-pattern="infinite-growth">📈 无限增长</button>
     </div>
 </div>
 
