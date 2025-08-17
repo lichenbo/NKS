@@ -1123,6 +1123,35 @@ header {
     margin-bottom: 1rem;
 }
 
+.instructions {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(212, 175, 55, 0.1);
+    border-left: 3px solid var(--accent-gold);
+    border-radius: 6px;
+}
+
+.instructions p {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-gold);
+    font-weight: 500;
+}
+
+.instructions ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.instructions strong {
+    color: var(--accent-gold);
+}
+
 .control-row {
     display: flex;
     align-items: center;

@@ -2,6 +2,13 @@
 
 *Before diving into "A New Kind of Science," experience firsthand how simple rules can create infinite complexity.*
 
+**💡 How to Use:**
+
+- **Left-click cells** on the grid to toggle them alive (golden) or dead (black)
+- **Click "Play"** to start the simulation and watch patterns evolve  
+- **Try "Random"** for instant chaos - then see what emerges!
+- **Use preset patterns** below to explore famous configurations
+
 <div id="game-of-life-container" class="game-of-life-container">
     <div class="game-controls">
         <div class="control-row">
@@ -17,22 +24,23 @@
         </div>
         <div class="control-row">
             <label>Grid Size:</label>
-            <button id="grid-small" class="size-btn">20×20</button>
-            <button id="grid-medium" class="size-btn active">30×30</button>
-            <button id="grid-large" class="size-btn">40×40</button>
+            <button id="grid-small" class="size-btn active">40×40</button>
+            <button id="grid-medium" class="size-btn">100×100</button>
+            <button id="grid-large" class="size-btn">300×300</button>
         </div>
     </div>
-    <canvas id="game-canvas" class="game-canvas"></canvas>
-    <div class="pattern-library">
-        <h3>🎨 Try These Patterns:</h3>
-        <div class="pattern-buttons">
-            <button class="pattern-btn" data-pattern="glider">✈️ Glider</button>
-            <button class="pattern-btn" data-pattern="blinker">💫 Blinker</button>
-            <button class="pattern-btn" data-pattern="toad">🐸 Toad</button>
-            <button class="pattern-btn" data-pattern="beacon">🔆 Beacon</button>
-            <button class="pattern-btn" data-pattern="gosper-gun">🔫 Gosper Gun</button>
-            <button class="pattern-btn" data-pattern="pentadecathlon">⚡ Pentadecathlon</button>
-        </div>
+
+<canvas id="game-canvas" class="game-canvas"></canvas>
+
+<div class="pattern-library">
+    <h3>🎨 Try These Patterns:</h3>
+    <div class="pattern-buttons">
+        <button class="pattern-btn" data-pattern="glider">✈️ Glider</button>
+        <button class="pattern-btn" data-pattern="blinker">💫 Blinker</button>
+        <button class="pattern-btn" data-pattern="toad">🐸 Toad</button>
+        <button class="pattern-btn" data-pattern="beacon">🔆 Beacon</button>
+        <button class="pattern-btn" data-pattern="gosper-gun">🔫 Gosper Gun</button>
+        <button class="pattern-btn" data-pattern="pentadecathlon">⚡ Pentadecathlon</button>
     </div>
 </div>
 

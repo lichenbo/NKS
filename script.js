@@ -197,10 +197,11 @@ async function loadChapter(chapterId) {
 
         // Handle special demo pages
         if (chapterId === 'intro-demo') {
-            const response = await fetch('intro-demo.md');
+            const filePath = currentLanguage === 'zh' ? 'zh/intro-demo.md' : 'intro-demo.md';
+            const response = await fetch(filePath);
             
             if (!response.ok) {
-                throw new Error(`Demo file not found: intro-demo.md`);
+                throw new Error(`Demo file not found: ${filePath}`);
             }
 
             const markdownContent = await response.text();
@@ -1016,7 +1017,10 @@ const translations = {
         'loading': 'Loading chapter content...',
         'rule-bg': 'BG',
         'rule-header': 'Header',
-        'rule': 'Rule'
+        'rule': 'Rule',
+        'intro-demo': 'Interactive Demo: Conway\'s Game of Life',
+        'play': '▶ Play',
+        'pause': '⏸ Pause'
     },
     zh: {
         author: '斯蒂芬·沃尔夫拉姆',
@@ -1040,7 +1044,10 @@ const translations = {
         'loading': '正在加载章节内容...',
         'rule-bg': '背景',
         'rule-header': '标题',
-        'rule': '元胞自动机：规则'
+        'rule': '元胞自动机：规则',
+        'intro-demo': '交互演示：康威的生命游戏',
+        'play': '▶ 播放',
+        'pause': '⏸ 暂停'
     }
 };
 
@@ -1065,7 +1072,7 @@ if (!window.GameOfLife) {
         }
         
         this.ctx = this.canvas.getContext('2d');
-        this.gridSize = 30;
+        this.gridSize = 40;
         this.cellSize = 0;
         this.grid = [];
         this.nextGrid = [];
@@ -1076,6 +1083,7 @@ if (!window.GameOfLife) {
         this.setupCanvas();
         this.initializeGrid();
         this.setupEventListeners();
+        this.setInitialActiveButton();
         this.draw();
     }
     
@@ -1092,6 +1100,13 @@ if (!window.GameOfLife) {
     initializeGrid() {
         this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
         this.nextGrid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+    }
+    
+    setInitialActiveButton() {
+        // Set the correct initial active button for the default grid size (40)
+        document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+        const initialBtn = document.getElementById('grid-small');
+        if (initialBtn) initialBtn.classList.add('active');
     }
     
     setupEventListeners() {
@@ -1131,9 +1146,9 @@ if (!window.GameOfLife) {
         const gridMedium = document.getElementById('grid-medium');
         const gridLarge = document.getElementById('grid-large');
         
-        if (gridSmall) gridSmall.addEventListener('click', () => this.setGridSize(20));
-        if (gridMedium) gridMedium.addEventListener('click', () => this.setGridSize(30));
-        if (gridLarge) gridLarge.addEventListener('click', () => this.setGridSize(40));
+        if (gridSmall) gridSmall.addEventListener('click', () => this.setGridSize(40));
+        if (gridMedium) gridMedium.addEventListener('click', () => this.setGridSize(100));
+        if (gridLarge) gridLarge.addEventListener('click', () => this.setGridSize(300));
         
         document.querySelectorAll('.pattern-btn').forEach(btn => {
             btn.addEventListener('click', () => this.loadPattern(btn.dataset.pattern));
@@ -1165,14 +1180,20 @@ if (!window.GameOfLife) {
     play() {
         this.isPlaying = true;
         const playBtn = document.getElementById('play-pause-btn');
-        if (playBtn) playBtn.textContent = '⏸ Pause';
+        if (playBtn) {
+            const pauseText = translations[currentLanguage] ? translations[currentLanguage]['pause'] : '⏸ Pause';
+            playBtn.textContent = pauseText;
+        }
         this.interval = setInterval(() => this.step(), this.speed);
     }
     
     stop() {
         this.isPlaying = false;
         const playBtn = document.getElementById('play-pause-btn');
-        if (playBtn) playBtn.textContent = '▶ Play';
+        if (playBtn) {
+            const playText = translations[currentLanguage] ? translations[currentLanguage]['play'] : '▶ Play';
+            playBtn.textContent = playText;
+        }
         if (this.interval) {
             clearInterval(this.interval);
             this.interval = null;
@@ -1240,13 +1261,13 @@ if (!window.GameOfLife) {
         this.offsetY = (this.canvas.height - this.gridSize * this.cellSize) / 2;
         
         document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-        if (size === 20) {
+        if (size === 40) {
             const btn = document.getElementById('grid-small');
             if (btn) btn.classList.add('active');
-        } else if (size === 30) {
+        } else if (size === 100) {
             const btn = document.getElementById('grid-medium');
             if (btn) btn.classList.add('active');
-        } else {
+        } else if (size === 300) {
             const btn = document.getElementById('grid-large');
             if (btn) btn.classList.add('active');
         }
