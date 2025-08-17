@@ -12,8 +12,8 @@
         </div>
         <div class="control-row">
             <label for="speed-slider">Speed:</label>
-            <input type="range" id="speed-slider" min="50" max="1000" value="200" class="slider">
-            <span id="speed-display">200ms</span>
+            <input type="range" id="speed-slider" min="1" max="10" value="5" class="slider">
+            <span id="speed-display">1x</span>
         </div>
         <div class="control-row">
             <label>Grid Size:</label>

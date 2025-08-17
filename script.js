@@ -1071,7 +1071,7 @@ if (!window.GameOfLife) {
         this.nextGrid = [];
         this.isPlaying = false;
         this.interval = null;
-        this.speed = 200;
+        this.speed = 600; // Default speed for slider value 5
         
         this.setupCanvas();
         this.initializeGrid();
@@ -1111,8 +1111,15 @@ if (!window.GameOfLife) {
         
         if (speedSlider) {
             speedSlider.addEventListener('input', (e) => {
-                this.speed = parseInt(e.target.value);
-                if (speedDisplay) speedDisplay.textContent = this.speed + 'ms';
+                const sliderValue = parseInt(e.target.value);
+                // Convert slider value (1-10) to speed (1000ms-100ms)
+                // Higher slider value = faster animation = lower delay
+                this.speed = 1100 - (sliderValue * 100);
+                
+                // Display as speed multiplier (5 = 1x baseline)
+                const speedMultiplier = sliderValue / 5;
+                if (speedDisplay) speedDisplay.textContent = speedMultiplier + 'x';
+                
                 if (this.isPlaying) {
                     this.stop();
                     this.play();
