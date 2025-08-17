@@ -13,6 +13,92 @@ document.addEventListener('DOMContentLoaded', function () {
 // Cache for loaded annotations
 const annotationCache = {};
 
+// Image preloading cache
+const imageCache = new Map();
+
+// Preload an image and cache it aggressively
+function preloadImage(src) {
+    if (imageCache.has(src)) {
+        console.log('Image already cached:', src);
+        return imageCache.get(src);
+    }
+    
+    console.log('🔄 PRELOADING IMAGE:', src);
+    
+    // Create a preload link tag for better caching
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = src;
+    document.head.appendChild(link);
+    
+    // Also create an Image object for immediate caching
+    const img = new Image();
+    const promise = new Promise((resolve, reject) => {
+        img.onload = () => {
+            console.log('✅ Image preloaded successfully:', src);
+            resolve(img);
+        };
+        img.onerror = (error) => {
+            console.log('❌ Image preload failed:', src, error);
+            reject(error);
+        };
+    });
+    
+    img.src = src;
+    imageCache.set(src, promise);
+    return promise;
+}
+
+// Process content for typing: replace images with invisible placeholders
+async function processContentForTyping(content) {
+    const imageRegex = /<img[^>]+src="([^"]*)"[^>]*>/g;
+    const images = [];
+    let processedContent = content;
+    
+    console.log('🖼️ Processing content - replacing images with invisible placeholders...');
+    
+    // Extract all image references and replace with invisible placeholders
+    let match;
+    while ((match = imageRegex.exec(content)) !== null) {
+        const [fullMatch, src] = match;
+        
+        images.push({ 
+            fullMatch, 
+            src,
+            placeholder: `<span class="image-placeholder-invisible" data-src="${src}"></span>`
+        });
+        
+        console.log('🔄 Preloading image:', src);
+        
+        // Preload the image
+        await preloadImage(src);
+        
+        // Replace img tag with invisible placeholder that won't trigger network requests
+        processedContent = processedContent.replace(fullMatch, images[images.length - 1].placeholder);
+    }
+    
+    console.log('✅ Preloaded', images.length, 'images and replaced with invisible placeholders');
+    
+    return { processedContent, images };
+}
+
+// Restore images after typing completes - one-time operation
+function restoreImagesAfterTyping(element, images) {
+    console.log('🖼️ Restoring images after typing completes...');
+    
+    let content = element.innerHTML;
+    
+    images.forEach(({ fullMatch, placeholder }) => {
+        content = content.replace(placeholder, fullMatch);
+    });
+    
+    // Single innerHTML update after typing is completely done
+    element.innerHTML = content;
+    console.log('✅ Restored', images.length, 'images in single operation');
+}
+
+
 function initMarkdownRenderer() {
     // Configure marked for our annotation syntax
     marked.setOptions({
@@ -266,11 +352,20 @@ async function showDesktopAnnotation(key) {
 
         // Initialize Typed.js with error handling
         if (typeof Typed !== 'undefined') {
+            // Process content to replace images with invisible placeholders
+            const { processedContent, images } = await processContentForTyping(annotation.content);
+            
+            console.log('=== CONTENT DEBUGGING ===');
+            console.log('Original annotation content:', annotation.content.substring(0, 300));
+            console.log('Processed content for typing:', processedContent.substring(0, 300));
+            console.log('Contains <img tags:', processedContent.includes('<img'));
+            console.log('Images array:', images);
+            
             // Start checking for links during typing
             startLinkMonitoring();
             
             currentTyped = new Typed('#typewriter-text', {
-                strings: [annotation.content], // Use HTML content directly
+                strings: [processedContent], // Use content with invisible placeholders
                 typeSpeed: 10, // Much faster typing (was 1ms, now 10ms per character)
                 backSpeed: 0,
                 fadeOut: false,
@@ -279,8 +374,13 @@ async function showDesktopAnnotation(key) {
                 autoInsertCss: true,
                 contentType: 'html', // Allow HTML content
                 onComplete: function () {
-                    // Stop monitoring and make sure all links are clickable
+                    // Stop monitoring
                     stopLinkMonitoring();
+                    
+                    // Restore images after typing is completely done
+                    const element = document.getElementById('typewriter-text');
+                    restoreImagesAfterTyping(element, images);
+                    
                     enableAnnotationLinks();
                 }
             });
@@ -358,11 +458,14 @@ async function showInlineAnnotation(key, clickedElement) {
 
         // Initialize Typed.js with error handling
         if (typeof Typed !== 'undefined') {
+            // Process content to replace images with invisible placeholders
+            const { processedContent, images } = await processContentForTyping(annotation.content);
+            
             // Start checking for links during typing
             startLinkMonitoring(`#inline-typewriter-text-${key}`);
             
             currentTyped = new Typed(`#inline-typewriter-text-${key}`, {
-                strings: [annotation.content], // Use HTML content directly
+                strings: [processedContent], // Use content with invisible placeholders
                 typeSpeed: 10, // Much faster typing
                 backSpeed: 0,
                 fadeOut: false,
@@ -371,8 +474,13 @@ async function showInlineAnnotation(key, clickedElement) {
                 autoInsertCss: true,
                 contentType: 'html', // Allow HTML content
                 onComplete: function () {
-                    // Stop monitoring and make sure all links are clickable
+                    // Stop monitoring
                     stopLinkMonitoring();
+                    
+                    // Restore images after typing is completely done
+                    const element = document.getElementById(`inline-typewriter-text-${key}`);
+                    restoreImagesAfterTyping(element, images);
+                    
                     enableInlineAnnotationLinks(key);
                 }
             });

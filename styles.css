@@ -570,6 +570,61 @@ header {
     color: var(--text-primary);
 }
 
+/* Image styling in annotations */
+.annotation-text img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: var(--spacing-sm) 0;
+    border: 1px solid var(--border-subtle);
+    background: #ffffff;
+    padding: var(--spacing-sm);
+    transition: all var(--transition-fast);
+}
+
+/* White background for paragraphs containing images */
+.annotation-text p:has(img) {
+    background: #ffffff;
+    padding: var(--spacing-sm);
+    border-radius: 8px;
+    margin: var(--spacing-sm) 0;
+}
+
+.annotation-text img:hover {
+    border-color: var(--accent-gold);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-subtle);
+}
+
+/* Image placeholder during typing */
+.image-placeholder {
+    display: inline-block;
+    background: var(--secondary-bg);
+    color: var(--text-muted);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px dashed var(--border-subtle);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    margin: var(--spacing-xs) 0;
+}
+
+/* Style the emoji-based image placeholders */
+.annotation-text {
+    /* Ensure emojis render nicely */
+    font-variant-emoji: normal;
+}
+
+/* Invisible image placeholder during typing - takes up no space */
+.image-placeholder-invisible {
+    display: inline;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    font-size: 0;
+    line-height: 0;
+}
+
 /* Initially disable pointer events during typing animation */
 #typewriter-text a {
     pointer-events: none;
