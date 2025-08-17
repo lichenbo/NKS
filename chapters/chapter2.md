@@ -80,7 +80,7 @@ Rule 30 and similar discoveries provide:
 
 While Rule 30 was the initial breakthrough, the crucial experiment revealed an entire universe of simple programs with remarkable properties:
 
-- **Rule 90**: Generates fractal Sierpinski triangle patterns
+- **Rule 90**: Generates [fractal](annotation:fractals) Sierpinski triangle patterns
 - **Rule 110**: Exhibits [computational universality](annotation:computational-equivalence)
 - **Rule 184**: Models traffic flow and particle interactions
 - **Rule 150**: Creates additive patterns with XOR-like behavior
