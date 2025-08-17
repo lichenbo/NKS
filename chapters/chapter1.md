@@ -8,13 +8,13 @@ Chapter 1 serves as both an introduction and manifesto, outlining the revolution
 
 Three centuries ago, science was revolutionized by using mathematical equations to describe the natural world. Wolfram aims to initiate another such transformation by introducing a **new kind of science based on the more general types of rules embodied in simple computer programs**.
 
-This represents a departure from traditional mathematical modeling toward [computational approaches](annotation:computational-equivalence) that can capture phenomena previously beyond the reach of conventional scientific methods.
+This represents a departure from traditional mathematical modeling toward [computational approaches](annotation:scientific-methodology) that can capture phenomena previously beyond the reach of conventional scientific methods.
 
 ### Origin of the Idea
 
 This new science stems from a discovery Wolfram made over twenty years prior: a computer experiment showed unexpected results, leading him to realize it was "the beginning of a crack in the very foundations of existing science". The book is the culmination of nearly twenty years of work developing this new science.
 
-The pivotal moment came when Wolfram witnessed [simple rules producing complex behavior](annotation:emergence) in ways that traditional science could not explain or predict.
+The pivotal moment came when Wolfram witnessed [simple rules producing complex behavior](annotation:rule-30) in ways that traditional science could not explain or predict.
 
 ### Simplicity and Complexity
 
@@ -189,7 +189,7 @@ Rather than viewing complexity as something that requires explanation, this new 
 
 ### Randomness Reconsidered
 
-Apparent randomness in nature may actually be the result of [deterministic computational processes](annotation:emergence) that are too complex to predict analytically.
+Apparent randomness in nature may actually be the result of [deterministic computational processes](annotation:deterministic-chaos) that are too complex to predict analytically.
 
 ### The Limits of Prediction
 

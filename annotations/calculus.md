@@ -48,7 +48,21 @@ Traditional calculus works with continuous, smooth functions. It assumes that sm
 
 ## Wolfram's Perspective
 
-Wolfram suggests that nature might not always follow the smooth, continuous patterns that calculus describes. His computational approach can handle discrete, rule-based systems that don't fit neatly into traditional calculus frameworks.
+Chapter 1 contrasts traditional physics methods that rely on continuous numbers and calculus with the new computational approach using simple programs. Key differences include:
+
+**Traditional Calculus-Based Approach:**
+- Assumes continuous, smooth changes
+- Uses differential equations and mathematical analysis  
+- Works well for systems that can be described by equations
+- Limited to phenomena that fit mathematical frameworks
+
+**Wolfram's Computational Approach:**
+- Handles discrete, rule-based systems naturally
+- Uses direct simulation rather than mathematical analysis
+- Can capture phenomena that don't fit traditional equations
+- Reveals mechanisms for previously mysterious physical processes
+
+This represents a fundamental shift from describing nature through mathematical equations to understanding it through computational rules - potentially offering a more fundamental theory for the universe than calculus-based physics.
 
 ## Mathematical Beauty
 

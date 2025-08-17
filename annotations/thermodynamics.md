@@ -36,7 +36,16 @@ Developed in the 19th century during the Industrial Revolution, thermodynamics e
 
 ## Connection to Wolfram's Work
 
-Traditional thermodynamics uses statistical methods to explain the behavior of countless particles. Wolfram proposes that simple computational rules might provide an alternative explanation for thermodynamic phenomena.
+Traditional thermodynamics has faced over a century of confusion about fundamental questions like the origin of irreversibility and the arrow of time. Wolfram's discoveries about simple programs offer a straightforward explanation for how thermodynamic behavior arises in physics.
+
+Rather than relying on statistical mechanics and the assumption of randomness, Wolfram suggests that thermodynamic behavior emerges naturally from simple computational rules. This provides a deterministic foundation for understanding phenomena like:
+
+- **Irreversibility**: Why systems naturally evolve toward equilibrium
+- **Entropy increase**: How disorder emerges from ordered initial conditions  
+- **Arrow of time**: Why time has a preferred direction in thermodynamic processes
+- **Randomness in thermal motion**: How deterministic rules can produce apparently random behavior
+
+This computational approach potentially resolves longstanding paradoxes and provides a unified framework for understanding thermodynamic phenomena across different scales and systems.
 
 ## Learn More
 
