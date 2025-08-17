@@ -6,9 +6,13 @@
 
 规则30作用于一维单元格阵列，每个单元格可以是黑色（1）或白色（0）。该规则根据每个单元格的当前状态及其两个直接邻居的状态来确定其下一个状态。
 
-![规则30演化图案](images/cellular-automata/rule-30-evolution.png)
+![规则30初始图案](images/cellular-automata/rule-30-initial-pattern.svg)
 
-*参见[维基百科上的规则30可视化](https://en.wikipedia.org/wiki/Rule_30)查看元胞自动机图案*
+*规则30从单个黑色单元格的早期演化，显示了特征性的嵌套图案和新兴复杂性*
+
+![规则30演化图案](images/cellular-automata/rule-30-evolution-250.jpg)
+
+*规则30经过250次迭代后，展现了从简单初始条件中产生的完整复杂性*
 
 该规则可以表示为一个简单的查找表：
 - 111 → 0
@@ -35,6 +39,10 @@
 - **伪随机生成**：在Mathematica的随机数生成器中使用
 
 ## 视觉图案
+
+![规则30元胞自动机](images/cellular-automata/cellular-automata-rule-30.svg)
+
+*详细的元胞自动机可视化，显示规则30的演化图案和结构*
 
 当规则30从简单的初始条件（通常是单个黑色单元格）运行时，它生成一个三角形图案，具有：
 - 复杂的、嵌套结构的中央脊

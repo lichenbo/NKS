@@ -6,9 +6,13 @@ Rule 30 is one of the most famous [elementary cellular automata](https://en.wiki
 
 Rule 30 operates on a one-dimensional array of cells, each of which can be either black (1) or white (0). The rule determines the next state of each cell based on its current state and the states of its two immediate neighbors.
 
-![Rule 30 Evolution Pattern](images/cellular-automata/rule-30-evolution.png)
+![Rule 30 Initial Pattern](images/cellular-automata/rule-30-initial-pattern.svg)
 
-*See [Rule 30 visualization on Wikipedia](https://en.wikipedia.org/wiki/Rule_30) for cellular automaton patterns*
+*Early evolution of Rule 30 from a single black cell, showing the characteristic nested patterns and emerging complexity*
+
+![Rule 30 Evolution Pattern](images/cellular-automata/rule-30-evolution-250.jpg)
+
+*Rule 30 after 250 iterations, demonstrating the full complexity that emerges from the simple initial condition*
 
 The rule can be expressed as a simple lookup table:
 - 111 → 0
@@ -35,6 +39,10 @@ The binary representation (00011110) equals 30 in decimal, hence "Rule 30."
 - **Pseudo-random generation**: Used in Mathematica's random number generator
 
 ## Visual Patterns
+
+![Rule 30 Cellular Automaton](images/cellular-automata/cellular-automata-rule-30.svg)
+
+*Detailed cellular automaton visualization showing Rule 30's evolution pattern and structure*
 
 When Rule 30 is run from a simple initial condition (typically a single black cell), it generates a triangular pattern with:
 - Central spine of complex, nested structures

@@ -9,12 +9,19 @@ A system is computationally irreducible when:
 - **Prediction requires full simulation**: You cannot jump ahead to future states without computing all intermediate states
 - **Mathematical analysis fails**: Traditional analytical methods cannot provide faster solutions
 
-*See [Computational Irreducibility examples](https://mathworld.wolfram.com/ComputationalIrreducibility.html) for mathematical illustrations*
+![Rule 30 Computational Irreducibility](images/cellular-automata/rule-30-evolution-250.jpg)
+
+*Rule 30 after 250 iterations - despite the deterministic rule, predicting this pattern requires computing every intermediate step*
 
 ## Examples in Simple Systems
 
 ### Rule 30 Cellular Automaton
 The most famous example of computational irreducibility:
+
+![Rule 30 Evolution Pattern](images/cellular-automata/cellular-automata-rule-30.svg)
+
+*The evolution pattern of Rule 30 shows how simple local rules create complex global behavior that cannot be predicted without step-by-step computation*
+
 - Despite simple rules, predicting the pattern after many steps requires running the entire computation
 - No mathematical formula can directly calculate the state at step n without computing all previous steps
 - Each cell's evolution depends on complex interactions that resist analytical solution
@@ -23,6 +30,10 @@ The most famous example of computational irreducibility:
 - **Three-body problem**: No analytical solution exists for predicting planetary motions with three or more bodies
 - **Protein folding**: Determining a protein's final shape requires simulation of the folding process
 - **Weather systems**: Long-term weather prediction is limited by computational irreducibility
+
+![Lorenz Attractor Chaos](images/chaos/lorenz-attractor-animation.gif)
+
+*The Lorenz attractor demonstrates computational irreducibility in continuous systems - predicting long-term trajectories requires step-by-step integration*
 
 ## Implications for Science
 

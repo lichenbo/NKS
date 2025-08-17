@@ -10,7 +10,9 @@ Deterministic chaos describes systems that are completely deterministic (governe
 - **Unpredictable output**: Despite deterministic rules, long-term behavior appears random
 - **Sensitive dependence**: Tiny differences in initial conditions lead to dramatically different outcomes
 
-*See [Lorenz system visualization](https://en.wikipedia.org/wiki/Lorenz_system) for examples of deterministic chaos*
+![Lorenz Attractor](images/chaos/lorenz-attractor.svg)
+
+*The Lorenz attractor - a classic example of deterministic chaos where simple differential equations produce complex, non-repeating trajectories*
 
 ## Historical Development
 
@@ -29,6 +31,11 @@ Lorenz's famous metaphor: "A butterfly flapping its wings in Brazil could cause 
 
 ### Strange Attractors
 Chaotic systems often exhibit [strange attractors](https://en.wikipedia.org/wiki/Attractor#Strange_attractor):
+
+![Lorenz Attractor Animation](images/chaos/lorenz-attractor-animation.gif)
+
+*Dynamic evolution of the Lorenz attractor showing how trajectories trace out the characteristic butterfly-shaped strange attractor*
+
 - **Bounded behavior**: System stays within finite region of phase space
 - **Non-periodic**: Never exactly repeats previous states
 - **Fractal structure**: Self-similar patterns at multiple scales
@@ -61,6 +68,11 @@ The [logistic map](https://en.wikipedia.org/wiki/Logistic_map): x_{n+1} = rx_n(1
 
 ### Cellular Automata Chaos
 Rule 30 exemplifies deterministic chaos:
+
+![Rule 30 Chaos](images/cellular-automata/rule-30-evolution-250.jpg)
+
+*Rule 30 demonstrates how deterministic cellular automaton rules can produce chaotic, seemingly random patterns*
+
 - **Simple deterministic rule**: Each cell's next state is completely determined
 - **Chaotic output**: Generates seemingly random patterns
 - **Computational irreducibility**: Cannot predict future states without full computation
