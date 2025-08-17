@@ -625,6 +625,19 @@ header {
     line-height: 0;
 }
 
+/* Typing cursor animation */
+@keyframes typedjsBlink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.typed-cursor {
+    font-weight: 100;
+    color: inherit;
+    animation: typedjsBlink 0.7s infinite;
+}
+
 /* Initially disable pointer events during typing animation */
 #typewriter-text a {
     pointer-events: none;

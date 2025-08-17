@@ -50,52 +50,145 @@ function preloadImage(src) {
     return promise;
 }
 
-// Process content for typing: replace images with invisible placeholders
-async function processContentForTyping(content) {
-    const imageRegex = /<img[^>]+src="([^"]*)"[^>]*>/g;
-    const images = [];
-    let processedContent = content;
-    
-    console.log('🖼️ Processing content - replacing images with invisible placeholders...');
-    
-    // Extract all image references and replace with invisible placeholders
-    let match;
-    while ((match = imageRegex.exec(content)) !== null) {
-        const [fullMatch, src] = match;
+// Custom incremental typing that doesn't reset innerHTML
+class IncrementalTyper {
+    constructor(element, content, options = {}) {
+        this.element = element;
+        this.content = content;
+        this.typeSpeed = options.typeSpeed || 10;
+        this.onComplete = options.onComplete || (() => {});
+        this.currentIndex = 0;
+        this.isTyping = false;
         
-        images.push({ 
-            fullMatch, 
-            src,
-            placeholder: `<span class="image-placeholder-invisible" data-src="${src}"></span>`
-        });
+        // Parse HTML into tokens for incremental building
+        this.tokens = this.parseHTML(content);
+        this.currentTokenIndex = 0;
+        this.currentCharIndex = 0;
         
-        console.log('🔄 Preloading image:', src);
-        
-        // Preload the image
-        await preloadImage(src);
-        
-        // Replace img tag with invisible placeholder that won't trigger network requests
-        processedContent = processedContent.replace(fullMatch, images[images.length - 1].placeholder);
+        console.log('🔤 Parsed content into', this.tokens.length, 'tokens');
     }
     
-    console.log('✅ Preloaded', images.length, 'images and replaced with invisible placeholders');
+    parseHTML(html) {
+        const tokens = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        this.extractTokens(tempDiv.childNodes, tokens);
+        return tokens;
+    }
     
-    return { processedContent, images };
+    extractTokens(nodes, tokens) {
+        for (let node of nodes) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                // Split text into individual characters for typing
+                const text = node.textContent;
+                for (let char of text) {
+                    tokens.push({ type: 'char', content: char });
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.tagName.toLowerCase() === 'img') {
+                    // Insert complete image element at once
+                    tokens.push({ type: 'element', element: node.cloneNode(true) });
+                } else {
+                    // For other elements, open tag, content, close tag
+                    tokens.push({ type: 'open_tag', element: node.cloneNode(false) });
+                    this.extractTokens(node.childNodes, tokens);
+                    tokens.push({ type: 'close_tag', tagName: node.tagName.toLowerCase() });
+                }
+            }
+        }
+    }
+    
+    start() {
+        if (this.isTyping) return;
+        this.isTyping = true;
+        this.element.innerHTML = ''; // Clear only once at start
+        this.currentStack = [this.element]; // Stack to track current parent element
+        
+        // Add cursor
+        this.cursor = document.createElement('span');
+        this.cursor.textContent = '|';
+        this.cursor.className = 'typed-cursor';
+        this.cursor.style.cssText = 'font-weight: 100; color: inherit; animation: typedjsBlink 0.7s infinite;';
+        this.element.appendChild(this.cursor);
+        
+        this.typeNextToken();
+    }
+    
+    typeNextToken() {
+        if (this.currentTokenIndex >= this.tokens.length) {
+            // Typing complete - remove cursor
+            if (this.cursor && this.cursor.parentNode) {
+                this.cursor.parentNode.removeChild(this.cursor);
+            }
+            this.isTyping = false;
+            console.log('✅ Incremental typing completed');
+            this.onComplete();
+            return;
+        }
+        
+        const token = this.tokens[this.currentTokenIndex];
+        const currentParent = this.currentStack[this.currentStack.length - 1];
+        
+        // Insert before cursor if it exists
+        const insertBefore = (element) => {
+            if (this.cursor && this.cursor.parentNode === currentParent) {
+                currentParent.insertBefore(element, this.cursor);
+            } else {
+                currentParent.appendChild(element);
+            }
+        };
+        
+        switch (token.type) {
+            case 'char':
+                // Append character to current parent
+                const textNode = document.createTextNode(token.content);
+                insertBefore(textNode);
+                break;
+                
+            case 'element':
+                // Insert complete element (like img) at once
+                console.log('🖼️ Inserting complete element:', token.element.tagName);
+                insertBefore(token.element);
+                break;
+                
+            case 'open_tag':
+                // Create and append opening element
+                const newElement = token.element.cloneNode(false);
+                insertBefore(newElement);
+                this.currentStack.push(newElement);
+                break;
+                
+            case 'close_tag':
+                // Pop from stack (close current element)
+                this.currentStack.pop();
+                break;
+        }
+        
+        this.currentTokenIndex++;
+        
+        // Continue typing after delay (except for complete elements)
+        const delay = token.type === 'element' ? 0 : this.typeSpeed;
+        setTimeout(() => this.typeNextToken(), delay);
+    }
+    
+    destroy() {
+        this.isTyping = false;
+        // Remove cursor if it exists
+        if (this.cursor && this.cursor.parentNode) {
+            this.cursor.parentNode.removeChild(this.cursor);
+        }
+    }
 }
 
-// Restore images after typing completes - one-time operation
-function restoreImagesAfterTyping(element, images) {
-    console.log('🖼️ Restoring images after typing completes...');
+// Start incremental typing
+function startIncrementalTyping(elementId, content, options = {}) {
+    const element = document.getElementById(elementId);
+    if (!element) return null;
     
-    let content = element.innerHTML;
-    
-    images.forEach(({ fullMatch, placeholder }) => {
-        content = content.replace(placeholder, fullMatch);
-    });
-    
-    // Single innerHTML update after typing is completely done
-    element.innerHTML = content;
-    console.log('✅ Restored', images.length, 'images in single operation');
+    const typer = new IncrementalTyper(element, content, options);
+    typer.start();
+    return typer;
 }
 
 
@@ -350,45 +443,19 @@ async function showDesktopAnnotation(key) {
             </div>
         `;
 
-        // Initialize Typed.js with error handling
-        if (typeof Typed !== 'undefined') {
-            // Process content to replace images with invisible placeholders
-            const { processedContent, images } = await processContentForTyping(annotation.content);
-            
-            console.log('=== CONTENT DEBUGGING ===');
-            console.log('Original annotation content:', annotation.content.substring(0, 300));
-            console.log('Processed content for typing:', processedContent.substring(0, 300));
-            console.log('Contains <img tags:', processedContent.includes('<img'));
-            console.log('Images array:', images);
-            
-            // Start checking for links during typing
-            startLinkMonitoring();
-            
-            currentTyped = new Typed('#typewriter-text', {
-                strings: [processedContent], // Use content with invisible placeholders
-                typeSpeed: 10, // Much faster typing (was 1ms, now 10ms per character)
-                backSpeed: 0,
-                fadeOut: false,
-                showCursor: true,
-                cursorChar: '|',
-                autoInsertCss: true,
-                contentType: 'html', // Allow HTML content
-                onComplete: function () {
-                    // Stop monitoring
-                    stopLinkMonitoring();
-                    
-                    // Restore images after typing is completely done
-                    const element = document.getElementById('typewriter-text');
-                    restoreImagesAfterTyping(element, images);
-                    
-                    enableAnnotationLinks();
-                }
-            });
-        } else {
-            // Fallback: display content immediately if Typed.js is not available
-            document.getElementById('typewriter-text').innerHTML = annotation.content;
-            enableAnnotationLinks();
-        }
+        // Use custom incremental typing instead of Typed.js
+        // Start checking for links during typing
+        startLinkMonitoring();
+        
+        // Use incremental typing that doesn't reset innerHTML
+        currentTyped = startIncrementalTyping('typewriter-text', annotation.content, {
+            typeSpeed: 10,
+            onComplete: function () {
+                // Stop monitoring
+                stopLinkMonitoring();
+                enableAnnotationLinks();
+            }
+        });
     } else {
         annotationContent.innerHTML = `
             <h3>Annotation Not Found</h3>
@@ -456,39 +523,19 @@ async function showInlineAnnotation(key, clickedElement) {
             </div>
         `;
 
-        // Initialize Typed.js with error handling
-        if (typeof Typed !== 'undefined') {
-            // Process content to replace images with invisible placeholders
-            const { processedContent, images } = await processContentForTyping(annotation.content);
-            
-            // Start checking for links during typing
-            startLinkMonitoring(`#inline-typewriter-text-${key}`);
-            
-            currentTyped = new Typed(`#inline-typewriter-text-${key}`, {
-                strings: [processedContent], // Use content with invisible placeholders
-                typeSpeed: 10, // Much faster typing
-                backSpeed: 0,
-                fadeOut: false,
-                showCursor: true,
-                cursorChar: '|',
-                autoInsertCss: true,
-                contentType: 'html', // Allow HTML content
-                onComplete: function () {
-                    // Stop monitoring
-                    stopLinkMonitoring();
-                    
-                    // Restore images after typing is completely done
-                    const element = document.getElementById(`inline-typewriter-text-${key}`);
-                    restoreImagesAfterTyping(element, images);
-                    
-                    enableInlineAnnotationLinks(key);
-                }
-            });
-        } else {
-            // Fallback: display content immediately if Typed.js is not available
-            document.getElementById(`inline-typewriter-text-${key}`).innerHTML = annotation.content;
-            enableInlineAnnotationLinks(key);
-        }
+        // Use custom incremental typing instead of Typed.js
+        // Start checking for links during typing
+        startLinkMonitoring(`#inline-typewriter-text-${key}`);
+        
+        // Use incremental typing that doesn't reset innerHTML
+        currentTyped = startIncrementalTyping(`inline-typewriter-text-${key}`, annotation.content, {
+            typeSpeed: 10,
+            onComplete: function () {
+                // Stop monitoring
+                stopLinkMonitoring();
+                enableInlineAnnotationLinks(key);
+            }
+        });
     } else {
         titleElement.textContent = 'Annotation Not Found';
         contentElement.innerHTML = `
