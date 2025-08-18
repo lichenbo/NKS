@@ -89,6 +89,9 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Fallback system**: Japanese content falls back to Chinese, then English if translation doesn't exist
 - **Translation object**: All UI text is stored in `translations` object in `script.js` with complete EN/ZH/JA support
 
+## Translation and Content Notes
+- **Chinese Title for "A New Kind of Science"**: The standard Chinese translation for the book title "A New Kind of Science" should be "一种新科学", not "一种新的科学". This has been updated across all relevant files.
+
 ## Key Features
 
 - **Interactive Conway's Game of Life demo** as introduction page with 12 sample patterns:

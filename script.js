@@ -1038,7 +1038,7 @@ const translations = {
     zh: {
         preface: '前言',
         author: '斯蒂芬·沃尔夫拉姆',
-        title: '一种新的科学',
+        title: '一种新科学',
         subtitle: '个人笔记和注释',
         outline: '大纲',
         annotations: '注释',
