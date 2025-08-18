@@ -1,4 +1,4 @@
-# Interactive Demo: Conway's Game of Life
+# Interactive Demo: [Conway's Game of Life](annotation:conways-game-of-life)
 
 *Before diving into "A New Kind of Science," experience firsthand how simple rules can create infinite complexity.*
 
