@@ -70,7 +70,7 @@ The book shows that even systems with extremely simple construction can yield im
 
 ### Art
 
-Simple programs can generate pictures with striking aesthetic qualities, often reminiscent of nature but also uniquely new. This opens up new frontiers in computational art and design.
+Simple programs can generate pictures with striking aesthetic qualities, often reminiscent of nature but also uniquely new. This opens up new frontiers in [computational art and design](annotation:computational-art).
 
 ### Technology
 

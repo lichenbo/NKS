@@ -13,6 +13,36 @@ The central discovery that simple computational rules can produce immense comple
 
 ## Examples of Emergence
 
+### Natural Examples
+
+```
+Individual Rules → Collective Behavior
+
+🐦 BIRD FLOCKING:
+Individual: • Stay close to neighbors
+           • Avoid crowding  
+           • Match average direction
+Result:    • Beautiful formations
+           • Coordinated movement
+           • Predator protection
+
+🐟 FISH SCHOOLING:
+Individual: • Swim toward neighbors
+           • Avoid collisions
+           • Match speed
+Result:    • Synchronized swimming
+           • Efficient foraging
+           • Safety in numbers
+
+🐜 ANT COLONIES:
+Individual: • Follow pheromone trails
+           • Drop pheromones
+           • Carry food home
+Result:    • Optimal paths to food
+           • Complex nest structures
+           • Division of labor
+```
+
 ### Computational Systems
 ![Elementary CA Rules](images/cellular-automata/elementary-ca-rules.svg)
 

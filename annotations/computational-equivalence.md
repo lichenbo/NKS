@@ -4,6 +4,10 @@ Wolfram's most ambitious hypothesis states that almost all systems perform compu
 
 ## Core Concepts
 
+![Universal Turing Machine](images/turing-machines/universal-turing-machine.svg)
+
+*A Universal Turing Machine that can simulate any other computational system, illustrating the fundamental equivalence between different forms of computation - from simple cellular automata to the human brain*
+
 ### Universal Computation
 - **Simple Programs**: Even the most basic rules can achieve maximum computational complexity.
 - **Human Brain**: Fundamentally equivalent to simple computational systems.
@@ -30,6 +34,10 @@ Based on the work of Alan Turing:
 - **Universal Computation**: A system capable of simulating any other computation.
 - **Rule 110**: A simple cellular automaton proven to be Turing complete.
 - **Computational Universality**: Simple systems are capable of performing any possible computation.
+
+![Rule 110 Evolution](images/cellular-automata/rule-110-evolution.gif)
+
+*Rule 110 demonstrates computational equivalence - this simple cellular automaton with just 3 basic rules is Turing complete, meaning it can perform any computation that any computer can do*
 
 ### Collapse of Complexity Hierarchies
 Breaking down traditional complexity rankings:
