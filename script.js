@@ -224,7 +224,14 @@ async function loadChapter(chapterId) {
         }
 
         // Determine file path based on current language
-        const filePath = currentLanguage === 'zh' ? `chapters/zh/${chapterId}.md` : `chapters/${chapterId}.md`;
+        let filePath;
+        if (currentLanguage === 'zh') {
+            filePath = `chapters/zh/${chapterId}.md`;
+        } else if (currentLanguage === 'ja') {
+            filePath = `chapters/ja/${chapterId}.md`;
+        } else {
+            filePath = `chapters/${chapterId}.md`;
+        }
 
         // Fetch the markdown file
         const response = await fetch(filePath);
@@ -362,6 +369,12 @@ async function loadAnnotation(key) {
         let response;
         if (currentLanguage === 'zh') {
             response = await fetch(`annotations/zh/${key}.md`);
+            if (!response.ok) {
+                // Fallback to English version
+                response = await fetch(`annotations/${key}.md`);
+            }
+        } else if (currentLanguage === 'ja') {
+            response = await fetch(`annotations/ja/${key}.md`);
             if (!response.ok) {
                 // Fallback to English version
                 response = await fetch(`annotations/${key}.md`);
@@ -1049,6 +1062,34 @@ const translations = {
         'intro-demo': '交互演示：康威的生命游戏',
         'play': '▶ 播放',
         'pause': '⏸ 暂停'
+    },
+    ja: {
+        preface: '序文',
+        author: 'スティーブン・ウルフラム',
+        title: '新しい科学',
+        subtitle: '個人ノートと注釈',
+        outline: 'アウトライン',
+        annotations: '注釈',
+        'annotation-placeholder': 'ノート内のハイライトされたリンクをクリックして、詳細な注釈と追加のコンテキストを表示します。',
+        'chapter1': '第1章：新しい科学の基礎',
+        'chapter2': '第2章：決定的実験',
+        'chapter3': '第3章：シンプルなプログラムの世界',
+        'chapter4': '第4章：数値ベースのシステム',
+        'chapter5': '第5章：二次元とその先',
+        'chapter6': '第6章：ランダム性からの出発',
+        'chapter7': '第7章：プログラムと自然界のメカニズム',
+        'chapter8': '第8章：日常システムへの影響',
+        'chapter9': '第9章：基礎物理学',
+        'chapter10': '第10章：知覚と分析のプロセス',
+        'chapter11': '第11章：計算の概念',
+        'chapter12': '第12章：計算等価性の原理',
+        'loading': 'チャプター内容を読み込み中...',
+        'rule-bg': 'BG',
+        'rule-header': 'ヘッダー',
+        'rule': 'ルール',
+        'intro-demo': 'インタラクティブデモ：コンウェイのライフゲーム',
+        'play': '▶ プレイ',
+        'pause': '⏸ 一時停止'
     }
 };
 
@@ -1641,29 +1682,34 @@ if (!window.GameOfLife) {
 }
 
 function initLanguageSystem() {
-    const languageBtn = document.getElementById('language-btn');
+    const langOptions = document.querySelectorAll('.lang-option');
 
     // currentLanguage is already initialized from localStorage at top level
-    updateLanguageButton();
+    updateLanguageButtons();
 
-    languageBtn.addEventListener('click', function () {
-        currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
-        localStorage.setItem('nks-language', currentLanguage);
-        updateLanguageButton();
-        updatePageLanguage();
+    langOptions.forEach(button => {
+        button.addEventListener('click', function () {
+            const selectedLang = this.getAttribute('data-lang');
+            if (selectedLang !== currentLanguage) {
+                currentLanguage = selectedLang;
+                localStorage.setItem('nks-language', currentLanguage);
+                updateLanguageButtons();
+                updatePageLanguage();
 
-        // Update annotation content to show correct language
-        clearAnnotationContent();
+                // Update annotation content to show correct language
+                clearAnnotationContent();
 
-        // Update rule indicators to show correct language
-        updateRuleIndicators();
+                // Update rule indicators to show correct language
+                updateRuleIndicators();
 
-        // Reload current chapter with new language
-        const activeChapter = document.querySelector('.chapter-link.active');
-        if (activeChapter) {
-            const chapterId = activeChapter.getAttribute('data-chapter');
-            loadChapter(chapterId);
-        }
+                // Reload current chapter with new language
+                const activeChapter = document.querySelector('.chapter-link.active');
+                if (activeChapter) {
+                    const chapterId = activeChapter.getAttribute('data-chapter');
+                    loadChapter(chapterId);
+                }
+            }
+        });
     });
 
     // Initialize with current language
@@ -1671,9 +1717,17 @@ function initLanguageSystem() {
     updateRuleIndicators();
 }
 
-function updateLanguageButton() {
-    const langText = document.querySelector('.lang-text');
-    langText.textContent = currentLanguage === 'en' ? '中文' : 'EN';
+function updateLanguageButtons() {
+    const langOptions = document.querySelectorAll('.lang-option');
+    
+    langOptions.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        if (buttonLang === currentLanguage) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
 }
 
 function updatePageLanguage() {
