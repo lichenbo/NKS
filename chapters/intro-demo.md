@@ -6,7 +6,7 @@
 
 - **Left-click cells** on the grid to toggle them alive (golden) or dead (black)
 - **Click "Play"** to start the simulation and watch patterns evolve  
-- **Try "Random"** for instant chaos - then see what emerges!
+- **Try "Random"** for instant chaos - then see what [emerges](annotation:emergence)!
 - **Use preset patterns** below to explore famous configurations
 
 <div id="game-of-life-container" class="game-of-life-container">

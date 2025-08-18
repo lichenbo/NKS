@@ -1126,15 +1126,26 @@ if (!window.GameOfLife) {
         if (randomBtn) randomBtn.addEventListener('click', () => this.randomize());
         
         if (speedSlider) {
+            // Set initial display value for default slider position (value=5)
+            if (speedDisplay) speedDisplay.textContent = '1.00x';
+
             speedSlider.addEventListener('input', (e) => {
                 const sliderValue = parseInt(e.target.value);
-                // Convert slider value (1-10) to speed (1000ms-100ms)
-                // Higher slider value = faster animation = lower delay
-                this.speed = 1100 - (sliderValue * 100);
+                let speedMultiplier;
+
+                if (sliderValue <= 5) {
+                    // Scale from 0.25x to 1.0x for slider values 1-5
+                    speedMultiplier = 0.25 + (sliderValue - 1) * 0.1875;
+                } else {
+                    // Scale from 1.0x to 5.0x for slider values 5-10
+                    speedMultiplier = 1.0 + (sliderValue - 5) * 0.8;
+                }
                 
-                // Display as speed multiplier (5 = 1x baseline)
-                const speedMultiplier = sliderValue / 5;
-                if (speedDisplay) speedDisplay.textContent = speedMultiplier + 'x';
+                // Update speed display
+                if (speedDisplay) speedDisplay.textContent = speedMultiplier.toFixed(2) + 'x';
+
+                // Calculate interval delay (1x speed = 600ms)
+                this.speed = 600 / speedMultiplier;
                 
                 if (this.isPlaying) {
                     this.stop();
