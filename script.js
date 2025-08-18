@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initAnnotationContent();
     initScrollToTop();
 
-    // Load intro demo by default
-    loadChapter('intro-demo');
+    // Load preface by default
+    loadChapter('preface');
 });
 
 // Cache for loaded annotations
@@ -1023,6 +1023,7 @@ const translations = {
         'pause': '⏸ Pause'
     },
     zh: {
+        preface: '前言',
         author: '斯蒂芬·沃尔夫拉姆',
         title: '一种新的科学',
         subtitle: '个人笔记和注释',
