@@ -12,11 +12,23 @@
 
 *牙签序列展示了几何生长规则如何创造出具有数学精确性和视觉吸引力的分形图案*
 
+![生命游戏滑翔机枪](images/computational-art/game-of-life-glider-gun.svg)
+
+*康威的生命游戏滑翔机枪图案——一个简单配置，仅通过四个基本规则就能持续生成滑翔机，创造出无限复杂性*
+
 ## 分形中的数学之美
 
 ![曼德布洛特集合](images/computational-art/mandelbrot-set.png)
 
 *曼德布洛特集合从简单方程z² + c中显现出无限细节和惊人的视觉复杂性，展示了数学公式如何创造深刻的审美体验*
+
+![谢尔宾斯基地毯](images/computational-art/sierpinski-carpet.svg)
+
+*通过递归细分创建的谢尔宾斯基地毯分形——从移除中心正方形的简单规则中涌现出无限复杂性*
+
+![龙形曲线](images/computational-art/dragon-curve.svg)
+
+*由L系统规则生成的龙形曲线分形——通过简单的递归折叠指令创造出优雅的自相似图案*
 
 ## 计算艺术的特征
 
