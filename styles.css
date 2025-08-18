@@ -1285,9 +1285,11 @@ header {
     }
     
     .control-row {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
     
     .pattern-buttons {
@@ -1301,7 +1303,27 @@ header {
     
     .control-btn, .pattern-btn, .size-btn {
         font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
+/* Extra mobile optimization for very small screens */
+@media (max-width: 480px) {
+    .control-row {
+        gap: 0.3rem;
+    }
+    
+    .control-btn, .pattern-btn, .size-btn {
+        font-size: 0.75rem;
         padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+    }
+    
+    .slider {
+        width: 100px;
+        margin: 0 0.25rem;
     }
 }
 
