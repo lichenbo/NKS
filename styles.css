@@ -1234,6 +1234,10 @@ header {
     margin: 1rem auto;
     display: block;
     transition: border-color var(--transition-fast);
+    touch-action: none; /* Prevent browser touch gestures */
+    user-select: none; /* Prevent text selection */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none; /* Prevent iOS callout menu */
 }
 
 .game-canvas:hover {

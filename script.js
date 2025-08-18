@@ -1130,13 +1130,20 @@ if (!window.GameOfLife) {
     }
     
     setupCanvas() {
-        this.canvas.width = 600;
-        this.canvas.height = 400;
+        // Make canvas responsive to container size
+        const rect = this.canvas.getBoundingClientRect();
+        const maxWidth = Math.min(600, rect.width || 600);
+        const maxHeight = Math.min(400, window.innerWidth <= 768 ? 300 : 400);
+        
+        this.canvas.width = maxWidth;
+        this.canvas.height = maxHeight;
         this.cellSize = Math.min(this.canvas.width / this.gridSize, this.canvas.height / this.gridSize);
         
         // Center the grid
         this.offsetX = (this.canvas.width - this.gridSize * this.cellSize) / 2;
         this.offsetY = (this.canvas.height - this.gridSize * this.cellSize) / 2;
+        
+        console.log(`Canvas setup: ${this.canvas.width}x${this.canvas.height}, cellSize: ${this.cellSize}, offset: (${this.offsetX}, ${this.offsetY})`);
     }
     
     initializeGrid() {
@@ -1339,7 +1346,19 @@ if (!window.GameOfLife) {
     }
     
     setupEventListeners() {
+        // Handle both mouse and touch events
         this.canvas.addEventListener('click', (e) => this.handleClick(e));
+        this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e));
+        
+        // Prevent default touch behavior to avoid scrolling issues
+        this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
+        this.canvas.addEventListener('touchend', (e) => e.preventDefault());
+        
+        // Handle window resize and orientation change for mobile
+        window.addEventListener('resize', () => this.handleResize());
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.handleResize(), 100); // Delay to let orientation settle
+        });
         
         const playBtn = document.getElementById('play-pause-btn');
         const stepBtn = document.getElementById('step-btn');
@@ -1399,16 +1418,59 @@ if (!window.GameOfLife) {
     
     handleClick(e) {
         const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - this.offsetX;
-        const y = e.clientY - rect.top - this.offsetY;
         
+        // Account for canvas scaling
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        const x = (e.clientX - rect.left) * scaleX - this.offsetX;
+        const y = (e.clientY - rect.top) * scaleY - this.offsetY;
+        
+        this.toggleCell(x, y);
+    }
+    
+    handleTouch(e) {
+        e.preventDefault(); // Prevent default touch behavior
+        const rect = this.canvas.getBoundingClientRect();
+        const touch = e.touches[0]; // Get first touch point
+        
+        // Account for canvas scaling and device pixel ratio
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        const x = (touch.clientX - rect.left) * scaleX - this.offsetX;
+        const y = (touch.clientY - rect.top) * scaleY - this.offsetY;
+        
+        // Visual feedback for touch detection
+        console.log(`Touch detected: clientX=${touch.clientX}, clientY=${touch.clientY}`);
+        console.log(`Canvas rect: left=${rect.left}, top=${rect.top}, width=${rect.width}, height=${rect.height}`);
+        console.log(`Scale: X=${scaleX.toFixed(2)}, Y=${scaleY.toFixed(2)}`);
+        
+        this.toggleCell(x, y);
+    }
+    
+    toggleCell(x, y) {
         const col = Math.floor(x / this.cellSize);
         const row = Math.floor(y / this.cellSize);
+        
+        // Debug logging for mobile testing
+        console.log(`Touch/Click at pixel (${x.toFixed(1)}, ${y.toFixed(1)}) -> grid (${col}, ${row})`);
         
         if (col >= 0 && col < this.gridSize && row >= 0 && row < this.gridSize) {
             this.grid[row][col] = !this.grid[row][col];
             this.draw();
+            
+            // Visual feedback for successful cell toggle
+            console.log(`Cell toggled at grid (${col}, ${row}) to ${this.grid[row][col]}`);
+        } else {
+            console.log(`Touch/Click outside grid bounds`);
         }
+    }
+    
+    handleResize() {
+        console.log('Handling resize/orientation change');
+        this.setupCanvas();
+        this.draw();
     }
     
     togglePlay() {
