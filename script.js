@@ -1073,7 +1073,7 @@ if (!window.GameOfLife) {
         }
         
         this.ctx = this.canvas.getContext('2d');
-        this.gridSize = 40;
+        this.gridSize = 20;
         this.cellSize = 0;
         this.grid = [];
         this.nextGrid = [];
@@ -1101,12 +1101,199 @@ if (!window.GameOfLife) {
     initializeGrid() {
         this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
         this.nextGrid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+        
+        // Add engaging starting patterns based on grid size
+        if (this.gridSize === 20) {
+            // 20x20: Simple patterns for beginners
+            // Add a blinker pattern in the center
+            const center = Math.floor(this.gridSize / 2);
+            this.grid[center-1][center] = true;
+            this.grid[center][center] = true;
+            this.grid[center+1][center] = true;
+            
+            // Add a glider in the upper left area
+            this.grid[3][4] = true;
+            this.grid[4][5] = true;
+            this.grid[5][3] = true;
+            this.grid[5][4] = true;
+            this.grid[5][5] = true;
+            
+        } else if (this.gridSize === 40) {
+            // 40x40: Multiple interacting patterns
+            // Add a beacon oscillator
+            this.grid[8][8] = true;
+            this.grid[8][9] = true;
+            this.grid[9][8] = true;
+            this.grid[10][11] = true;
+            this.grid[11][10] = true;
+            this.grid[11][11] = true;
+            
+            // Add a toad oscillator
+            this.grid[15][20] = true;
+            this.grid[15][21] = true;
+            this.grid[15][22] = true;
+            this.grid[16][19] = true;
+            this.grid[16][20] = true;
+            this.grid[16][21] = true;
+            
+            // Add two gliders moving toward each other
+            // Glider 1 (moving southeast)
+            this.grid[5][25] = true;
+            this.grid[6][26] = true;
+            this.grid[7][24] = true;
+            this.grid[7][25] = true;
+            this.grid[7][26] = true;
+            
+            // Glider 2 (moving northwest)
+            this.grid[30][15] = true;
+            this.grid[30][14] = true;
+            this.grid[30][13] = true;
+            this.grid[31][15] = true;
+            this.grid[32][14] = true;
+            
+        } else if (this.gridSize === 100) {
+            // 100x100: Complex patterns including Gosper Gun
+            // Add a simplified Gosper Gun for glider generation
+            const gunStartRow = 40;
+            const gunStartCol = 20;
+            // Left block
+            this.grid[gunStartRow][gunStartCol] = true;
+            this.grid[gunStartRow][gunStartCol+1] = true;
+            this.grid[gunStartRow+1][gunStartCol] = true;
+            this.grid[gunStartRow+1][gunStartCol+1] = true;
+            
+            // Main gun structure (simplified)
+            this.grid[gunStartRow][gunStartCol+10] = true;
+            this.grid[gunStartRow+1][gunStartCol+10] = true;
+            this.grid[gunStartRow+2][gunStartCol+10] = true;
+            this.grid[gunStartRow-1][gunStartCol+11] = true;
+            this.grid[gunStartRow+3][gunStartCol+11] = true;
+            this.grid[gunStartRow-2][gunStartCol+12] = true;
+            this.grid[gunStartRow+4][gunStartCol+12] = true;
+            this.grid[gunStartRow+1][gunStartCol+13] = true;
+            this.grid[gunStartRow-1][gunStartCol+14] = true;
+            this.grid[gunStartRow+3][gunStartCol+14] = true;
+            this.grid[gunStartRow][gunStartCol+15] = true;
+            this.grid[gunStartRow+1][gunStartCol+15] = true;
+            this.grid[gunStartRow+2][gunStartCol+15] = true;
+            this.grid[gunStartRow+1][gunStartCol+16] = true;
+            
+            // Right structures
+            this.grid[gunStartRow-2][gunStartCol+20] = true;
+            this.grid[gunStartRow-1][gunStartCol+20] = true;
+            this.grid[gunStartRow][gunStartCol+20] = true;
+            this.grid[gunStartRow-2][gunStartCol+21] = true;
+            this.grid[gunStartRow-1][gunStartCol+21] = true;
+            this.grid[gunStartRow][gunStartCol+21] = true;
+            this.grid[gunStartRow-3][gunStartCol+22] = true;
+            this.grid[gunStartRow+1][gunStartCol+22] = true;
+            this.grid[gunStartRow-4][gunStartCol+24] = true;
+            this.grid[gunStartRow-3][gunStartCol+24] = true;
+            this.grid[gunStartRow+1][gunStartCol+24] = true;
+            this.grid[gunStartRow+2][gunStartCol+24] = true;
+            
+            // Final block
+            this.grid[gunStartRow-1][gunStartCol+34] = true;
+            this.grid[gunStartRow][gunStartCol+34] = true;
+            this.grid[gunStartRow-1][gunStartCol+35] = true;
+            this.grid[gunStartRow][gunStartCol+35] = true;
+            
+            // Add a pulsar in another area
+            const pulsarRow = 70;
+            const pulsarCol = 60;
+            // Pulsar pattern (13x13)
+            const pulsarPattern = [
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0]
+            ];
+            for (let row = 0; row < pulsarPattern.length; row++) {
+                for (let col = 0; col < pulsarPattern[row].length; col++) {
+                    if (pulsarPattern[row][col] === 1) {
+                        this.grid[pulsarRow + row][pulsarCol + col] = true;
+                    }
+                }
+            }
+            
+        } else if (this.gridSize === 300) {
+            // 300x300: Large scale patterns and methuselahs
+            // Add multiple Gosper guns creating complex interactions
+            this.addGosperGun(50, 50);
+            this.addGosperGun(200, 50);
+            this.addGosperGun(50, 200);
+            
+            // Add an R-pentomino (famous methuselah)
+            const rRow = 150;
+            const rCol = 150;
+            this.grid[rRow][rCol+1] = true;
+            this.grid[rRow][rCol+2] = true;
+            this.grid[rRow+1][rCol] = true;
+            this.grid[rRow+1][rCol+1] = true;
+            this.grid[rRow+2][rCol+1] = true;
+            
+            // Add an acorn (another methuselah)
+            const acornRow = 100;
+            const acornCol = 100;
+            this.grid[acornRow][acornCol+1] = true;
+            this.grid[acornRow+1][acornCol+3] = true;
+            this.grid[acornRow+2][acornCol] = true;
+            this.grid[acornRow+2][acornCol+1] = true;
+            this.grid[acornRow+2][acornCol+4] = true;
+            this.grid[acornRow+2][acornCol+5] = true;
+            this.grid[acornRow+2][acornCol+6] = true;
+            
+            // Add a diehard pattern
+            const diehardRow = 80;
+            const diehardCol = 220;
+            this.grid[diehardRow+1][diehardCol] = true;
+            this.grid[diehardRow+1][diehardCol+1] = true;
+            this.grid[diehardRow+2][diehardCol+1] = true;
+            this.grid[diehardRow+2][diehardCol+5] = true;
+            this.grid[diehardRow+2][diehardCol+6] = true;
+            this.grid[diehardRow+2][diehardCol+7] = true;
+            this.grid[diehardRow][diehardCol+6] = true;
+        }
+    }
+    
+    // Helper function to add a Gosper gun at specified position
+    addGosperGun(startRow, startCol) {
+        const gunPattern = [
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+            [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+            [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ];
+        
+        for (let row = 0; row < gunPattern.length; row++) {
+            for (let col = 0; col < gunPattern[row].length; col++) {
+                if (gunPattern[row][col] === 1 && 
+                    startRow + row < this.gridSize && 
+                    startCol + col < this.gridSize) {
+                    this.grid[startRow + row][startCol + col] = true;
+                }
+            }
+        }
     }
     
     setInitialActiveButton() {
-        // Set the correct initial active button for the default grid size (40)
+        // Set the correct initial active button for the default grid size (20)
         document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-        const initialBtn = document.getElementById('grid-small');
+        const initialBtn = document.getElementById('grid-smallest');
         if (initialBtn) initialBtn.classList.add('active');
     }
     
@@ -1137,8 +1324,8 @@ if (!window.GameOfLife) {
                     // Scale from 0.25x to 1.0x for slider values 1-5
                     speedMultiplier = 0.25 + (sliderValue - 1) * 0.1875;
                 } else {
-                    // Scale from 1.0x to 5.0x for slider values 5-10
-                    speedMultiplier = 1.0 + (sliderValue - 5) * 0.8;
+                    // Scale from 1.0x to 10.0x for slider values 5-10
+                    speedMultiplier = 1.0 + (sliderValue - 5) * 1.8;
                 }
                 
                 // Update speed display
@@ -1253,7 +1440,9 @@ if (!window.GameOfLife) {
     
     clear() {
         this.stop();
-        this.initializeGrid();
+        // Create completely empty grid (no initial patterns)
+        this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+        this.nextGrid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
         this.draw();
     }
     
@@ -1389,9 +1578,9 @@ if (!window.GameOfLife) {
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw grid lines
+        // Draw grid lines with adaptive thickness
         this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 0.5;
+        this.ctx.lineWidth = this.gridSize <= 20 ? 1 : 0.5;
         
         for (let i = 0; i <= this.gridSize; i++) {
             this.ctx.beginPath();
@@ -1405,16 +1594,35 @@ if (!window.GameOfLife) {
             this.ctx.stroke();
         }
         
-        // Draw live cells
+        // Draw live cells with better visual feedback for smaller grids
         this.ctx.fillStyle = '#ffd700';
+        const cellPadding = this.gridSize <= 20 ? 2 : 1;
+        
         for (let row = 0; row < this.gridSize; row++) {
             for (let col = 0; col < this.gridSize; col++) {
                 if (this.grid[row][col]) {
+                    // Add slight gradient effect for larger cells
+                    if (this.gridSize <= 20) {
+                        const gradient = this.ctx.createRadialGradient(
+                            this.offsetX + col * this.cellSize + this.cellSize/2,
+                            this.offsetY + row * this.cellSize + this.cellSize/2,
+                            0,
+                            this.offsetX + col * this.cellSize + this.cellSize/2,
+                            this.offsetY + row * this.cellSize + this.cellSize/2,
+                            this.cellSize/2
+                        );
+                        gradient.addColorStop(0, '#ffdd44');
+                        gradient.addColorStop(1, '#daa520');
+                        this.ctx.fillStyle = gradient;
+                    } else {
+                        this.ctx.fillStyle = '#ffd700';
+                    }
+                    
                     this.ctx.fillRect(
-                        this.offsetX + col * this.cellSize + 1,
-                        this.offsetY + row * this.cellSize + 1,
-                        this.cellSize - 2,
-                        this.cellSize - 2
+                        this.offsetX + col * this.cellSize + cellPadding,
+                        this.offsetY + row * this.cellSize + cellPadding,
+                        this.cellSize - cellPadding * 2,
+                        this.cellSize - cellPadding * 2
                     );
                 }
             }

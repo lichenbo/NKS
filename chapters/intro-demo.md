@@ -24,8 +24,8 @@
         </div>
         <div class="control-row">
             <label>Grid Size:</label>
-            <button id="grid-smallest" class="size-btn">20×20</button>
-            <button id="grid-small" class="size-btn active">40×40</button>
+            <button id="grid-smallest" class="size-btn active">20×20</button>
+            <button id="grid-small" class="size-btn">40×40</button>
             <button id="grid-medium" class="size-btn">100×100</button>
             <button id="grid-large" class="size-btn">300×300</button>
         </div>
