@@ -784,6 +784,11 @@ header {
         padding: 6px 8px;
         font-size: 0.8rem;
     }
+    
+    /* Add top spacing to header content to avoid language switcher overlap */
+    .header-content {
+        margin-top: 3rem; /* Space for language switcher + some padding */
+    }
 
     .rule-indicator {
         bottom: var(--spacing-xs);
@@ -874,6 +879,11 @@ header {
 
     .subtitle {
         font-size: 0.9rem;
+    }
+    
+    /* Ensure adequate space for language switcher on smallest screens */
+    .header-content {
+        margin-top: 3.5rem; /* Extra space for very small screens */
     }
 
     .three-column-layout {

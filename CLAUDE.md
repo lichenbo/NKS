@@ -34,9 +34,11 @@ This is a client-side web application that presents notes and annotations for St
   - Dark theme with gold accents
 - `chapters/` - Chapter content as markdown files
   - `intro-demo.md` - Interactive Conway's Game of Life demo (introduction page)
-  - `chapter1.md`, `chapter2.md`, `chapter3.md` (English)
-  - `zh/intro-demo.md`, `zh/chapter1.md`, `zh/chapter2.md`, `zh/chapter3.md` (Chinese)
-  - `ja/preface.md`, `ja/intro-demo.md` (Japanese)
+  - `chapter1.md` - Hybrid version combining comprehensive coverage with Wolfram's personal discovery narrative
+  - `chapter2.md`, `chapter3.md` - Additional English chapters
+  - `preface.md` - Project preface and introduction
+  - `zh/` - Chinese translations (intro-demo.md, chapter1.md, chapter2.md, chapter3.md, preface.md)
+  - `ja/` - Japanese translations (preface.md, intro-demo.md)
 - `annotations/` - Annotation content as individual markdown files
   - Individual annotation files (e.g., `cellular-automata.md`, `emergence.md`, `computational-art.md`)
   - `zh/` subdirectory for Chinese translations
@@ -61,6 +63,10 @@ Since this is a static HTML/CSS/JS project with no build system:
 
 ### Chapter System
 - **Adding chapters**: Create new `.md` files in `chapters/` directory following naming pattern `chapter[N].md`
+- **Hybrid chapter approach**: Chapter 1 uses hybrid format combining comprehensive technical coverage with engaging personal narrative
+  - `chapter1.md` contains the hybrid approach with Wolfram's personal discovery journey integrated throughout
+  - Maintains all annotation links and educational completeness from academic structure
+  - Integrates first-person narrative elements for enhanced reader engagement while preserving technical depth
 - **Multilingual chapters**: Add corresponding files in `chapters/zh/` for Chinese and `chapters/ja/` for Japanese versions
 - **Chapter navigation**: Update chapter list in `index.html` and add translations to `script.js` translations object
 - **Visual content**: Enhanced with educational images and computational art examples to improve accessibility
@@ -149,6 +155,7 @@ Since this is a static HTML/CSS/JS project with no build system:
 - JavaScript handles annotation display: sidebar (≥769px) or inline (≤768px)
 - Outline panel becomes non-sticky on tablets/mobile with reduced max-height
 - Chapter navigation becomes grid layout on mobile for better touch interaction
+- **Language switcher mobile optimization**: Header content positioned with adequate top margin (3rem on tablets, 3.5rem on phones) to prevent overlap with language selector
 
 ### Mobile Navigation Enhancement
 - **Scroll-to-Top Button**: Fixed circular button in bottom-right corner (mobile phones only ≤480px)
