@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态分层内容演示 - 第2章</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(26, 26, 26, 0.8);
+            padding: 2rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #ffd700;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #ffeb3b;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        /* Reading Mode Indicator */
+        .reading-mode-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            padding: 12px 16px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .mode-label {
+            color: rgba(255, 215, 0, 0.8);
+            font-weight: 500;
+        }
+
+        .mode-toggle {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 16px;
+            background: transparent;
+            color: rgba(255, 215, 0, 0.7);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .mode-toggle:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: rgba(255, 215, 0, 0.9);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .mode-toggle.active {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border-color: rgba(255, 215, 0, 0.8);
+            font-weight: 500;
+        }
+
+        /* Content container */
+        .content-container {
+            margin-top: 2rem;
+        }
+
+        .simplified-content, .detailed-content, .layered-content {
+            display: none;
+        }
+
+        .simplified-content.active, .detailed-content.active, .layered-content.active {
+            display: block;
+        }
+
+        /* Simplified content styling */
+        .simplified-content {
+            line-height: 1.7;
+        }
+
+        .simplified-content ul, .simplified-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .simplified-content li {
+            margin: 0.5rem 0;
+        }
+
+        .simplified-content blockquote {
+            margin: 1.5rem 0;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+            font-style: italic;
+        }
+
+        /* Detailed content styling */
+        .detailed-content {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .detailed-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 1rem 0;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Layered content styling */
+        .layered-content {
+            line-height: 1.6;
+        }
+
+        .layered-content .content-layer {
+            margin-bottom: 1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .layered-content .content-layer.detailed {
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .layered-content .content-layer.active-layer {
+            position: relative;
+            border-left: 3px solid #ffd700;
+            padding-left: 12px;
+        }
+
+        /* Expand Toggle Button */
+        .layered-content .expand-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 1rem 0;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            color: rgba(255, 215, 0, 0.8);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .layered-content .expand-toggle:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.5);
+            color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .layered-content .toggle-icon {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .layered-content .expand-toggle[data-expanded="true"] .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Annotation links */
+        .annotation-link {
+            color: #64b5f6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .annotation-link:hover {
+            color: #90caf9;
+        }
+
+        strong {
+            color: #ffd700;
+        }
+
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 215, 0, 0.8);
+            font-style: italic;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            padding: 1rem;
+            border-radius: 4px;
+            color: #f44336;
+            margin: 1rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .reading-mode-indicator {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .mode-toggle {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>第2章：关键实验</h1>
+        <p style="text-align: center; color: rgba(255, 215, 0, 0.7); margin-bottom: 1rem;">
+            <em>动态加载 - 分层内容来自 chapter2_layered.md</em>
+        </p>
+
+        <div class="reading-mode-indicator">
+            <span class="mode-label">阅读模式：</span>
+            <button class="mode-toggle" data-mode="simplified">简化版</button>
+            <button class="mode-toggle active" data-mode="layered">分层版</button>
+            <button class="mode-toggle" data-mode="detailed">详细版</button>
+        </div>
+
+        <div class="content-container">
+            <div class="simplified-content">
+                <div class="loading">正在加载简化版内容...</div>
+            </div>
+
+            <div class="layered-content active">
+                <div class="loading">正在加载分层内容...</div>
+            </div>
+
+            <div class="detailed-content">
+                <div class="loading">正在加载详细版内容...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include marked.js for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        class DynamicLayeredContent {
+            constructor() {
+                this.currentMode = 'layered'; // Default to layered collapsible view
+                this.simplifiedContent = '';
+                this.detailedContent = '';
+                this.layeredContent = '';
+                this.init();
+            }
+
+            async init() {
+                this.setupModeToggle();
+                await this.loadContent();
+                this.updateDisplay();
+            }
+
+            setupModeToggle() {
+                document.addEventListener('click', (e) => {
+                    const modeToggle = e.target.closest('.mode-toggle');
+                    if (!modeToggle) return;
+
+                    const newMode = modeToggle.dataset.mode;
+                    if (newMode !== this.currentMode) {
+                        this.switchMode(newMode);
+                    }
+                });
+            }
+
+            setupExpandToggleListeners() {
+                // Remove existing listeners to avoid duplicates
+                const existingToggles = document.querySelectorAll('.layered-content .expand-toggle');
+                existingToggles.forEach(toggle => {
+                    const newToggle = toggle.cloneNode(true);
+                    toggle.parentNode.replaceChild(newToggle, toggle);
+                });
+
+                // Add event listeners to expand/collapse buttons
+                document.addEventListener('click', (e) => {
+                    const expandToggle = e.target.closest('.layered-content .expand-toggle');
+                    if (!expandToggle) return;
+
+                    this.toggleSection(expandToggle);
+                });
+            }
+
+            toggleSection(toggleButton) {
+                const isExpanded = toggleButton.dataset.expanded === 'true';
+                const section = toggleButton.closest('section') || toggleButton.parentElement;
+                const detailedLayer = section.querySelector('.content-layer.detailed');
+
+                if (!detailedLayer) return;
+
+                if (!isExpanded) {
+                    // Expand to show detailed content
+                    detailedLayer.style.display = 'block';
+                    detailedLayer.style.maxHeight = detailedLayer.scrollHeight + 'px';
+                    toggleButton.dataset.expanded = 'true';
+                    
+                    // Smooth scroll to bring detailed content into view
+                    setTimeout(() => {
+                        detailedLayer.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start',
+                            inline: 'nearest' 
+                        });
+                    }, 100);
+                } else {
+                    // Collapse to hide detailed content
+                    detailedLayer.style.maxHeight = '0px';
+                    setTimeout(() => {
+                        detailedLayer.style.display = 'none';
+                    }, 300);
+                    toggleButton.dataset.expanded = 'false';
+                }
+
+                this.updateToggleText(toggleButton, !isExpanded);
+            }
+
+            updateToggleText(toggle, isExpanded) {
+                const textElement = toggle.querySelector('.toggle-text');
+                const iconElement = toggle.querySelector('.toggle-icon');
+                
+                if (textElement) {
+                    textElement.textContent = isExpanded ? '收起详细内容' : '展开详细内容';
+                }
+                
+                if (iconElement) {
+                    iconElement.textContent = isExpanded ? '▲' : '▼';
+                }
+            }
+
+            async loadContent() {
+                try {
+                    // Load layered content from chapter2_layered.md
+                    const layeredResponse = await fetch('chapters/zh/chapter2_layered.md');
+                    if (layeredResponse.ok) {
+                        const layeredText = await layeredResponse.text();
+                        this.parseLayeredContent(layeredText);
+                    } else {
+                        console.warn('Could not load layered content, using fallback');
+                        this.simplifiedContent = this.getFallbackSimplified();
+                        this.detailedContent = this.getFallbackDetailed();
+                    }
+
+                } catch (error) {
+                    console.error('Error loading content:', error);
+                    this.showError('无法加载内容，请检查文件是否存在。');
+                }
+            }
+
+            parseLayeredContent(layeredMarkdown) {
+                // Parse the layered markdown content that contains HTML div structures
+                const processedMarkdown = layeredMarkdown.replace(
+                    /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
+                    '<span class="annotation-link" data-annotation="$2">$1</span>'
+                );
+
+                // Since the layered content contains HTML structure, we need to parse it carefully
+                const htmlContent = marked.parse(processedMarkdown);
+                
+                // Extract simplified and detailed content from the parsed HTML
+                this.extractLayeredContent(htmlContent);
+            }
+
+            extractLayeredContent(htmlContent) {
+                // For layered content, we want to preserve the collapsible structure
+                // So we'll use the entire HTML content and handle the layered display with CSS/JS
+                this.layeredContent = htmlContent;
+                
+                // Also extract simplified and detailed for mode switching
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                
+                const simplifiedElements = tempDiv.querySelectorAll('.content-layer.simplified');
+                this.simplifiedContent = Array.from(simplifiedElements).map(el => el.outerHTML).join('');
+                
+                const detailedElements = tempDiv.querySelectorAll('.content-layer.detailed');
+                this.detailedContent = Array.from(detailedElements).map(el => el.outerHTML).join('');
+                
+                // If no layered content found, use the entire content
+                if (!this.simplifiedContent && !this.detailedContent) {
+                    this.simplifiedContent = htmlContent;
+                    this.detailedContent = htmlContent;
+                    this.layeredContent = htmlContent;
+                }
+            }
+
+            processMarkdown(markdown) {
+                // Process annotation links before markdown parsing
+                const processedMarkdown = markdown.replace(
+                    /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
+                    '<span class="annotation-link" data-annotation="$2">$1</span>'
+                );
+
+                // Parse markdown to HTML
+                return marked.parse(processedMarkdown);
+            }
+
+            getFallbackSimplified() {
+                return `
+                    <h2>探索简单程序的行为</h2>
+                    <p><strong>核心问题</strong>：如果我们运行一些非常简单的计算机程序，会发生什么？</p>
+                    <p>为了回答这个问题，我研究了一类叫做<strong>细胞自动机</strong>的简单程序。</p>
+                    
+                    <h2>重要发现</h2>
+                    <blockquote>
+                        <strong>即使系统的规则极其简单，即使从最简单的初始条件开始，系统的行为仍然可以变得高度复杂。</strong>
+                    </blockquote>
+                    
+                    <p><em>注意：分层内容文件 (chapter2_layered.md) 未找到，显示后备内容。</em></p>
+                `;
+            }
+
+            getFallbackDetailed() {
+                return `
+                    <h2>简单程序的行为如何？</h2>
+                    <p>科学上的新方向，通常源于某些核心的观察或实验。对于本书所描述的这门新科学而言，这些观察和实验关乎<strong>简单程序的行为</strong>。</p>
+                    <p>在日常使用计算机的经验中，我们遇到的程序通常是为了执行非常明确的任务而设计的。但近二十年前我产生了一个关键想法——这个想法最终促成了本书中这门全新的科学——那就是去探究，如果我们不带任何特定任务的意图，只是观察随意选择的简单程序，会发生什么。</p>
+                    
+                    <h2>细胞自动机的发现</h2>
+                    <p>任何程序在某种层面上都可以被看作是一套规则的集合，这些规则指定了程序在每一步应该做什么。我将考虑一类特殊的例子，称为<span class="annotation-link" data-annotation="cellular-automata">细胞自动机</span>，这是我在1980年代初研究的第一类简单程序。</p>
+                    
+                    <p><em>注意：分层内容文件 (chapter2_layered.md) 未找到，显示后备内容。</em></p>
+                `;
+            }
+
+            switchMode(newMode) {
+                this.currentMode = newMode;
+                this.updateModeButtons();
+                this.updateDisplay();
+                
+                // Smooth scroll to top when switching modes
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            updateModeButtons() {
+                const modeButtons = document.querySelectorAll('.mode-toggle');
+                modeButtons.forEach(btn => {
+                    const isActive = btn.dataset.mode === this.currentMode;
+                    btn.classList.toggle('active', isActive);
+                });
+            }
+
+            updateDisplay() {
+                const simplifiedContainer = document.querySelector('.simplified-content');
+                const detailedContainer = document.querySelector('.detailed-content');
+                const layeredContainer = document.querySelector('.layered-content');
+
+                // Hide all containers first
+                simplifiedContainer.classList.remove('active');
+                detailedContainer.classList.remove('active');
+                layeredContainer.classList.remove('active');
+
+                if (this.currentMode === 'simplified') {
+                    simplifiedContainer.classList.add('active');
+                    if (this.simplifiedContent) {
+                        simplifiedContainer.innerHTML = this.simplifiedContent;
+                    }
+                } else if (this.currentMode === 'detailed') {
+                    detailedContainer.classList.add('active');
+                    if (this.detailedContent) {
+                        detailedContainer.innerHTML = this.detailedContent;
+                    }
+                } else if (this.currentMode === 'layered') {
+                    layeredContainer.classList.add('active');
+                    if (this.layeredContent) {
+                        layeredContainer.innerHTML = this.layeredContent;
+                        // Set up expand/collapse functionality for the layered content
+                        this.setupExpandToggleListeners();
+                    }
+                }
+            }
+
+            showError(message) {
+                const errorHtml = `
+                    <div class="error">
+                        <h3>加载错误</h3>
+                        <p>${message}</p>
+                        <p>请确保以下文件存在：</p>
+                        <ul>
+                            <li><code>chapters/zh/chapter2_layered.md</code></li>
+                        </ul>
+                    </div>
+                `;
+                
+                document.querySelector('.simplified-content').innerHTML = errorHtml;
+                document.querySelector('.detailed-content').innerHTML = errorHtml;
+                document.querySelector('.layered-content').innerHTML = errorHtml;
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new DynamicLayeredContent();
+        });
+    </script>
+</body>
+</html>
