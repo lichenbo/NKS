@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolfram规则探索器 - 交互式细胞自动机实验</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            color: #1a1a1a;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 0;
+        }
+
+        .controls-panel {
+            background: rgba(40, 40, 40, 0.9);
+            padding: 2rem;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .canvas-area {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.5);
+        }
+
+        .section-title {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Rule Definition Grid */
+        .rule-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .rule-cell {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .rule-cell:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .rule-pattern {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .rule-output {
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 4px;
+            margin: 0 auto;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .rule-output.active {
+            background: #ffd700;
+            color: #1a1a1a;
+        }
+
+        .rule-output:hover {
+            border-color: #ffd700;
+            transform: scale(1.1);
+        }
+
+        /* Preset Rules */
+        .preset-rules {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .preset-rule {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .preset-rule:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .preset-rule.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+        }
+
+        .preset-number {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+
+        .preset-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* Control Buttons and Sliders */
+        .control-group {
+            margin: 1rem 0;
+        }
+
+        .control-label {
+            display: block;
+            color: rgba(255, 215, 0, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255, 215, 0, 0.8);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .btn.primary {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border-color: #ffd700;
+        }
+
+        .btn.primary:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            color: rgba(255, 215, 0, 0.8);
+            font-weight: 500;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* Canvas Styling */
+        #cellular-canvas {
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            background: #000;
+            margin: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .canvas-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 12px 16px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .info-label {
+            color: rgba(255, 215, 0, 0.8);
+            font-size: 0.8rem;
+        }
+
+        .info-value {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        /* Rule Analysis */
+        .rule-analysis {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .analysis-title {
+            color: #ffd700;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .analysis-text {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-panel {
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            }
+
+            .rule-grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+
+            .preset-rules {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls-panel,
+            .canvas-area {
+                padding: 1.5rem;
+            }
+
+            .rule-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+
+            .rule-output {
+                width: 25px;
+                height: 25px;
+            }
+
+            .preset-rules {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .canvas-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .generating {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Wolfram规则探索器</h1>
+            <p>交互式探索细胞自动机规则，理解复杂性从简单规则中的涌现</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="section-title">定义规则</div>
+                <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
+                    点击下方方格定义8种邻域状态的输出规则：
+                </p>
+                
+                <div class="rule-grid">
+                    <div class="rule-cell">
+                        <div class="rule-pattern">111</div>
+                        <div class="rule-output" data-pattern="111">0</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">110</div>
+                        <div class="rule-output" data-pattern="110">0</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">101</div>
+                        <div class="rule-output" data-pattern="101">0</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">100</div>
+                        <div class="rule-output" data-pattern="100">1</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">011</div>
+                        <div class="rule-output" data-pattern="011">1</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">010</div>
+                        <div class="rule-output" data-pattern="010">1</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">001</div>
+                        <div class="rule-output" data-pattern="001">1</div>
+                    </div>
+                    <div class="rule-cell">
+                        <div class="rule-pattern">000</div>
+                        <div class="rule-output" data-pattern="000">0</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <span style="color: rgba(255, 215, 0, 0.8); font-size: 0.9rem;">当前规则: </span>
+                        <span id="current-rule" style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">30</span>
+                    </div>
+                </div>
+
+                <div class="section-title">预设规则</div>
+                <div class="preset-rules">
+                    <div class="preset-rule active" data-rule="30">
+                        <div class="preset-number">规则 30</div>
+                        <div class="preset-description">随机复杂</div>
+                    </div>
+                    <div class="preset-rule" data-rule="90">
+                        <div class="preset-number">规则 90</div>
+                        <div class="preset-description">分形图案</div>
+                    </div>
+                    <div class="preset-rule" data-rule="110">
+                        <div class="preset-number">规则 110</div>
+                        <div class="preset-description">图灵完备</div>
+                    </div>
+                    <div class="preset-rule" data-rule="150">
+                        <div class="preset-number">规则 150</div>
+                        <div class="preset-description">对称分形</div>
+                    </div>
+                    <div class="preset-rule" data-rule="184">
+                        <div class="preset-number">规则 184</div>
+                        <div class="preset-description">交通流</div>
+                    </div>
+                    <div class="preset-rule" data-rule="250">
+                        <div class="preset-number">规则 250</div>
+                        <div class="preset-description">棋盘模式</div>
+                    </div>
+                    <div class="preset-rule" data-rule="254">
+                        <div class="preset-number">规则 254</div>
+                        <div class="preset-description">填充模式</div>
+                    </div>
+                    <div class="preset-rule" data-rule="126">
+                        <div class="preset-number">规则 126</div>
+                        <div class="preset-description">混沌边缘</div>
+                    </div>
+                </div>
+
+                <div class="section-title">控制参数</div>
+                
+                <div class="control-group">
+                    <label class="control-label">画布尺寸</label>
+                    <div class="control-row">
+                        <input type="range" class="slider" id="canvas-width" min="100" max="500" value="300">
+                        <span class="slider-value" id="canvas-width-value">300</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">演化代数</label>
+                    <div class="control-row">
+                        <input type="range" class="slider" id="generations" min="50" max="400" value="200">
+                        <span class="slider-value" id="generations-value">200</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">演化速度</label>
+                    <div class="control-row">
+                        <input type="range" class="slider" id="speed" min="1" max="10" value="5">
+                        <span class="slider-value" id="speed-value">5</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <button class="btn primary" id="start-btn">开始演化</button>
+                        <button class="btn" id="stop-btn">停止</button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn" id="reset-btn">重置</button>
+                        <button class="btn" id="random-rule-btn">随机规则</button>
+                    </div>
+                </div>
+
+                <div class="rule-analysis" id="rule-analysis">
+                    <div class="analysis-title">规则分析</div>
+                    <div class="analysis-text" id="analysis-text">
+                        规则30：产生看似随机的复杂图案，是Wolfram最重要的发现之一。尽管规则极其简单，但行为展现出真正的随机性特征。
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <canvas id="cellular-canvas" width="600" height="400"></canvas>
+                
+                <div class="canvas-info">
+                    <div class="info-item">
+                        <span class="info-label">当前代数</span>
+                        <span class="info-value" id="current-generation">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">活跃细胞</span>
+                        <span class="info-value" id="active-cells">1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">模式类型</span>
+                        <span class="info-value" id="pattern-type">复杂</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">状态</span>
+                        <span class="info-value" id="evolution-status">就绪</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WolframRuleExplorer {
+            constructor() {
+                this.canvas = document.getElementById('cellular-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.width = 300;
+                this.maxGenerations = 200;
+                this.height = this.maxGenerations; // Height matches max generations
+                this.cellSize = 2;
+                this.currentGeneration = 0;
+                this.speedLevel = 5; // Speed level (1=slow, 10=fast)
+                this.speed = this.calculateDelay(5); // Actual delay in ms
+                this.isRunning = false;
+                this.animationId = null;
+                
+                // Current rule (default Rule 30)
+                this.rule = [0, 1, 1, 1, 1, 0, 0, 0];
+                this.ruleNumber = 30;
+                
+                // Grid for cellular automata
+                this.grid = [];
+                this.nextGrid = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.updateRuleDisplay();
+                this.resetGrid();
+                this.render();
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.width * this.cellSize;
+                this.canvas.height = this.height * this.cellSize;
+                this.ctx.imageSmoothingEnabled = false;
+            }
+
+            setupEventListeners() {
+                // Rule definition clicks
+                document.querySelectorAll('.rule-output').forEach(output => {
+                    output.addEventListener('click', (e) => {
+                        this.toggleRuleOutput(e.target);
+                    });
+                });
+
+                // Preset rules
+                document.querySelectorAll('.preset-rule').forEach(preset => {
+                    preset.addEventListener('click', (e) => {
+                        this.loadPresetRule(e.currentTarget);
+                    });
+                });
+
+                // Control buttons
+                document.getElementById('start-btn').addEventListener('click', () => this.start());
+                document.getElementById('stop-btn').addEventListener('click', () => this.stop());
+                document.getElementById('reset-btn').addEventListener('click', () => this.reset());
+                document.getElementById('random-rule-btn').addEventListener('click', () => this.generateRandomRule());
+
+                // Sliders
+                document.getElementById('canvas-width').addEventListener('input', (e) => {
+                    this.setWidth(parseInt(e.target.value));
+                });
+                
+                document.getElementById('generations').addEventListener('input', (e) => {
+                    this.setMaxGenerations(parseInt(e.target.value));
+                });
+                
+                document.getElementById('speed').addEventListener('input', (e) => {
+                    this.setSpeed(parseInt(e.target.value));
+                });
+            }
+
+            toggleRuleOutput(element) {
+                const isActive = element.classList.contains('active');
+                element.classList.toggle('active', !isActive);
+                element.textContent = isActive ? '0' : '1';
+                this.updateRuleFromUI();
+            }
+
+            updateRuleFromUI() {
+                const outputs = document.querySelectorAll('.rule-output');
+                this.rule = Array.from(outputs).map(output => 
+                    output.classList.contains('active') ? 1 : 0
+                );
+                
+                // Calculate rule number
+                this.ruleNumber = this.rule.reduce((sum, bit, index) => 
+                    sum + bit * Math.pow(2, index), 0
+                );
+                
+                this.updateRuleDisplay();
+                this.updateRuleAnalysis();
+            }
+
+            loadPresetRule(presetElement) {
+                // Remove active class from all presets
+                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
+                presetElement.classList.add('active');
+                
+                const ruleNum = parseInt(presetElement.dataset.rule);
+                this.setRule(ruleNum);
+            }
+
+            setRule(ruleNumber) {
+                this.ruleNumber = ruleNumber;
+                
+                // Convert rule number to binary array
+                this.rule = [];
+                for (let i = 0; i < 8; i++) {
+                    this.rule[i] = (ruleNumber >> i) & 1;
+                }
+                
+                // Update UI
+                this.updateRuleUI();
+                this.updateRuleDisplay();
+                this.updateRuleAnalysis();
+            }
+
+            updateRuleUI() {
+                const outputs = document.querySelectorAll('.rule-output');
+                outputs.forEach((output, index) => {
+                    const isActive = this.rule[index] === 1;
+                    output.classList.toggle('active', isActive);
+                    output.textContent = isActive ? '1' : '0';
+                });
+            }
+
+            updateRuleDisplay() {
+                document.getElementById('current-rule').textContent = this.ruleNumber;
+            }
+
+            updateRuleAnalysis() {
+                const analyses = {
+                    30: "规则30：产生看似随机的复杂图案，是Wolfram最重要的发现之一。尽管规则极其简单，但行为展现出真正的随机性特征。",
+                    90: "规则90：生成经典的谢尔宾斯基三角形分形图案。具有自相似的嵌套结构，展现数学之美。",
+                    110: "规则110：被证明是图灵完备的，能够进行通用计算。产生复杂的局部结构和相互作用。",
+                    150: "规则150：生成对称的分形图案，与规则90相似但更加复杂。展现出左右对称的嵌套结构。",
+                    184: "规则184：模拟交通流动力学。粒子向右移动，展现出集体行为和流体特性。",
+                    250: "规则250：产生简单的重复图案，类似棋盘。展现周期性行为。",
+                    254: "规则254：产生均匀填充的简单图案。几乎所有细胞都变为活跃状态。",
+                    126: "规则126：处于混沌边缘，产生复杂但有一定规律的图案。"
+                };
+                
+                const defaultAnalysis = `规则${this.ruleNumber}：自定义规则。观察其产生的图案特征，分析其复杂性和规律性。`;
+                
+                document.getElementById('analysis-text').textContent = 
+                    analyses[this.ruleNumber] || defaultAnalysis;
+            }
+
+            generateRandomRule() {
+                const randomRule = Math.floor(Math.random() * 256);
+                this.setRule(randomRule);
+                
+                // Remove active class from preset rules
+                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
+            }
+
+            setWidth(newWidth) {
+                this.width = newWidth;
+                document.getElementById('canvas-width-value').textContent = newWidth;
+                this.setupCanvas();
+                this.resetGrid();
+            }
+
+            setMaxGenerations(gens) {
+                this.maxGenerations = gens;
+                this.height = gens; // Update grid height to match generations
+                document.getElementById('generations-value').textContent = gens;
+                this.setupCanvas();
+                this.resetGrid();
+            }
+
+            calculateDelay(speedLevel) {
+                // Convert speed level (1-10) to delay in milliseconds
+                // Level 1 = 500ms (slow), Level 10 = 10ms (fast)
+                return Math.max(10, 510 - speedLevel * 50);
+            }
+
+            setSpeed(speedLevel) {
+                this.speedLevel = speedLevel;
+                this.speed = this.calculateDelay(speedLevel);
+                document.getElementById('speed-value').textContent = speedLevel;
+            }
+
+            resetGrid() {
+                this.currentGeneration = 0;
+                this.grid = new Array(this.height).fill(null).map(() => new Array(this.width).fill(0));
+                this.nextGrid = new Array(this.height).fill(null).map(() => new Array(this.width).fill(0));
+                
+                // Initialize with single cell in center of first row
+                this.grid[0][Math.floor(this.width / 2)] = 1;
+                
+                this.updateInfo();
+                this.render();
+            }
+
+            applyRule(left, center, right) {
+                const pattern = (left << 2) | (center << 1) | right;
+                return this.rule[pattern];
+            }
+
+            evolve() {
+                if (this.currentGeneration >= this.maxGenerations - 1) {
+                    this.stop();
+                    return;
+                }
+
+                const currentRow = this.currentGeneration;
+                const nextRow = currentRow + 1;
+
+                // Make sure we don't exceed grid bounds
+                if (nextRow >= this.height) {
+                    this.stop();
+                    return;
+                }
+
+                for (let x = 0; x < this.width; x++) {
+                    const left = this.grid[currentRow][(x - 1 + this.width) % this.width];
+                    const center = this.grid[currentRow][x];
+                    const right = this.grid[currentRow][(x + 1) % this.width];
+                    
+                    this.grid[nextRow][x] = this.applyRule(left, center, right);
+                }
+
+                this.currentGeneration++;
+                this.updateInfo();
+                this.render();
+            }
+
+            start() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                document.getElementById('evolution-status').textContent = '运行中';
+                document.getElementById('start-btn').classList.add('generating');
+                
+                const evolveStep = () => {
+                    if (!this.isRunning) return;
+                    
+                    this.evolve();
+                    
+                    if (this.currentGeneration < this.maxGenerations - 1 && this.currentGeneration < this.height - 1) {
+                        this.animationId = setTimeout(evolveStep, this.speed);
+                    } else {
+                        this.stop();
+                    }
+                };
+                
+                evolveStep();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+                document.getElementById('evolution-status').textContent = '已停止';
+                document.getElementById('start-btn').classList.remove('generating');
+            }
+
+            reset() {
+                this.stop();
+                this.resetGrid();
+                document.getElementById('evolution-status').textContent = '就绪';
+            }
+
+            render() {
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.fillStyle = '#ffd700';
+                
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        if (this.grid[y] && this.grid[y][x] === 1) {
+                            this.ctx.fillRect(
+                                x * this.cellSize, 
+                                y * this.cellSize, 
+                                this.cellSize, 
+                                this.cellSize
+                            );
+                        }
+                    }
+                }
+            }
+
+            updateInfo() {
+                document.getElementById('current-generation').textContent = this.currentGeneration;
+                
+                // Count active cells in current generation
+                let activeCells = 0;
+                if (this.grid[this.currentGeneration]) {
+                    activeCells = this.grid[this.currentGeneration].reduce((sum, cell) => sum + cell, 0);
+                }
+                document.getElementById('active-cells').textContent = activeCells;
+                
+                // Simple pattern classification
+                let patternType = '未知';
+                if (this.ruleNumber === 30) patternType = '随机复杂';
+                else if (this.ruleNumber === 90 || this.ruleNumber === 150) patternType = '分形';
+                else if (this.ruleNumber === 110) patternType = '复杂结构';
+                else if (this.ruleNumber === 184) patternType = '粒子';
+                else if (this.ruleNumber === 250 || this.ruleNumber === 254) patternType = '简单重复';
+                else if (activeCells === 0) patternType = '消亡';
+                else if (activeCells > this.width * 0.7) patternType = '填充';
+                else patternType = '复杂';
+                
+                document.getElementById('pattern-type').textContent = patternType;
+            }
+        }
+
+        // Initialize the explorer when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WolframRuleExplorer();
+        });
+    </script>
+</body>
+</html>
