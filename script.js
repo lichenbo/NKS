@@ -169,6 +169,11 @@ function initChapterNavigation() {
 
     chapterLinks.forEach(link => {
         link.addEventListener('click', function (e) {
+            // Skip external demo links - let them work normally
+            if (this.classList.contains('external-demo-link')) {
+                return; // Don't preventDefault, allow normal navigation
+            }
+            
             e.preventDefault();
 
             // Remove active class from all links
@@ -1032,6 +1037,7 @@ const translations = {
         'rule-header': 'Header',
         'rule': 'Rule',
         'intro-demo': 'Interactive Demo: Conway\'s Game of Life',
+        'wolfram-demo': '🔬 Interactive Demo: Wolfram Rules Explorer',
         'play': '▶ Play',
         'pause': '⏸ Pause'
     },
@@ -1060,6 +1066,7 @@ const translations = {
         'rule-header': '标题',
         'rule': '元胞自动机：规则',
         'intro-demo': '交互演示：康威的生命游戏',
+        'wolfram-demo': '🔬 交互演示：Wolfram规则探索器',
         'play': '▶ 播放',
         'pause': '⏸ 暂停'
     },
@@ -1088,6 +1095,7 @@ const translations = {
         'rule-header': 'ヘッダー',
         'rule': 'ルール',
         'intro-demo': 'インタラクティブデモ：コンウェイのライフゲーム',
+        'wolfram-demo': '🔬 インタラクティブデモ：ウルフラムルール探索',
         'play': '▶ プレイ',
         'pause': '⏸ 一時停止'
     }

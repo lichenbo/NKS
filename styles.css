@@ -423,6 +423,25 @@ header {
     font-weight: 500;
 }
 
+.chapter-link.external-demo-link {
+    position: relative;
+}
+
+.chapter-link.external-demo-link::after {
+    content: '↗';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+}
+
+.chapter-link.external-demo-link:hover::after {
+    opacity: 0.8;
+}
+
 /* ================================
    MIDDLE COLUMN: NOTES
    ================================ */

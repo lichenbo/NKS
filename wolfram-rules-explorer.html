@@ -17,16 +17,15 @@
             color: #e0e0e0;
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
         }
 
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            width: 100vw;
+            min-height: 100vh;
+            margin: 0;
             background: rgba(26, 26, 26, 0.8);
-            border-radius: 12px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
 
@@ -50,8 +49,9 @@
 
         .main-content {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 400px 1fr;
             gap: 0;
+            min-height: calc(100vh - 120px); /* Account for header height */
         }
 
         .controls-panel {
@@ -63,11 +63,12 @@
         }
 
         .canvas-area {
-            padding: 2rem;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             background: rgba(20, 20, 20, 0.5);
+            overflow: auto;
         }
 
         .section-title {
@@ -309,15 +310,27 @@
         }
 
         /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+        
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
+                min-height: auto;
             }
 
             .controls-panel {
                 max-height: none;
                 border-right: none;
                 border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+                padding: 1.5rem;
+            }
+
+            .canvas-area {
+                padding: 1rem;
             }
 
             .rule-grid {
@@ -331,8 +344,8 @@
 
         @media (max-width: 768px) {
             .container {
-                margin: 10px;
-                border-radius: 8px;
+                margin: 0;
+                border-radius: 0;
             }
 
             .header {
@@ -345,7 +358,7 @@
 
             .controls-panel,
             .canvas-area {
-                padding: 1.5rem;
+                padding: 1rem;
             }
 
             .rule-grid {
@@ -365,6 +378,11 @@
             .canvas-info {
                 flex-direction: column;
                 gap: 8px;
+            }
+
+            #cellular-canvas {
+                max-width: 100%;
+                height: auto;
             }
         }
 
@@ -474,18 +492,18 @@
                 <div class="section-title">控制参数</div>
                 
                 <div class="control-group">
-                    <label class="control-label">画布尺寸</label>
+                    <label class="control-label">画布宽度</label>
                     <div class="control-row">
-                        <input type="range" class="slider" id="canvas-width" min="100" max="500" value="300">
-                        <span class="slider-value" id="canvas-width-value">300</span>
+                        <input type="range" class="slider" id="canvas-width" min="200" max="2000" value="800">
+                        <span class="slider-value" id="canvas-width-value">800</span>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">演化代数</label>
                     <div class="control-row">
-                        <input type="range" class="slider" id="generations" min="50" max="400" value="200">
-                        <span class="slider-value" id="generations-value">200</span>
+                        <input type="range" class="slider" id="generations" min="100" max="800" value="300">
+                        <span class="slider-value" id="generations-value">300</span>
                     </div>
                 </div>
 
@@ -517,7 +535,7 @@
             </div>
 
             <div class="canvas-area">
-                <canvas id="cellular-canvas" width="600" height="400"></canvas>
+                <canvas id="cellular-canvas" width="800" height="300"></canvas>
                 
                 <div class="canvas-info">
                     <div class="info-item">
@@ -546,10 +564,10 @@
             constructor() {
                 this.canvas = document.getElementById('cellular-canvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.width = 300;
-                this.maxGenerations = 200;
+                this.width = 800;
+                this.maxGenerations = 300;
                 this.height = this.maxGenerations; // Height matches max generations
-                this.cellSize = 2;
+                this.cellSize = 1; // Smaller cell size for larger canvas
                 this.currentGeneration = 0;
                 this.speedLevel = 5; // Speed level (1=slow, 10=fast)
                 this.speed = this.calculateDelay(5); // Actual delay in ms
