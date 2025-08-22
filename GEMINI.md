@@ -19,25 +19,28 @@ This is a client-side web application that presents notes and annotations for St
 
 - `index.html` - Main HTML structure with three-column CSS Grid layout, language toggle, and cellular automata canvases
 - `script.js` - Core JavaScript functionality including:
-  - Chapter navigation and loading system
+  - Chapter navigation and loading system with special handling for layered Chapter 1 (Chinese only)
   - Annotation system with custom incremental typing effects and caching
   - Dual cellular automata animations (background Rule 30, header cycling through multiple rules)
   - Conway's Game of Life demo implementation with 12 sample patterns and mobile touch support
   - Markdown parsing with annotation link preprocessing
   - Complete internationalization system with localStorage persistence (EN/ZH/JA)
   - Visual enhancement system with educational images and computational art examples
+  - **Layered content system with expand/collapse functionality for progressive disclosure**
 - `styles.css` - Modern CSS with:
   - CSS Grid responsive three-column layout
   - Glass-morphism design with hover effects
   - Custom scrollbars and animations
   - Mobile-first responsive breakpoints
   - Dark theme with gold accents
+  - **Layered content system styling with smooth transitions and expand/collapse buttons**
 - `chapters/` - Chapter content as markdown files
   - `intro-demo.md` - Interactive Conway's Game of Life demo (introduction page)
   - `chapter1.md` - Hybrid version combining comprehensive coverage with Wolfram's personal discovery narrative
   - `chapter2.md`, `chapter3.md` - Additional English chapters
   - `preface.md` - Project preface and introduction
   - `zh/` - Chinese translations (intro-demo.md, chapter1.md, chapter2.md, chapter3.md, preface.md)
+    - `chapter1_layered.md` - **Special layered version of Chapter 1 with collapsible content sections**
   - `ja/` - Japanese translations (preface.md, intro-demo.md)
 - `annotations/` - Annotation content as individual markdown files
   - Individual annotation files (e.g., `cellular-automata.md`, `emergence.md`, `computational-art.md`)
@@ -67,6 +70,12 @@ Since this is a static HTML/CSS/JS project with no build system:
   - `chapter1.md` contains the hybrid approach with Wolfram's personal discovery journey integrated throughout
   - Maintains all annotation links and educational completeness from academic structure
   - Integrates first-person narrative elements for enhanced reader engagement while preserving technical depth
+- **Layered content system**: Chapter 1 Chinese version (`chapters/zh/chapter1_layered.md`) uses special layered format
+  - Content organized into `.content-layer.simplified` and `.content-layer.detailed` sections
+  - Expand/collapse buttons (`<button class="expand-toggle">`) allow progressive disclosure
+  - Detailed sections start hidden and can be expanded section by section
+  - Only available for Chinese language version - English/Japanese use regular format
+  - Automatically detected and loaded when viewing Chapter 1 in Chinese
 - **Multilingual chapters**: Add corresponding files in `chapters/zh/` for Chinese and `chapters/ja/` for Japanese versions
 - **Chapter navigation**: Update chapter list in `index.html` and add translations to `script.js` translations object
 - **Visual content**: Enhanced with educational images and computational art examples to improve accessibility
@@ -108,6 +117,11 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Glass-morphism UI design** with subtle transparency, blur effects, and hover interactions
 - **Annotation linking system** connecting main content to detailed explanations with active state
 - **Complete trilingual support** (EN/ZH/JA) with seamless language switching and visual content enhancement
+- **Progressive disclosure system** with layered content for Chapter 1 Chinese version:
+  - Simplified content shown by default for easier reading
+  - Detailed explanations available through expand/collapse buttons
+  - Smooth animations and auto-scroll for enhanced UX
+  - Section-by-section control over content depth
 - **Educational visual system** with computational art examples, cellular automata demonstrations, and mathematical visualizations
 - **Sticky sidebar panels** for outline and annotations with custom scrollbars
 - **Mobile scroll-to-top button** for improved navigation on mobile devices
@@ -143,6 +157,19 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Processing**: Links use pattern `[text](annotation:key)` converted to `<span class="annotation-link" data-annotation="key">text</span>`
 - **Content**: Custom incremental typing supports HTML content with proper cursor styling
 - **Visual**: Active annotation links highlighted with golden background
+
+### Layered Content System
+- **Chapter detection**: `loadChapter()` function automatically detects Chapter 1 + Chinese language combination
+- **Special loading**: Uses `chapters/zh/chapter1_layered.md` instead of regular chapter file
+- **Content structure**: Markdown contains HTML divs with `.content-layer.simplified` and `.content-layer.detailed` classes
+- **Toggle buttons**: `<button class="expand-toggle" data-expanded="false">` elements control section visibility
+- **JavaScript functions**:
+  - `initLayeredContentSystem()` - Sets up event listeners for expand/collapse buttons
+  - `toggleLayeredSection()` - Handles expanding/collapsing with smooth animations
+  - `updateToggleText()` - Updates button text based on current language and state
+- **Progressive disclosure**: Detailed content starts hidden (`display: none`) and expands on demand
+- **Auto-scroll**: Expanded content automatically scrolls into view for better UX
+- **Responsive**: Works on all device sizes with adjusted button sizing
 
 ### Language Implementation
 - Fallback system: Japanese → Chinese → English for missing translations

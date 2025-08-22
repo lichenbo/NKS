@@ -228,6 +228,28 @@ async function loadChapter(chapterId) {
             return;
         }
 
+        // Handle Chapter 1 with layered content (only for Chinese)
+        if (chapterId === 'chapter1' && currentLanguage === 'zh') {
+            const response = await fetch('chapters/zh/chapter1_layered.md');
+            
+            if (response.ok) {
+                const layeredContent = await response.text();
+                const processedMarkdown = processAnnotationLinksInMarkdown(layeredContent);
+                const parsedContent = marked.parse(processedMarkdown);
+                
+                notesContent.innerHTML = parsedContent;
+                
+                // Initialize layered content functionality
+                setTimeout(() => {
+                    initLayeredContentSystem();
+                }, 200);
+                
+                return;
+            } else {
+                console.warn(`Chinese layered version not found, falling back to regular chapter1.md`);
+            }
+        }
+
         // Determine file path based on current language
         let filePath;
         if (currentLanguage === 'zh') {
@@ -1822,4 +1844,93 @@ function updateChapterLinks() {
             link.textContent = translations[currentLanguage][chapterKey];
         }
     });
+}
+
+// Initialize layered content system for collapsible content
+function initLayeredContentSystem() {
+    console.log('🔧 Initializing layered content system...');
+    
+    // Add click event listeners to expand/collapse buttons
+    const expandToggles = document.querySelectorAll('.expand-toggle');
+    expandToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleLayeredSection(this);
+        });
+    });
+    
+    console.log(`✅ Layered content system initialized with ${expandToggles.length} toggles`);
+}
+
+function toggleLayeredSection(toggleButton) {
+    const isExpanded = toggleButton.dataset.expanded === 'true';
+    
+    // Find the detailed content layer in the same section
+    let detailedLayer;
+    let currentElement = toggleButton.previousElementSibling;
+    
+    // Look backwards for the detailed content layer
+    while (currentElement) {
+        const detailedContent = currentElement.querySelector('.content-layer.detailed');
+        if (detailedContent) {
+            detailedLayer = detailedContent;
+            break;
+        }
+        if (currentElement.classList.contains('content-layer') && currentElement.classList.contains('detailed')) {
+            detailedLayer = currentElement;
+            break;
+        }
+        currentElement = currentElement.previousElementSibling;
+    }
+    
+    if (!detailedLayer) {
+        console.warn('No detailed content layer found for toggle button');
+        return;
+    }
+    
+    if (!isExpanded) {
+        // Expand to show detailed content
+        detailedLayer.style.display = 'block';
+        detailedLayer.style.maxHeight = 'none';
+        detailedLayer.style.opacity = '1';
+        toggleButton.dataset.expanded = 'true';
+        
+        // Smooth scroll to bring detailed content into view
+        setTimeout(() => {
+            detailedLayer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start',
+                inline: 'nearest' 
+            });
+        }, 100);
+    } else {
+        // Collapse to hide detailed content
+        detailedLayer.style.maxHeight = '0px';
+        detailedLayer.style.opacity = '0';
+        setTimeout(() => {
+            detailedLayer.style.display = 'none';
+        }, 300);
+        toggleButton.dataset.expanded = 'false';
+    }
+    
+    updateToggleText(toggleButton, !isExpanded);
+}
+
+function updateToggleText(toggle, isExpanded) {
+    const textElement = toggle.querySelector('.toggle-text');
+    const iconElement = toggle.querySelector('.toggle-icon');
+    
+    if (textElement) {
+        if (currentLanguage === 'zh') {
+            textElement.textContent = isExpanded ? '收起详细内容' : '展开详细内容';
+        } else if (currentLanguage === 'ja') {
+            textElement.textContent = isExpanded ? '詳細を閉じる' : '詳細を開く';
+        } else {
+            textElement.textContent = isExpanded ? 'Collapse Details' : 'Expand Details';
+        }
+    }
+    
+    if (iconElement) {
+        iconElement.textContent = isExpanded ? '▲' : '▼';
+    }
 }
