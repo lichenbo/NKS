@@ -1,0 +1,182 @@
+# .gitignore for NKS Static Web Application
+
+# Operating System Files
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+# Windows Zone Identifier files (from downloads)
+*:Zone.Identifier
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Editor and IDE Files
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+tags
+tags.lock
+tags.temp
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# JetBrains IDEs (WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Atom
+.atom/
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.log
+
+# Node.js (if ever added)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python (if ever used for local server)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Local Development Server Files
+.serve/
+.http-server-cache/
+
+# Build Tools (if ever added)
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local Configuration
+config.local.js
+config.local.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage Reports (if testing is added)
+coverage/
+*.lcov
+.nyc_output/
+
+# Miscellaneous
+*.pid
+*.seed
+*.pid.lock
+.sass-cache/
+.connect.lock
+.typings/
+
+# Local Testing
+test-results/
+playwright-report/
+test-results.xml
+
+# Browser Downloads
+*.crdownload
+*.part
+
+# Compressed Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Ignore any personal notes or drafts
+drafts/
+notes/
+TODO.md
+NOTES.md
+personal/
+
+# Ignore any local database files (if SQLite is ever used)
+*.sqlite
+*.sqlite3
+*.db
+
+# Ignore any generated documentation (if build docs is added)
+docs/
+documentation/
+
+# Local server configurations
+httpd.conf
+.htaccess.local
