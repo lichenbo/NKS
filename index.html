@@ -104,6 +104,7 @@
             <div id="annotation-content" class="content-area">
                 <p class="placeholder" data-i18n="annotation-placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
             </div>
+            
         </aside>
     </main>
 
@@ -111,6 +112,71 @@
     <button id="scroll-to-top" class="scroll-to-top hidden" title="Back to top">
         <span class="scroll-to-top-icon">↑</span>
     </button>
+
+    <!-- NKS Chat Input -->
+    <div id="nks-chat" class="nks-chat-container">
+        <!-- Mobile-only round button -->
+        <button id="mobile-chat-button" class="mobile-round-button" aria-label="Open chat">
+            <span>💬</span>
+        </button>
+        
+        <!-- Collapsed State: Single Line Input -->
+        <div id="chat-input-bar" class="chat-input-bar">
+            <input 
+                type="text" 
+                id="chat-quick-input" 
+                class="chat-quick-input"
+                placeholder="Ask about A New Kind of Science..."
+                data-i18n-placeholder="chat-quick-placeholder"
+                maxlength="500"
+            >
+            <button id="chat-quick-send" class="chat-quick-send" aria-label="Send message">
+                <span class="send-icon">💬</span>
+            </button>
+        </div>
+        
+        <!-- Expanded State: Full Conversation View -->
+        <div id="chat-conversation" class="chat-conversation hidden">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span class="chat-icon">🤖</span>
+                    <span data-i18n="chatbot-title">NKS Assistant</span>
+                </div>
+                <button id="chat-minimize" class="chat-minimize" aria-label="Minimize chat">
+                    <span>−</span>
+                </button>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will be added dynamically -->
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="chat-input"
+                        placeholder="Continue the conversation..."
+                        data-i18n-placeholder="chat-input-placeholder"
+                        maxlength="500"
+                    >
+                    <button id="chat-send" class="chat-send-btn" aria-label="Send message">
+                        <span class="send-icon">💬</span>
+                    </button>
+                </div>
+                <div class="chat-typing hidden" id="chat-typing">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span data-i18n="chatbot-thinking">NKS Assistant is thinking...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- AOS Animation Library -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

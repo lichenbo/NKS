@@ -27,6 +27,7 @@ This is a client-side web application that presents notes and annotations for St
   - Complete internationalization system with localStorage persistence (EN/ZH/JA)
   - Visual enhancement system with educational images and computational art examples
   - **Layered content system with expand/collapse functionality for progressive disclosure**
+  - **AI-powered chatbot integration with RAG model API for answering questions about "A New Kind of Science"**
 - `styles.css` - Modern CSS with:
   - CSS Grid responsive three-column layout
   - Glass-morphism design with hover effects
@@ -125,6 +126,12 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Educational visual system** with computational art examples, cellular automata demonstrations, and mathematical visualizations
 - **Sticky sidebar panels** for outline and annotations with custom scrollbars
 - **Mobile scroll-to-top button** for improved navigation on mobile devices
+- **AI-powered NKS Chatbot** with intelligent question-answering capabilities:
+  - Desktop: Expandable input bar positioned in annotations column area
+  - Mobile: Round floating button (💬) expanding to full-screen conversation
+  - RAG model integration via API (https://nks-746942233281.us-west1.run.app)
+  - Complete trilingual support with context-aware responses
+  - Glass-morphism design consistent with site aesthetics
 
 ## Technical Notes
 
@@ -194,6 +201,17 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Smooth Behavior**: Throttled scroll detection and smooth scroll animation
 - **Visual Design**: Glass-morphism with golden hover effects matching site theme
 - **Touch-Friendly**: Adequate size for mobile touch targets with hover feedback
+
+### NKS Chatbot System
+- **API Integration**: Connects to RAG model API for intelligent responses about book content
+- **Responsive Behavior**: Different UI patterns for desktop vs mobile
+  - Desktop (≥769px): Input bar aligned with annotations column, expands to conversation view
+  - Mobile (≤768px): Round floating button that opens full-screen conversation
+- **State Management**: Tracks conversation history, typing indicators, and expanded states
+- **Dynamic Positioning**: JavaScript calculates exact alignment with annotations column on desktop
+- **Language Support**: Multilingual placeholders and UI elements with automatic translation updates
+- **Error Handling**: Graceful fallbacks for API failures with user-friendly error messages
+- **Visual Consistency**: Glass-morphism design with golden accents matching site aesthetic
 
 ## Dependencies
 

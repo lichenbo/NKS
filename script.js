@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initAnnotationSystem();
     initAnnotationContent();
     initScrollToTop();
+    initChatbot();  // Initialize chatbot
 
     // Load preface by default
     loadChapter('preface');
@@ -1061,7 +1062,14 @@ const translations = {
         'intro-demo': 'Interactive Demo: Conway\'s Game of Life',
         'wolfram-demo': '🔬 Interactive Demo: Wolfram Rules Explorer',
         'play': '▶ Play',
-        'pause': '⏸ Pause'
+        'pause': '⏸ Pause',
+        'chatbot-title': 'NKS Assistant',
+        'chatbot-welcome': 'Hello! I\'m your NKS Assistant. Ask me anything about Stephen Wolfram\'s "A New Kind of Science" - cellular automata, computational equivalence, emergence, or any concepts from the book!',
+        'chatbot-placeholder': 'Ask about cellular automata, Rule 30, complexity...',
+        'chatbot-thinking': 'NKS Assistant is thinking...',
+        'chatbot-toggle-title': 'Chat with NKS Assistant',
+        'chat-quick-placeholder': '💡 Ask about A New Kind of Science...',
+        'chat-input-placeholder': 'Continue the conversation...'
     },
     zh: {
         preface: '前言',
@@ -1090,7 +1098,14 @@ const translations = {
         'intro-demo': '交互演示：康威的生命游戏',
         'wolfram-demo': '🔬 交互演示：Wolfram规则探索器',
         'play': '▶ 播放',
-        'pause': '⏸ 暂停'
+        'pause': '⏸ 暂停',
+        'chatbot-title': 'NKS 助手',
+        'chatbot-welcome': '您好！我是您的 NKS 助手。请随时询问关于斯蒂芬·沃尔夫拉姆《一种新科学》的任何问题——细胞自动机、计算等价性、涌现或书中的任何概念！',
+        'chatbot-placeholder': '询问细胞自动机、规则30、复杂性...',
+        'chatbot-thinking': 'NKS 助手正在思考中...',
+        'chatbot-toggle-title': '与 NKS 助手聊天',
+        'chat-quick-placeholder': '💡 询问《一种新科学》相关问题...',
+        'chat-input-placeholder': '继续对话...'
     },
     ja: {
         preface: '序文',
@@ -1119,7 +1134,14 @@ const translations = {
         'intro-demo': 'インタラクティブデモ：コンウェイのライフゲーム',
         'wolfram-demo': '🔬 インタラクティブデモ：ウルフラムルール探索',
         'play': '▶ プレイ',
-        'pause': '⏸ 一時停止'
+        'pause': '⏸ 一時停止',
+        'chatbot-title': 'NKS アシスタント',
+        'chatbot-welcome': 'こんにちは！私はあなたの NKS アシスタントです。スティーブン・ウルフラムの『新しい科学』について、セルオートマトン、計算等価性、創発、または本のあらゆる概念について何でもお聞きください！',
+        'chatbot-placeholder': 'セルオートマトン、ルール30、複雑性について質問...',
+        'chatbot-thinking': 'NKS アシスタントが考えています...',
+        'chatbot-toggle-title': 'NKS アシスタントとチャット',
+        'chat-quick-placeholder': '💡 『新しい科学』について質問...',
+        'chat-input-placeholder': '会話を続ける...'
     }
 };
 
@@ -1832,6 +1854,15 @@ function updatePageLanguage() {
         }
     });
 
+    // Update placeholder text for inputs
+    const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+    placeholderElements.forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
+            element.placeholder = translations[currentLanguage][key];
+        }
+    });
+
     // Update chapter links text
     updateChapterLinks();
 }
@@ -1933,4 +1964,335 @@ function updateToggleText(toggle, isExpanded) {
     if (iconElement) {
         iconElement.textContent = isExpanded ? '▲' : '▼';
     }
+}
+
+// ==============================
+// CHATBOT FUNCTIONALITY
+// ==============================
+
+class NKSChatbot {
+    constructor() {
+        this.apiUrl = "https://nks-746942233281.us-west1.run.app";
+        this.isExpanded = false;
+        this.isTyping = false;
+        this.messageHistory = [];
+        
+        this.initializeElements();
+        this.bindEvents();
+    }
+    
+    initializeElements() {
+        // Main container
+        this.chatContainer = document.getElementById('nks-chat');
+        
+        // Mobile round button
+        this.mobileButton = document.getElementById('mobile-chat-button');
+        
+        // Collapsed state elements
+        this.inputBar = document.getElementById('chat-input-bar');
+        this.quickInput = document.getElementById('chat-quick-input');
+        this.quickSendButton = document.getElementById('chat-quick-send');
+        
+        // Track mobile state
+        this.isMobile = window.innerWidth <= 768;
+        
+        // Expanded state elements
+        this.conversation = document.getElementById('chat-conversation');
+        this.minimizeButton = document.getElementById('chat-minimize');
+        this.messagesContainer = document.getElementById('chat-messages');
+        this.inputField = document.getElementById('chat-input');
+        this.sendButton = document.getElementById('chat-send');
+        this.typingIndicator = document.getElementById('chat-typing');
+    }
+    
+    bindEvents() {
+        // Mobile round button click
+        this.mobileButton.addEventListener('click', () => this.handleMobileButtonClick());
+        
+        // Quick input events (collapsed state)
+        this.quickSendButton.addEventListener('click', () => this.sendQuickMessage());
+        this.quickInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendQuickMessage();
+            }
+        });
+        
+        // Full chat events (expanded state)
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        this.inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+        
+        // Minimize button
+        this.minimizeButton.addEventListener('click', () => this.minimizeChat());
+        
+        // Close chat when clicking outside (only when expanded)
+        document.addEventListener('click', (e) => {
+            if (this.isExpanded && !this.chatContainer.contains(e.target)) {
+                this.minimizeChat();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            this.isMobile = window.innerWidth <= 768;
+        });
+        
+        // Update placeholder text when language changes
+        document.addEventListener('languageChanged', () => this.updateLanguageElements());
+    }
+    
+    handleMobileButtonClick() {
+        if (this.isMobile) {
+            // On mobile: directly open full conversation view
+            this.expandChat();
+        }
+    }
+    
+    minimizeChat() {
+        if (this.isMobile) {
+            // On mobile: return to round button state
+            this.isExpanded = false;
+            this.conversation.classList.add('hidden');
+        } else {
+            // Desktop behavior unchanged
+            this.isExpanded = false;
+            this.conversation.classList.add('hidden');
+        }
+    }
+    
+    async sendQuickMessage() {
+        const message = this.quickInput.value.trim();
+        if (!message || this.isTyping) return;
+        
+        // Clear quick input
+        this.quickInput.value = '';
+        
+        // Expand to conversation view
+        this.expandChat();
+        
+        // Add user message and get bot response
+        this.addMessage('user', message);
+        await this.getBotResponse(message);
+    }
+    
+    async sendMessage() {
+        const message = this.inputField.value.trim();
+        if (!message || this.isTyping) return;
+        
+        // Clear input
+        this.inputField.value = '';
+        
+        // Add user message and get bot response
+        this.addMessage('user', message);
+        await this.getBotResponse(message);
+    }
+    
+    expandChat() {
+        this.isExpanded = true;
+        this.inputBar.style.display = 'none';
+        this.conversation.classList.remove('hidden');
+        
+        // Focus on the main input field
+        setTimeout(() => {
+            this.inputField.focus();
+            this.scrollToBottom();
+        }, 300);
+    }
+    
+    minimizeChat() {
+        this.isExpanded = false;
+        this.conversation.classList.add('hidden');
+        this.inputBar.style.display = 'flex';
+        
+        // Clear the quick input when minimizing
+        setTimeout(() => {
+            this.quickInput.focus();
+        }, 300);
+    }
+    
+    async getBotResponse(message) {
+        // Show typing indicator
+        this.showTypingIndicator();
+        
+        try {
+            // Call RAG API
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: message })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // API returns pure text, so get it as text instead of JSON
+            const botResponse = await response.text();
+            console.log('🤖 API Response received:', botResponse);
+            
+            // Hide typing indicator and add bot response
+            this.hideTypingIndicator();
+            this.addMessage('bot', botResponse);
+            
+        } catch (error) {
+            console.error('Chatbot API error:', error);
+            
+            // Hide typing indicator and show error message
+            this.hideTypingIndicator();
+            
+            let errorMessage;
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage = 'I\'m having trouble connecting to my knowledge base. Please check your internet connection and try again.';
+            } else if (error.message.includes('HTTP 429')) {
+                errorMessage = 'I\'m receiving too many requests right now. Please wait a moment and try again.';
+            } else if (error.message.includes('HTTP 5')) {
+                errorMessage = 'My knowledge service is temporarily unavailable. Please try again in a few minutes.';
+            } else {
+                errorMessage = 'I encountered an unexpected error. Please try asking your question in a different way.';
+            }
+            
+            this.addMessage('bot', errorMessage, true);
+        }
+    }
+    
+    addMessage(type, content, isError = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message${isError ? ' error-message' : ''}`;
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        avatarDiv.textContent = type === 'user' ? '👤' : '🤖';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        const contentP = document.createElement('p');
+        contentP.textContent = content;
+        
+        contentDiv.appendChild(contentP);
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        
+        this.messagesContainer.appendChild(messageDiv);
+        
+        // Store in history
+        this.messageHistory.push({ type, content, isError });
+        
+        // Scroll to bottom
+        this.scrollToBottom();
+    }
+    
+    showTypingIndicator() {
+        this.isTyping = true;
+        if (this.typingIndicator) {
+            this.typingIndicator.classList.remove('hidden');
+        }
+        this.scrollToBottom();
+    }
+    
+    hideTypingIndicator() {
+        this.isTyping = false;
+        if (this.typingIndicator) {
+            this.typingIndicator.classList.add('hidden');
+        }
+    }
+    
+    scrollToBottom() {
+        setTimeout(() => {
+            if (this.messagesContainer) {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+        }, 50);
+    }
+    
+    updateLanguageElements() {
+        // Update placeholder texts
+        const quickPlaceholder = this.getTranslatedText('chat-quick-placeholder', 'Ask about A New Kind of Science...');
+        if (this.quickInput) {
+            this.quickInput.placeholder = quickPlaceholder;
+        }
+        
+        const inputPlaceholder = this.getTranslatedText('chat-input-placeholder', 'Continue the conversation...');
+        if (this.inputField) {
+            this.inputField.placeholder = inputPlaceholder;
+        }
+        
+        // Update other translatable elements
+        const translatableElements = this.chatContainer.querySelectorAll('[data-i18n]');
+        translatableElements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = this.getTranslatedText(key);
+            if (translation) {
+                element.textContent = translation;
+            }
+        });
+        
+        // Update placeholder attributes
+        const placeholderElements = this.chatContainer.querySelectorAll('[data-i18n-placeholder]');
+        placeholderElements.forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            const translation = this.getTranslatedText(key);
+            if (translation) {
+                element.placeholder = translation;
+            }
+        });
+    }
+    
+    getTranslatedText(key, fallback = '') {
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
+            return translations[currentLanguage][key];
+        }
+        return fallback;
+    }
+}
+
+// Position chat to align with annotations column
+function positionChatWithAnnotationsColumn() {
+    const annotationsColumn = document.querySelector('.annotations-column');
+    const chatContainer = document.querySelector('.nks-chat-container');
+    
+    if (!annotationsColumn || !chatContainer) return;
+    
+    // Only position on desktop (width > 768px)
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        // Remove any inline positioning on mobile to let CSS take over
+        chatContainer.style.left = '';
+        chatContainer.style.width = '';
+        chatContainer.classList.add('positioned');
+        return;
+    }
+    
+    const rect = annotationsColumn.getBoundingClientRect();
+    const columnLeft = rect.left + window.scrollX;
+    const columnWidth = rect.width;
+    
+    chatContainer.style.left = columnLeft + 'px';
+    chatContainer.style.width = columnWidth + 'px';
+    chatContainer.classList.add('positioned');
+}
+
+// Initialize chatbot
+function initChatbot() {
+    console.log('🤖 Initializing NKS Chatbot...');
+    window.nksChatbot = new NKSChatbot();
+    console.log('✅ NKS Chatbot initialized');
+    
+    // Position chat to align with annotations column after a small delay
+    // to ensure the CSS Grid layout has been fully calculated
+    setTimeout(() => {
+        positionChatWithAnnotationsColumn();
+    }, 100);
+    
+    // Reposition on window resize
+    window.addEventListener('resize', () => {
+        setTimeout(positionChatWithAnnotationsColumn, 50);
+    });
 }
