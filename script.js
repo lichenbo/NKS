@@ -14,6 +14,41 @@ document.addEventListener('DOMContentLoaded', function () {
 // Cache for loaded annotations
 const annotationCache = {};
 
+// Utility: Unified language file loader with fallback system
+async function loadLanguageFile(basePath, fileName, language = null) {
+    const lang = language || currentLanguage;
+    
+    try {
+        let response;
+        if (lang === 'zh') {
+            response = await fetch(`${basePath}/zh/${fileName}`);
+            if (!response.ok) {
+                response = await fetch(`${basePath}/${fileName}`);
+            }
+        } else if (lang === 'ja') {
+            response = await fetch(`${basePath}/ja/${fileName}`);
+            if (!response.ok) {
+                // Japanese fallback: Chinese -> English
+                response = await fetch(`${basePath}/zh/${fileName}`);
+                if (!response.ok) {
+                    response = await fetch(`${basePath}/${fileName}`);
+                }
+            }
+        } else {
+            response = await fetch(`${basePath}/${fileName}`);
+        }
+        
+        if (!response.ok) {
+            throw new Error(`File not found: ${fileName}`);
+        }
+        
+        return await response.text();
+    } catch (error) {
+        console.error('Error loading language file:', error);
+        return null;
+    }
+}
+
 
 // Custom incremental typing that doesn't reset innerHTML
 class IncrementalTyper {
@@ -251,24 +286,11 @@ async function loadChapter(chapterId) {
             }
         }
 
-        // Determine file path based on current language
-        let filePath;
-        if (currentLanguage === 'zh') {
-            filePath = `chapters/zh/${chapterId}.md`;
-        } else if (currentLanguage === 'ja') {
-            filePath = `chapters/ja/${chapterId}.md`;
-        } else {
-            filePath = `chapters/${chapterId}.md`;
-        }
-
-        // Fetch the markdown file
-        const response = await fetch(filePath);
-
-        if (!response.ok) {
+        // Use unified language file loader
+        const markdownText = await loadLanguageFile('chapters', `${chapterId}.md`);
+        if (!markdownText) {
             throw new Error(`Chapter file not found: ${chapterId}.md`);
         }
-
-        const markdownText = await response.text();
 
         // Process annotation links BEFORE markdown parsing
         const processedMarkdown = processAnnotationLinksInMarkdown(markdownText);
@@ -299,13 +321,7 @@ function processAnnotationLinksInMarkdown(markdown) {
     );
 }
 
-function processAnnotationLinks(html) {
-    // Convert [text](annotation:key) to clickable annotation links
-    return html.replace(
-        /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
-        '<a href="#" class="annotation-link" data-annotation="$2">$1</a>'
-    );
-}
+// Removed unused processAnnotationLinks function - functionality is handled by processAnnotationLinksInMarkdown
 
 function initAnnotationSystem() {
     // Add click event listeners to all annotation links
@@ -393,29 +409,11 @@ async function loadAnnotation(key) {
     }
 
     try {
-        // Try language-specific annotation first, fallback to English
-        let response;
-        if (currentLanguage === 'zh') {
-            response = await fetch(`annotations/zh/${key}.md`);
-            if (!response.ok) {
-                // Fallback to English version
-                response = await fetch(`annotations/${key}.md`);
-            }
-        } else if (currentLanguage === 'ja') {
-            response = await fetch(`annotations/ja/${key}.md`);
-            if (!response.ok) {
-                // Fallback to English version
-                response = await fetch(`annotations/${key}.md`);
-            }
-        } else {
-            response = await fetch(`annotations/${key}.md`);
-        }
-
-        if (!response.ok) {
+        // Use unified language file loader
+        const markdownText = await loadLanguageFile('annotations', `${key}.md`);
+        if (!markdownText) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
-
-        const markdownText = await response.text();
         let htmlContent = marked.parse(markdownText);
         
         // Process external links to open in new tab
@@ -726,82 +724,154 @@ function initScrollToTop() {
     toggleScrollToTopButton();
 }
 
-// Cellular Automata Background Animation
-function initCellularAutomataBackground() {
-    const canvas = document.getElementById('cellular-automata-bg');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-
-    // Cellular automata parameters
-    const cellSize = 3;
-    let cols, rows, grid, currentRow;
-
-    // Set canvas size
-    function resizeCanvas() {
-        // Skip resize during mobile scrolling to prevent animation restarts
-        if (isMobile() && isScrolling) {
-            return;
+// Base class for cellular automata canvas animations
+class CellularAutomataCanvas {
+    constructor(canvasId, cellSize, options = {}) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) return null;
+        
+        this.ctx = this.canvas.getContext('2d');
+        this.cellSize = cellSize;
+        this.cols = 0;
+        this.rows = 0;
+        this.grid = [];
+        this.currentRow = 0;
+        this.animationInterval = null;
+        
+        // Options
+        this.animationSpeed = options.animationSpeed || 200;
+        this.resizeDebounce = options.resizeDebounce || 250;
+        this.parentElement = options.parentElement || null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupCanvas();
+        this.setupResizeListener();
+        this.initAnimation();
+    }
+    
+    setupCanvas() {
+        if (this.parentElement) {
+            // Use parent element dimensions (for header)
+            const parent = this.canvas.parentElement;
+            this.canvas.width = parent.clientWidth;
+            this.canvas.height = parent.clientHeight;
+        } else {
+            // Use window dimensions (for background)
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
         }
+        this.ctx.imageSmoothingEnabled = false;
+    }
+    
+    setupResizeListener() {
+        const resizeHandler = () => {
+            // Skip resize during mobile scrolling to prevent animation restarts
+            if (isMobile() && isScrolling) return;
+            
+            const newWidth = this.parentElement ? 
+                this.canvas.parentElement.clientWidth : window.innerWidth;
+            const newHeight = this.parentElement ?
+                this.canvas.parentElement.clientHeight : window.innerHeight;
+            
+            // Only resize if dimensions changed significantly
+            const widthDiff = Math.abs(this.canvas.width - newWidth);
+            const heightDiff = Math.abs(this.canvas.height - newHeight);
+            const threshold = this.parentElement ? 20 : 50;
+            
+            if (widthDiff > threshold || heightDiff > threshold) {
+                this.setupCanvas();
+                this.initAnimation();
+            }
+        };
         
-        const newWidth = window.innerWidth;
-        const newHeight = window.innerHeight;
-        
-        // Only resize and reinitialize if dimensions actually changed significantly
-        if (Math.abs(canvas.width - newWidth) > 50 || Math.abs(canvas.height - newHeight) > 50) {
-            canvas.width = newWidth;
-            canvas.height = newHeight;
-            initAnimation();
+        window.addEventListener('resize', debounce(resizeHandler, this.resizeDebounce));
+    }
+    
+    initAnimation() {
+        this.cols = Math.floor(this.canvas.width / this.cellSize);
+        this.rows = Math.floor(this.canvas.height / this.cellSize);
+        this.grid = new Array(this.cols).fill(0);
+        this.grid[Math.floor(this.cols / 2)] = 1; // Start with center cell
+        this.currentRow = 0;
+    }
+    
+    startAnimation() {
+        if (this.animationInterval) {
+            clearInterval(this.animationInterval);
+        }
+        this.animationInterval = setInterval(() => this.animate(), this.animationSpeed);
+    }
+    
+    stopAnimation() {
+        if (this.animationInterval) {
+            clearInterval(this.animationInterval);
+            this.animationInterval = null;
         }
     }
-
-    resizeCanvas();
-    // Debounce resize events to prevent excessive animation restarts
-    window.addEventListener('resize', debounce(resizeCanvas, 250));
-
-    function initAnimation() {
-        cols = Math.floor(canvas.width / cellSize);
-        rows = Math.floor(canvas.height / cellSize);
-        grid = new Array(cols).fill(0);
-        grid[Math.floor(cols / 2)] = 1; // Start with center cell
-        currentRow = 0;
+    
+    // Override this method in subclasses
+    animate() {
+        console.warn('animate() method should be overridden in subclass');
     }
+    
+    // Override this method in subclasses  
+    applyRule(left, center, right) {
+        // Parameters are used by subclasses - suppress unused warning
+        void left; void center; void right;
+        console.warn('applyRule() method should be overridden in subclass');
+        return 0;
+    }
+}
 
-    // Background uses only Rule 30 (static)
-    const rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
-
-    // Apply Rule 30 for background
-    function applyRule30(left, center, right) {
+// Background Cellular Automata - extends base class
+class BackgroundCellularAutomata extends CellularAutomataCanvas {
+    constructor() {
+        super('cellular-automata-bg', 3, { animationSpeed: 200 });
+        if (!this.canvas) return;
+        
+        // Background uses only Rule 30 (static)
+        this.rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
+        this.drawnRows = [];
+        
+        // Initialize background rule indicator
+        updateBackgroundRuleIndicator();
+        
+        // Start animation
+        this.startAnimation();
+    }
+    
+    applyRule(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
-        return rule30[pattern];
+        return this.rule30[pattern];
     }
-
-    const drawnRows = [];
-
-    function drawCellularAutomata() {
+    
+    animate() {
         // Only clear if starting over
-        if (currentRow === 0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawnRows.length = 0;
+        if (this.currentRow === 0) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.drawnRows.length = 0;
         }
 
         // Store current row
-        drawnRows[currentRow] = [...grid];
+        this.drawnRows[this.currentRow] = [...this.grid];
 
-        // Draw all stored rows
-        for (let row = 0; row < drawnRows.length; row++) {
-            for (let col = 0; col < cols; col++) {
-                if (drawnRows[row] && drawnRows[row][col] === 1) {
+        // Draw all stored rows with golden gradient effect
+        for (let row = 0; row < this.drawnRows.length; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
                     // Create gradient effect based on position and age
                     const distance = Math.sqrt(
-                        Math.pow(col - cols / 2, 2) + Math.pow(row - currentRow / 2, 2)
+                        Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
                     );
-                    const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
+                    const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
                     const intensity = Math.max(0.2, 1 - distance / maxDistance);
 
                     // Age effect - older rows fade
-                    const age = currentRow - row;
-                    const ageFactor = Math.max(0.1, 1 - age / (rows * 0.3));
+                    const age = this.currentRow - row;
+                    const ageFactor = Math.max(0.1, 1 - age / (this.rows * 0.3));
 
                     // Very subtle golden pattern
                     const alpha = intensity * ageFactor * 0.08;
@@ -809,200 +879,166 @@ function initCellularAutomataBackground() {
                     const green = Math.floor(175 * intensity * ageFactor);
                     const blue = Math.floor(55 * intensity * ageFactor);
 
-                    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                    ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
+                    this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                    this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
                 }
             }
         }
 
         // Calculate next generation
-        if (currentRow < rows - 1) {
-            const newGrid = new Array(cols).fill(0);
-            for (let i = 0; i < cols; i++) {
-                const left = grid[i - 1] || 0;
-                const center = grid[i];
-                const right = grid[i + 1] || 0;
-                newGrid[i] = applyRule30(left, center, right);
+        if (this.currentRow < this.rows - 1) {
+            const newGrid = new Array(this.cols).fill(0);
+            for (let i = 0; i < this.cols; i++) {
+                const left = this.grid[i - 1] || 0;
+                const center = this.grid[i];
+                const right = this.grid[i + 1] || 0;
+                newGrid[i] = this.applyRule(left, center, right);
             }
-            grid = newGrid;
-            currentRow++;
-        } else {
-            // Background animation complete - stop here
-            // No more generations, pattern stays static
+            this.grid = newGrid;
+            this.currentRow++;
         }
+        // Background animation stops when complete - pattern stays static
     }
-
-    // Initialize background rule indicator
-    updateBackgroundRuleIndicator();
-
-    // Initialize
-    initAnimation();
-
-    // Animate very slowly for subtle effect
-    setInterval(drawCellularAutomata, 200);
 }
 
-// Header Cellular Automata Animation
-function initHeaderCellularAutomata() {
-    const canvas = document.getElementById('header-cellular-automata');
-    if (!canvas) return;
+// Cellular Automata Background Animation (refactored)
+function initCellularAutomataBackground() {
+    new BackgroundCellularAutomata();
+}
 
-    const ctx = canvas.getContext('2d');
-
-    // Cellular automata parameters
-    const cellSize = 2;
-    let cols, rows, grid, currentRow;
-    let fadeDirection = 1; // 1 for fade in, -1 for fade out
-    let globalAlpha = 0.3;
-
-    // Set canvas size to header dimensions
-    function resizeCanvas() {
-        // Skip resize during mobile scrolling to prevent animation restarts
-        if (isMobile() && isScrolling) {
-            return;
-        }
+// Header Cellular Automata - extends base class with rule cycling
+class HeaderCellularAutomata extends CellularAutomataCanvas {
+    constructor() {
+        super('header-cellular-automata', 2, { 
+            animationSpeed: 150, 
+            parentElement: true,
+            resizeDebounce: 250 
+        });
+        if (!this.canvas) return;
         
-        const header = canvas.parentElement;
-        const newWidth = header.clientWidth;
-        const newHeight = header.clientHeight;
+        // Multiple cellular automata rules
+        this.headerRules = {
+            30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
+            90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal 
+            110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex
+            54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric
+            150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
+            126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
+        };
         
-        // Only resize and reinitialize if dimensions actually changed significantly
-        if (Math.abs(canvas.width - newWidth) > 20 || Math.abs(canvas.height - newHeight) > 20) {
-            canvas.width = newWidth;
-            canvas.height = newHeight;
-            initAnimation();
-        }
+        this.headerRuleKeys = Object.keys(this.headerRules);
+        this.headerRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
+        this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
+        this.drawnRows = [];
+        
+        // Breathing effect variables
+        this.fadeDirection = 1; // 1 for fade in, -1 for fade out
+        this.globalAlpha = 0.3;
+        
+        // Update global rule name for indicator
+        headerRuleName = this.headerRuleKeys[this.headerRuleIndex];
+        
+        // Initialize header rule indicator
+        updateHeaderRuleIndicator();
+        
+        // Start animation
+        this.startAnimation();
     }
-
-    resizeCanvas();
-    // Debounce resize events to prevent excessive animation restarts
-    window.addEventListener('resize', debounce(resizeCanvas, 250));
-
-    function initAnimation() {
-        cols = Math.floor(canvas.width / cellSize);
-        rows = Math.floor(canvas.height / cellSize);
-        grid = new Array(cols).fill(0);
-        grid[Math.floor(cols / 2)] = 1; // Start with center cell
-        currentRow = 0;
-    }
-
-    // Multiple cellular automata rules (same as background)
-    const headerRules = {
-        30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
-        90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal 
-        110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex
-        54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric
-        150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
-        126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
-    };
-
-    const headerRuleKeys = Object.keys(headerRules);
-    let headerRuleIndex = Math.floor(Math.random() * headerRuleKeys.length); // Start with random rule
-    let headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
-    headerRuleName = headerRuleKeys[headerRuleIndex]; // Update global variable
-
-    // Apply current cellular automata rule
-    function applyHeaderRule(left, center, right) {
+    
+    applyRule(left, center, right) {
         const pattern = left * 4 + center * 2 + right;
-        return headerCurrentRule[pattern];
+        return this.headerCurrentRule[pattern];
     }
-
-    // Cycle to next rule (randomized)
-    function cycleHeaderRule() {
+    
+    cycleToNextRule() {
         // Choose a random rule that's different from current one
         let newRuleIndex;
         do {
-            newRuleIndex = Math.floor(Math.random() * headerRuleKeys.length);
-        } while (newRuleIndex === headerRuleIndex && headerRuleKeys.length > 1);
+            newRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
+        } while (newRuleIndex === this.headerRuleIndex && this.headerRuleKeys.length > 1);
 
-        headerRuleIndex = newRuleIndex;
-        headerCurrentRule = headerRules[headerRuleKeys[headerRuleIndex]];
-        headerRuleName = headerRuleKeys[headerRuleIndex];
+        this.headerRuleIndex = newRuleIndex;
+        this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
+        headerRuleName = this.headerRuleKeys[this.headerRuleIndex]; // Update global variable
         console.log(`Header: Switching to Rule ${headerRuleName}`);
 
         // Update header rule indicator
         updateHeaderRuleIndicator();
 
         // Reset animation for new rule
-        initAnimation();
-        drawnRows.length = 0;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.initAnimation();
+        this.drawnRows.length = 0;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
-
-    const drawnRows = [];
-
-    function drawHeaderCellularAutomata() {
-        // Update global fade
-        globalAlpha += fadeDirection * 0.01;
-        if (globalAlpha >= 0.6) {
-            fadeDirection = -1;
-        } else if (globalAlpha <= 0.2) {
-            fadeDirection = 1;
+    
+    animate() {
+        // Update global fade (breathing effect)
+        this.globalAlpha += this.fadeDirection * 0.01;
+        if (this.globalAlpha >= 0.6) {
+            this.fadeDirection = -1;
+        } else if (this.globalAlpha <= 0.2) {
+            this.fadeDirection = 1;
         }
 
         // Only clear if starting over
-        if (currentRow === 0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawnRows.length = 0;
+        if (this.currentRow === 0) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.drawnRows.length = 0;
         }
 
         // Store current row
-        drawnRows[currentRow] = [...grid];
+        this.drawnRows[this.currentRow] = [...this.grid];
 
-        // Draw all stored rows
-        for (let row = 0; row < drawnRows.length; row++) {
-            for (let col = 0; col < cols; col++) {
-                if (drawnRows[row] && drawnRows[row][col] === 1) {
+        // Draw all stored rows with breathing golden effect
+        for (let row = 0; row < this.drawnRows.length; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
                     // Create gradient effect based on position and age
                     const distance = Math.sqrt(
-                        Math.pow(col - cols / 2, 2) + Math.pow(row - currentRow / 2, 2)
+                        Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
                     );
-                    const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
+                    const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
                     const intensity = Math.max(0.3, 1 - distance / maxDistance);
 
                     // Age effect - older rows fade
-                    const age = currentRow - row;
-                    const ageFactor = Math.max(0.2, 1 - age / (rows * 0.4));
+                    const age = this.currentRow - row;
+                    const ageFactor = Math.max(0.2, 1 - age / (this.rows * 0.4));
 
                     // Golden pattern with breathing effect
-                    const alpha = intensity * ageFactor * globalAlpha;
+                    const alpha = intensity * ageFactor * this.globalAlpha;
                     const red = Math.floor(212 * intensity * ageFactor);
                     const green = Math.floor(175 * intensity * ageFactor);
                     const blue = Math.floor(55 * intensity * ageFactor);
 
-                    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                    ctx.fillRect(col * cellSize, row * cellSize, cellSize - 0.5, cellSize - 0.5);
+                    this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                    this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
                 }
             }
         }
 
-        // Calculate next generation for header
-        if (currentRow < rows - 1) {
-            const newGrid = new Array(cols).fill(0);
-            for (let i = 0; i < cols; i++) {
-                const left = grid[i - 1] || 0;
-                const center = grid[i];
-                const right = grid[i + 1] || 0;
-                newGrid[i] = applyHeaderRule(left, center, right);
+        // Calculate next generation
+        if (this.currentRow < this.rows - 1) {
+            const newGrid = new Array(this.cols).fill(0);
+            for (let i = 0; i < this.cols; i++) {
+                const left = this.grid[i - 1] || 0;
+                const center = this.grid[i];
+                const right = this.grid[i + 1] || 0;
+                newGrid[i] = this.applyRule(left, center, right);
             }
-            grid = newGrid;
-            currentRow++;
+            this.grid = newGrid;
+            this.currentRow++;
         } else {
-            // Cycle to next rule and restart
+            // Cycle to next rule and restart after delay
             setTimeout(() => {
-                cycleHeaderRule();
+                this.cycleToNextRule();
             }, 1800);
         }
     }
+}
 
-    // Initialize header rule indicator
-    updateHeaderRuleIndicator();
-
-    // Initialize
-    initAnimation();
-
-    // Animate faster for header effect
-    setInterval(drawHeaderCellularAutomata, 150);
+// Header Cellular Automata Animation (refactored)
+function initHeaderCellularAutomata() {
+    new HeaderCellularAutomata();
 }
 
 // Rule indicator update functions
