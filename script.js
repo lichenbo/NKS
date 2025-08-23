@@ -1976,9 +1976,11 @@ class NKSChatbot {
         this.isExpanded = false;
         this.isTyping = false;
         this.messageHistory = [];
+        this.storageKey = 'nks-chat-history';
         
         this.initializeElements();
         this.bindEvents();
+        this.loadChatHistory();
     }
     
     initializeElements() {
@@ -2185,6 +2187,9 @@ class NKSChatbot {
         // Store in history
         this.messageHistory.push({ type, content, isError });
         
+        // Save to localStorage
+        this.saveChatHistory();
+        
         // Scroll to bottom
         this.scrollToBottom();
     }
@@ -2251,6 +2256,116 @@ class NKSChatbot {
         }
         return fallback;
     }
+    
+    // localStorage methods for persistent chat history
+    saveChatHistory() {
+        try {
+            const historyData = {
+                messages: this.messageHistory,
+                timestamp: Date.now(),
+                version: '1.0' // For future compatibility
+            };
+            localStorage.setItem(this.storageKey, JSON.stringify(historyData));
+            console.log('💾 Chat history saved to localStorage');
+        } catch (error) {
+            console.warn('⚠️ Failed to save chat history:', error);
+        }
+    }
+    
+    loadChatHistory() {
+        try {
+            const storedData = localStorage.getItem(this.storageKey);
+            if (!storedData) {
+                console.log('📭 No chat history found in localStorage');
+                return;
+            }
+            
+            const historyData = JSON.parse(storedData);
+            
+            // Validate data structure
+            if (!historyData.messages || !Array.isArray(historyData.messages)) {
+                console.warn('⚠️ Invalid chat history format, clearing...');
+                this.clearChatHistory();
+                return;
+            }
+            
+            // Check if history is too old (optional: clear after 30 days)
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            if (historyData.timestamp && historyData.timestamp < thirtyDaysAgo) {
+                console.log('🗓️ Chat history expired, clearing...');
+                this.clearChatHistory();
+                return;
+            }
+            
+            this.messageHistory = historyData.messages;
+            console.log(`📚 Loaded ${this.messageHistory.length} messages from chat history`);
+            
+            // Restore messages to UI if there are any
+            if (this.messageHistory.length > 0) {
+                this.restoreMessagesToUI();
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Failed to load chat history:', error);
+            this.clearChatHistory();
+        }
+    }
+    
+    restoreMessagesToUI() {
+        // Clear existing messages in UI
+        if (this.messagesContainer) {
+            this.messagesContainer.innerHTML = '';
+        }
+        
+        // Restore each message to the UI
+        this.messageHistory.forEach(({ type, content, isError }) => {
+            this.displayMessageInUI(type, content, isError);
+        });
+        
+        console.log('🔄 Chat history restored to UI');
+    }
+    
+    displayMessageInUI(type, content, isError = false) {
+        if (!this.messagesContainer) return;
+        
+        // Create message element (same as addMessage but without storing to history)
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message${isError ? ' error' : ''}`;
+        
+        // Avatar
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        avatarDiv.textContent = type === 'user' ? '👤' : '🤖';
+        
+        // Content
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = content; // Use innerHTML to preserve formatting
+        
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        this.messagesContainer.appendChild(messageDiv);
+    }
+    
+    clearChatHistory() {
+        try {
+            localStorage.removeItem(this.storageKey);
+            this.messageHistory = [];
+            if (this.messagesContainer) {
+                this.messagesContainer.innerHTML = '';
+            }
+            console.log('🗑️ Chat history cleared');
+        } catch (error) {
+            console.warn('⚠️ Failed to clear chat history:', error);
+        }
+    }
+    
+    // Public method to clear history (can be called from console or UI)
+    clearHistory() {
+        if (confirm('Are you sure you want to clear your chat history? This cannot be undone.')) {
+            this.clearChatHistory();
+        }
+    }
 }
 
 // Position chat to align with annotations column
@@ -2261,6 +2376,7 @@ function positionChatWithAnnotationsColumn() {
     if (!annotationsColumn || !chatContainer) return;
     
     // Only position on desktop (width > 768px)
+    // Also check if we're actually showing mobile UI elements
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
         // Remove any inline positioning on mobile to let CSS take over
@@ -2274,8 +2390,37 @@ function positionChatWithAnnotationsColumn() {
     const columnLeft = rect.left + window.scrollX;
     const columnWidth = rect.width;
     
-    chatContainer.style.left = columnLeft + 'px';
-    chatContainer.style.width = columnWidth + 'px';
+    // Ensure minimum width for the chat component
+    const minChatWidth = 200; // Matches CSS min-width
+    const adjustedWidth = Math.max(columnWidth, minChatWidth);
+    
+    // If we need more width than the column provides, adjust positioning
+    let adjustedLeft = columnLeft;
+    if (adjustedWidth > columnWidth) {
+        // Try to center the chat over the column
+        adjustedLeft = columnLeft - (adjustedWidth - columnWidth) / 2;
+        
+        // Ensure we don't go off the left edge of the viewport
+        adjustedLeft = Math.max(10, adjustedLeft);
+        
+        // Ensure we don't go off the right edge of the viewport
+        const rightEdge = adjustedLeft + adjustedWidth;
+        if (rightEdge > window.innerWidth - 10) {
+            adjustedLeft = window.innerWidth - adjustedWidth - 10;
+        }
+    }
+    
+    console.log('📍 Positioning chat:', {
+        columnLeft,
+        columnWidth,
+        adjustedLeft,
+        adjustedWidth,
+        viewportWidth: window.innerWidth,
+        isMobile
+    });
+    
+    chatContainer.style.left = adjustedLeft + 'px';
+    chatContainer.style.width = adjustedWidth + 'px';
     chatContainer.classList.add('positioned');
 }
 

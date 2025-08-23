@@ -1495,6 +1495,7 @@ header {
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    /* Container acts as positioning context for children */
 }
 
 .nks-chat-container.positioned {
@@ -1519,6 +1520,8 @@ header {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     width: 100%;
+    min-width: 200px; /* Ensure minimum width for button + input + padding */
+    box-sizing: border-box;
 }
 
 .chat-input-bar:focus-within {
@@ -1535,6 +1538,7 @@ header {
     font-size: 0.95rem;
     outline: none;
     font-family: inherit;
+    min-width: 120px; /* Ensure input field has minimum usable width */
 }
 
 .chat-quick-input::placeholder {
@@ -1742,6 +1746,8 @@ header {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    min-width: 200px; /* Ensure minimum width for button + input + padding */
+    box-sizing: border-box;
 }
 
 .chat-input {
@@ -1755,6 +1761,7 @@ header {
     outline: none;
     transition: all 0.3s ease;
     font-family: inherit;
+    min-width: 120px; /* Ensure input field has minimum usable width */
 }
 
 .chat-input:focus {
@@ -1780,6 +1787,7 @@ header {
     color: #1a1a1a;
     font-weight: bold;
     font-size: 1.2rem;
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
 
 .chat-send-btn:hover {
@@ -1880,6 +1888,10 @@ header {
         cursor: pointer;
         font-size: 1.5rem;
         transition: all 0.3s ease;
+        /* Ensure button stays within container bounds and aligned to right */
+        position: absolute;
+        right: 0;
+        top: 0;
     }
     
     .nks-chat-container .mobile-round-button:hover {
