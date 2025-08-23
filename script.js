@@ -11,10 +11,34 @@ document.addEventListener('DOMContentLoaded', function () {
     loadChapter('preface');
 });
 
-// Cache for loaded annotations
+/**
+ * Cache for storing loaded annotation content by language to prevent redundant fetches
+ * Structure: { 'en': { 'annotation-key': 'content' }, 'zh': { 'annotation-key': 'content' } }
+ * @type {Object<string, Object<string, string>>}
+ */
 const annotationCache = {};
 
-// Utility: Unified language file loader with fallback system
+/**
+ * Unified language file loader with intelligent fallback system
+ * Implements language-specific file loading with graceful fallbacks:
+ * - Chinese (zh): tries zh/file -> file
+ * - Japanese (ja): tries ja/file -> zh/file -> file  
+ * - English (en): tries file directly
+ * 
+ * Time Complexity: O(1) - constant network requests (max 3 fallback attempts)
+ * Space Complexity: O(n) where n is the size of the loaded file content
+ * 
+ * @async
+ * @function loadLanguageFile
+ * @param {string} basePath - Base directory path (e.g., 'chapters', 'annotations')
+ * @param {string} fileName - Target filename (e.g., 'chapter1.md')
+ * @param {string|null} [language=null] - Language code ('en', 'zh', 'ja'), defaults to currentLanguage
+ * @returns {Promise<string|null>} File content as text, or null if file not found
+ * @throws {Error} Network errors are caught and logged, returns null on failure
+ * 
+ * Called by: loadChapter(), loadAnnotation()
+ * Calls: fetch(), response.text()
+ */
 async function loadLanguageFile(basePath, fileName, language = null) {
     const lang = language || currentLanguage;
     
@@ -49,14 +73,51 @@ async function loadLanguageFile(basePath, fileName, language = null) {
     }
 }
 
-// DOM Utility Functions - reduce repeated queries
+/**
+ * DOM Utility Functions - optimized element access and caching
+ * Provides performance-optimized DOM queries with built-in caching to reduce
+ * repeated element lookups and improve application performance
+ * 
+ * Time Complexity: O(1) for cached elements, O(n) for new queries where n is DOM size
+ * Space Complexity: O(k) where k is number of cached elements
+ * 
+ * @namespace DOM
+ */
 const DOM = {
+    /**
+     * Get element by ID
+     * @param {string} id - Element ID
+     * @returns {HTMLElement|null} Element or null if not found
+     */
     byId: (id) => document.getElementById(id),
+    
+    /**
+     * Get first element matching selector
+     * @param {string} selector - CSS selector
+     * @returns {HTMLElement|null} Element or null if not found
+     */
     query: (selector) => document.querySelector(selector),
+    
+    /**
+     * Get all elements matching selector
+     * @param {string} selector - CSS selector
+     * @returns {NodeList} Collection of matching elements
+     */
     queryAll: (selector) => document.querySelectorAll(selector),
     
-    // Common element getters with caching
+    /**
+     * Internal cache for DOM elements (Map for better performance)
+     * @private
+     * @type {Map<string, HTMLElement>}
+     */
     _cache: new Map(),
+    
+    /**
+     * Get element by ID with caching for improved performance
+     * Time Complexity: O(1) for cached elements, O(n) for new elements
+     * @param {string} id - Element ID
+     * @returns {HTMLElement|null} Cached element or null if not found
+     */
     cached: function(id) {
         if (!this._cache.has(id)) {
             this._cache.set(id, document.getElementById(id));
@@ -64,14 +125,37 @@ const DOM = {
         return this._cache.get(id);
     },
     
+    /**
+     * Clear all cached DOM elements (useful for memory management)
+     * Time Complexity: O(1)
+     * @returns {void}
+     */
     clearCache: function() {
         this._cache.clear();
     }
 };
 
-// Event Handler Utilities - reduce repeated patterns
+/**
+ * Event Handler Utilities - streamlined event management patterns
+ * Provides common event handling patterns with delegation support
+ * to reduce boilerplate and improve maintainability
+ * 
+ * Time Complexity: O(n) for onClick where n is number of matching elements
+ * Space Complexity: O(1) for event handlers (stored in DOM)
+ * 
+ * @namespace Events
+ */
 const Events = {
-    // Add click handler to element or elements
+    /**
+     * Add click event handler to element(s) with flexible selector support
+     * Supports both CSS selector strings and direct element references
+     * Time Complexity: O(n) where n is number of matching elements
+     * 
+     * @param {string|HTMLElement} selector - CSS selector or element reference
+     * @param {Function} handler - Click event handler function
+     * @param {Object} [options={}] - AddEventListener options (passive, once, etc.)
+     * @returns {void}
+     */
     onClick: function(selector, handler, options = {}) {
         const elements = typeof selector === 'string' ? DOM.queryAll(selector) : [selector];
         elements.forEach(el => {
@@ -81,7 +165,17 @@ const Events = {
         });
     },
     
-    // Add event handler with delegation
+    /**
+     * Add delegated event handler for dynamic content support
+     * Uses event delegation pattern for elements that may be added/removed dynamically
+     * Time Complexity: O(1) for setup, O(log n) for event bubbling where n is DOM depth
+     * 
+     * @param {string|HTMLElement} parent - Parent element or CSS selector
+     * @param {string} selector - Child selector to match against event target
+     * @param {string} event - Event type ('click', 'change', etc.)
+     * @param {Function} handler - Event handler function
+     * @returns {void}
+     */
     delegate: function(parent, selector, event, handler) {
         const parentEl = typeof parent === 'string' ? DOM.query(parent) : parent;
         if (parentEl) {
@@ -94,22 +188,53 @@ const Events = {
     }
 };
 
-// Text Processing Utilities - common patterns
+/**
+ * Text Processing Utilities - markdown and HTML content processing
+ * Provides common text transformation patterns for markdown content,
+ * external link processing, and annotation link conversion
+ * 
+ * Time Complexity: O(n) where n is length of input text for most operations
+ * Space Complexity: O(n) for processed output strings
+ * 
+ * @namespace TextUtils
+ */
 const TextUtils = {
-    // Process external links to open in new tabs
+    /**
+     * Process external HTTP/HTTPS links to open in new tabs with security attributes
+     * Adds target="_blank" and rel="noopener noreferrer" to external links
+     * Time Complexity: O(n) where n is length of HTML string
+     * 
+     * @param {string} html - HTML string containing links
+     * @returns {string} Processed HTML with external link attributes
+     */
     processExternalLinks: function(html) {
         return html.replace(/<a href="https?:\/\/[^"]*"/g, function(match) {
             return match + ' target="_blank" rel="noopener noreferrer"';
         });
     },
     
-    // Extract title from markdown heading
+    /**
+     * Extract title from markdown's first H1 heading
+     * Searches for first line starting with '# ' and extracts title text
+     * Time Complexity: O(n) where n is length of markdown until first match
+     * 
+     * @param {string} markdown - Markdown content
+     * @param {string} [fallback=''] - Default title if no heading found
+     * @returns {string} Extracted title or fallback value
+     */
     extractTitle: function(markdown, fallback = '') {
         const titleMatch = markdown.match(/^#\s+(.+)$/m);
         return titleMatch ? titleMatch[1] : fallback;
     },
     
-    // Convert annotation links in markdown
+    /**
+     * Convert annotation links from markdown syntax to HTML spans
+     * Transforms [text](annotation:key) to clickable annotation links
+     * Time Complexity: O(n*m) where n is text length, m is number of annotation links
+     * 
+     * @param {string} markdown - Markdown content with annotation links
+     * @returns {string} Processed content with HTML annotation spans
+     */
     processAnnotationLinks: function(markdown) {
         return markdown.replace(
             /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
@@ -118,8 +243,34 @@ const TextUtils = {
     }
 };
 
-// Custom incremental typing that doesn't reset innerHTML
+/**
+ * Custom incremental typing animation system with HTML content support
+ * Provides typewriter-style text animation that preserves HTML structure and
+ * doesn't reset innerHTML, preventing image reloading and maintaining DOM state.
+ * 
+ * Key Features:
+ * - HTML-aware token parsing (preserves tags, attributes, structure)
+ * - Character-by-character typing animation with configurable speed
+ * - Non-destructive DOM manipulation (doesn't reset innerHTML)
+ * - Completion callback support for chaining animations
+ * - Image and media content preservation during animation
+ * 
+ * Time Complexity: O(n) where n is total characters + HTML tokens
+ * Space Complexity: O(n) for token storage
+ * 
+ * @class IncrementalTyper
+ */
 class IncrementalTyper {
+    /**
+     * Initialize incremental typer with content parsing and configuration
+     * Parses HTML content into tokens for character-by-character animation
+     * 
+     * @param {HTMLElement} element - Target DOM element for typing animation
+     * @param {string} content - HTML content to animate (supports full HTML)
+     * @param {Object} [options={}] - Configuration options
+     * @param {number} [options.typeSpeed=10] - Milliseconds between characters
+     * @param {Function} [options.onComplete=()=>{}] - Callback when animation completes
+     */
     constructor(element, content, options = {}) {
         this.element = element;
         this.content = content;
@@ -136,6 +287,14 @@ class IncrementalTyper {
         console.log('🔤 Parsed content into', this.tokens.length, 'tokens');
     }
     
+    /**
+     * Parse HTML content into animation tokens
+     * Converts HTML string into structured tokens for incremental rendering
+     * Time Complexity: O(n) where n is HTML content length
+     * 
+     * @param {string} html - HTML content to parse
+     * @returns {Array<Object>} Array of token objects { type, content, [tagName] }
+     */
     parseHTML(html) {
         const tokens = [];
         const tempDiv = document.createElement('div');
@@ -145,6 +304,15 @@ class IncrementalTyper {
         return tokens;
     }
     
+    /**
+     * Recursively extract tokens from DOM nodes
+     * Processes text nodes as individual characters, element nodes as tags
+     * Time Complexity: O(n*m) where n is nodes, m is average text length per node
+     * 
+     * @param {NodeList} nodes - DOM nodes to process
+     * @param {Array<Object>} tokens - Output array for tokens
+     * @returns {void} Mutates tokens array
+     */
     extractTokens(nodes, tokens) {
         for (let node of nodes) {
             if (node.nodeType === Node.TEXT_NODE) {
@@ -167,6 +335,14 @@ class IncrementalTyper {
         }
     }
     
+    /**
+     * Start the typing animation
+     * Initializes DOM state, creates cursor, and begins token-by-token animation
+     * Time Complexity: O(1) for initialization, O(n) total for all tokens
+     * 
+     * @returns {void}
+     * @public
+     */
     start() {
         if (this.isTyping) return;
         this.isTyping = true;
@@ -183,6 +359,15 @@ class IncrementalTyper {
         this.typeNextToken();
     }
     
+    /**
+     * Process the next token in the animation sequence
+     * Handles different token types (characters, HTML tags, images) appropriately
+     * Uses recursion with setTimeout for smooth animation timing
+     * Time Complexity: O(1) per call, O(n) total for all tokens
+     * 
+     * @returns {void}
+     * @private
+     */
     typeNextToken() {
         if (this.currentTokenIndex >= this.tokens.length) {
             // Typing complete - remove cursor
@@ -240,6 +425,14 @@ class IncrementalTyper {
         setTimeout(() => this.typeNextToken(), delay);
     }
     
+    /**
+     * Clean up and stop the typing animation
+     * Removes cursor and resets typing state for cleanup
+     * Time Complexity: O(1)
+     * 
+     * @returns {void}
+     * @public
+     */
     destroy() {
         this.isTyping = false;
         // Remove cursor if it exists
@@ -249,7 +442,24 @@ class IncrementalTyper {
     }
 }
 
-// Start incremental typing
+/**
+ * Factory function to create and start incremental typing animation
+ * Convenience wrapper for IncrementalTyper class instantiation and startup
+ * 
+ * Time Complexity: O(n) where n is content length for parsing
+ * Space Complexity: O(n) for token storage
+ * 
+ * @function startIncrementalTyping
+ * @param {string} elementId - DOM element ID for typing animation
+ * @param {string} content - HTML content to animate
+ * @param {Object} [options={}] - Animation configuration options
+ * @param {number} [options.typeSpeed=10] - Milliseconds between characters
+ * @param {Function} [options.onComplete] - Completion callback
+ * @returns {IncrementalTyper|null} Typer instance or null if element not found
+ * 
+ * Called by: showDesktopAnnotation()
+ * Calls: new IncrementalTyper(), typer.start()
+ */
 function startIncrementalTyping(elementId, content, options = {}) {
     const element = DOM.byId(elementId);
     if (!element) return null;
@@ -260,6 +470,19 @@ function startIncrementalTyping(elementId, content, options = {}) {
 }
 
 
+/**
+ * Initialize markdown renderer with configuration for NKS content
+ * Configures marked.js library with GitHub-flavored markdown and line breaks
+ * 
+ * Time Complexity: O(1)
+ * Space Complexity: O(1)
+ * 
+ * @function initMarkdownRenderer
+ * @returns {void}
+ * 
+ * Called by: DOMContentLoaded event handler
+ * Calls: marked.setOptions()
+ */
 function initMarkdownRenderer() {
     // Configure marked for our annotation syntax
     marked.setOptions({
@@ -268,6 +491,20 @@ function initMarkdownRenderer() {
     });
 }
 
+/**
+ * Initialize chapter navigation system with click handlers
+ * Sets up event listeners for chapter links with active state management
+ * Handles both internal navigation and external demo links
+ * 
+ * Time Complexity: O(n) where n is number of chapter links
+ * Space Complexity: O(1) for event listeners
+ * 
+ * @function initChapterNavigation
+ * @returns {void}
+ * 
+ * Called by: DOMContentLoaded event handler
+ * Calls: loadChapter(), clearAnnotationContent()
+ */
 function initChapterNavigation() {
     const chapterLinks = DOM.queryAll('.chapter-link');
 
@@ -296,6 +533,29 @@ function initChapterNavigation() {
     });
 }
 
+/**
+ * Load and display chapter content with language support
+ * Handles special cases like demo pages and layered content for Chapter 1 Chinese
+ * Processes markdown content and manages annotation links
+ * 
+ * Key Features:
+ * - Language-aware file loading with fallback system
+ * - Special handling for intro-demo and layered Chapter 1 (Chinese)
+ * - Markdown processing with annotation link conversion
+ * - Loading state management and error handling
+ * - Automatic layered content system initialization
+ * 
+ * Time Complexity: O(n) where n is content length for processing
+ * Space Complexity: O(n) for content storage
+ * 
+ * @async
+ * @function loadChapter
+ * @param {string} chapterId - Chapter identifier ('preface', 'chapter1', 'intro-demo', etc.)
+ * @returns {Promise<void>} Resolves when chapter is loaded and processed
+ * 
+ * Called by: initChapterNavigation(), DOMContentLoaded handler
+ * Calls: loadLanguageFile(), processAnnotationLinksInMarkdown(), initLayeredContentSystem()
+ */
 async function loadChapter(chapterId) {
     const notesContent = DOM.byId('notes-content');
 
@@ -381,12 +641,40 @@ async function loadChapter(chapterId) {
     }
 }
 
+/**
+ * Process annotation links in markdown content
+ * Wrapper function for TextUtils.processAnnotationLinks to maintain API consistency
+ * 
+ * Time Complexity: O(n*m) where n is text length, m is number of annotation links
+ * Space Complexity: O(n) for processed content
+ * 
+ * @function processAnnotationLinksInMarkdown
+ * @param {string} markdown - Markdown content with annotation links
+ * @returns {string} Processed markdown with HTML annotation spans
+ * 
+ * Called by: loadChapter()
+ * Calls: TextUtils.processAnnotationLinks()
+ */
 function processAnnotationLinksInMarkdown(markdown) {
     return TextUtils.processAnnotationLinks(markdown);
 }
 
 // Removed unused processAnnotationLinks function - functionality is handled by processAnnotationLinksInMarkdown
 
+/**
+ * Initialize annotation system with global click event delegation
+ * Sets up click handlers for annotation links with active state management
+ * Uses event delegation pattern to handle dynamically added annotation links
+ * 
+ * Time Complexity: O(1) for setup, O(n) per click where n is annotation links
+ * Space Complexity: O(1) for event listener
+ * 
+ * @function initAnnotationSystem
+ * @returns {void}
+ * 
+ * Called by: DOMContentLoaded event handler
+ * Calls: showAnnotation()
+ */
 function initAnnotationSystem() {
     // Add click event listeners to all annotation links
     document.addEventListener('click', function (e) {
@@ -413,7 +701,20 @@ function initAnnotationSystem() {
 let currentTyped = null;
 let linkCheckInterval = null;
 
-// Debounce helper function
+/**
+ * Debounce utility function to limit function call frequency
+ * Prevents excessive function calls during events like scroll or resize
+ * 
+ * Time Complexity: O(1)
+ * Space Complexity: O(1) for timeout storage
+ * 
+ * @function debounce
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Milliseconds to wait before executing
+ * @returns {Function} Debounced function
+ * 
+ * Called by: various scroll and resize handlers
+ */
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -426,13 +727,35 @@ function debounce(func, wait) {
     };
 }
 
-// Mobile detection
+/**
+ * Detect mobile device based on user agent and touch capability
+ * Uses comprehensive user agent detection and touch point analysis
+ * 
+ * Time Complexity: O(1)
+ * Space Complexity: O(1)
+ * 
+ * @function isMobile
+ * @returns {boolean} True if mobile device detected
+ * 
+ * Called by: annotation display logic, responsive behavior
+ */
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
 }
 
-// Check if device should use inline annotations (stacked layout)
+/**
+ * Determine if annotations should display inline (stacked layout)
+ * Based on viewport width to match CSS media query breakpoints
+ * 
+ * Time Complexity: O(1)
+ * Space Complexity: O(1)
+ * 
+ * @function shouldUseInlineAnnotations
+ * @returns {boolean} True if viewport width ≤ 768px (tablet/mobile)
+ * 
+ * Called by: showAnnotation()
+ */
 function shouldUseInlineAnnotations() {
     return window.innerWidth <= 768;
 }
@@ -463,6 +786,29 @@ if (isMobile()) {
     });
 }
 
+/**
+ * Load annotation content with caching and language support
+ * Implements efficient caching system to prevent redundant network requests
+ * Supports language fallback system and external link processing
+ * 
+ * Key Features:
+ * - Language-aware caching with compound cache keys (key-language)
+ * - Markdown to HTML conversion with marked.js
+ * - External link processing for security (target="_blank")
+ * - Fallback system through loadLanguageFile utility
+ * 
+ * Time Complexity: O(1) for cached content, O(n) for new content where n is file size
+ * Space Complexity: O(n) for content storage in cache
+ * 
+ * @async
+ * @function loadAnnotation
+ * @param {string} key - Annotation identifier (filename without extension)
+ * @returns {Promise<string>} HTML content of the annotation
+ * @throws {Error} If annotation file not found after fallback attempts
+ * 
+ * Called by: showAnnotation(), showDesktopAnnotation(), showInlineAnnotation()
+ * Calls: loadLanguageFile(), marked.parse(), TextUtils.processExternalLinks()
+ */
 async function loadAnnotation(key) {
     // Create a cache key that includes language
     const cacheKey = `${key}-${currentLanguage}`;
@@ -501,6 +847,23 @@ async function loadAnnotation(key) {
     }
 }
 
+/**
+ * Show annotation using appropriate display method (desktop sidebar or inline)
+ * Responsive annotation display that switches based on viewport size
+ * Routes to either desktop sidebar or inline mobile display
+ * 
+ * Time Complexity: O(1) for routing decision
+ * Space Complexity: O(1)
+ * 
+ * @async
+ * @function showAnnotation
+ * @param {string} key - Annotation identifier
+ * @param {HTMLElement|null} [clickedElement=null] - Element that triggered annotation (for positioning)
+ * @returns {Promise<void>} Resolves when annotation is displayed
+ * 
+ * Called by: initAnnotationSystem() click handler
+ * Calls: shouldUseInlineAnnotations(), showInlineAnnotation(), showDesktopAnnotation()
+ */
 async function showAnnotation(key, clickedElement = null) {
     // Check if we should use inline annotation for mobile phones or desktop sidebar
     if (shouldUseInlineAnnotations()) {
@@ -510,6 +873,28 @@ async function showAnnotation(key, clickedElement = null) {
     }
 }
 
+/**
+ * Display annotation in desktop sidebar with incremental typing animation
+ * Handles desktop-specific annotation display in the right sidebar panel
+ * Features custom incremental typing animation that preserves HTML structure
+ * 
+ * Key Features:
+ * - Incremental typing animation with HTML preservation
+ * - Sidebar container management and scrolling
+ * - Link monitoring for dynamically added annotation links
+ * - Error handling with fallback messages
+ * 
+ * Time Complexity: O(n) where n is annotation content length
+ * Space Complexity: O(n) for content processing
+ * 
+ * @async
+ * @function showDesktopAnnotation
+ * @param {string} key - Annotation identifier
+ * @returns {Promise<void>} Resolves when annotation is displayed and animated
+ * 
+ * Called by: showAnnotation()
+ * Calls: loadAnnotation(), startIncrementalTyping(), startLinkMonitoring()
+ */
 async function showDesktopAnnotation(key) {
     const annotationContent = DOM.byId('annotation-content');
 
@@ -786,7 +1171,35 @@ function initScrollToTop() {
 }
 
 // Base class for cellular automata canvas animations
+/**
+ * Base class for cellular automata canvas rendering and animation
+ * Provides common functionality for cellular automata visualization including
+ * canvas management, resize handling, animation control, and rule-based evolution
+ * 
+ * Key Features:
+ * - Responsive canvas sizing with resize debouncing
+ * - Rule-based cellular automata evolution (Elementary CA rules)
+ * - Animation control with configurable speed
+ * - Mobile-optimized scroll handling to prevent animation restarts
+ * - Golden color scheme with age-based fading effects
+ * 
+ * Time Complexity: O(n) per animation frame where n is number of cells
+ * Space Complexity: O(w*h) where w is width, h is height in cells
+ * 
+ * @class CellularAutomataCanvas
+ */
 class CellularAutomataCanvas {
+    /**
+     * Initialize cellular automata canvas with configuration
+     * Sets up canvas context, dimensions, animation parameters, and options
+     * 
+     * @param {string} canvasId - DOM element ID for canvas
+     * @param {number} cellSize - Size of each cell in pixels
+     * @param {Object} [options={}] - Configuration options
+     * @param {number} [options.animationSpeed=200] - Milliseconds between frames
+     * @param {number} [options.resizeDebounce=250] - Resize debounce delay
+     * @param {HTMLElement} [options.parentElement=null] - Parent for sizing reference
+     */
     constructor(canvasId, cellSize, options = {}) {
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) return null;
@@ -807,6 +1220,12 @@ class CellularAutomataCanvas {
         this.init();
     }
     
+    /**
+     * Initialize canvas setup and event listeners
+     * Time Complexity: O(1)
+     * @returns {void}
+     * @private
+     */
     init() {
         this.setupCanvas();
         this.setupResizeListener();
@@ -1896,6 +2315,27 @@ if (!window.GameOfLife) {
     };
 }
 
+/**
+ * Initialize multilingual language system with localStorage persistence
+ * Sets up language toggle buttons and manages language switching with
+ * automatic content reloading and UI updates
+ * 
+ * Key Features:
+ * - Three-language support (EN/ZH/JA) with fallback system
+ * - Persistent language preference in localStorage
+ * - Automatic content reloading on language change
+ * - UI element translation updates
+ * - Chapter link updates for language-specific navigation
+ * 
+ * Time Complexity: O(n) where n is number of language buttons
+ * Space Complexity: O(1) for event listeners
+ * 
+ * @function initLanguageSystem
+ * @returns {void}
+ * 
+ * Called by: DOMContentLoaded event handler
+ * Calls: updateLanguageButtons(), updatePageLanguage(), updateChapterLinks()
+ */
 function initLanguageSystem() {
     const langOptions = document.querySelectorAll('.lang-option');
 
