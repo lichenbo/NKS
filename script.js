@@ -49,6 +49,74 @@ async function loadLanguageFile(basePath, fileName, language = null) {
     }
 }
 
+// DOM Utility Functions - reduce repeated queries
+const DOM = {
+    byId: (id) => document.getElementById(id),
+    query: (selector) => document.querySelector(selector),
+    queryAll: (selector) => document.querySelectorAll(selector),
+    
+    // Common element getters with caching
+    _cache: new Map(),
+    cached: function(id) {
+        if (!this._cache.has(id)) {
+            this._cache.set(id, document.getElementById(id));
+        }
+        return this._cache.get(id);
+    },
+    
+    clearCache: function() {
+        this._cache.clear();
+    }
+};
+
+// Event Handler Utilities - reduce repeated patterns
+const Events = {
+    // Add click handler to element or elements
+    onClick: function(selector, handler, options = {}) {
+        const elements = typeof selector === 'string' ? DOM.queryAll(selector) : [selector];
+        elements.forEach(el => {
+            if (el) {
+                el.addEventListener('click', handler, options);
+            }
+        });
+    },
+    
+    // Add event handler with delegation
+    delegate: function(parent, selector, event, handler) {
+        const parentEl = typeof parent === 'string' ? DOM.query(parent) : parent;
+        if (parentEl) {
+            parentEl.addEventListener(event, function(e) {
+                if (e.target.matches && e.target.matches(selector)) {
+                    handler.call(e.target, e);
+                }
+            });
+        }
+    }
+};
+
+// Text Processing Utilities - common patterns
+const TextUtils = {
+    // Process external links to open in new tabs
+    processExternalLinks: function(html) {
+        return html.replace(/<a href="https?:\/\/[^"]*"/g, function(match) {
+            return match + ' target="_blank" rel="noopener noreferrer"';
+        });
+    },
+    
+    // Extract title from markdown heading
+    extractTitle: function(markdown, fallback = '') {
+        const titleMatch = markdown.match(/^#\s+(.+)$/m);
+        return titleMatch ? titleMatch[1] : fallback;
+    },
+    
+    // Convert annotation links in markdown
+    processAnnotationLinks: function(markdown) {
+        return markdown.replace(
+            /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
+            '<span class="annotation-link" data-annotation="$2">$1</span>'
+        );
+    }
+};
 
 // Custom incremental typing that doesn't reset innerHTML
 class IncrementalTyper {
@@ -183,7 +251,7 @@ class IncrementalTyper {
 
 // Start incremental typing
 function startIncrementalTyping(elementId, content, options = {}) {
-    const element = document.getElementById(elementId);
+    const element = DOM.byId(elementId);
     if (!element) return null;
     
     const typer = new IncrementalTyper(element, content, options);
@@ -201,7 +269,7 @@ function initMarkdownRenderer() {
 }
 
 function initChapterNavigation() {
-    const chapterLinks = document.querySelectorAll('.chapter-link');
+    const chapterLinks = DOM.queryAll('.chapter-link');
 
     chapterLinks.forEach(link => {
         link.addEventListener('click', function (e) {
@@ -229,7 +297,7 @@ function initChapterNavigation() {
 }
 
 async function loadChapter(chapterId) {
-    const notesContent = document.getElementById('notes-content');
+    const notesContent = DOM.byId('notes-content');
 
     try {
         // Show loading state
@@ -314,11 +382,7 @@ async function loadChapter(chapterId) {
 }
 
 function processAnnotationLinksInMarkdown(markdown) {
-    // Convert [text](annotation:key) to HTML before markdown parsing
-    return markdown.replace(
-        /\[([^\]]+)\]\(annotation:([^)]+)\)/g,
-        '<span class="annotation-link" data-annotation="$2">$1</span>'
-    );
+    return TextUtils.processAnnotationLinks(markdown);
 }
 
 // Removed unused processAnnotationLinks function - functionality is handled by processAnnotationLinksInMarkdown
@@ -417,13 +481,10 @@ async function loadAnnotation(key) {
         let htmlContent = marked.parse(markdownText);
         
         // Process external links to open in new tab
-        htmlContent = htmlContent.replace(/<a href="https?:\/\/[^"]*"/g, function(match) {
-            return match + ' target="_blank" rel="noopener noreferrer"';
-        });
+        htmlContent = TextUtils.processExternalLinks(htmlContent);
 
         // Extract title from the first heading
-        const titleMatch = markdownText.match(/^#\s+(.+)$/m);
-        const title = titleMatch ? titleMatch[1] : key.replace('-', ' ');
+        const title = TextUtils.extractTitle(markdownText, key.replace('-', ' '));
 
         const annotation = {
             title: title,
@@ -450,7 +511,7 @@ async function showAnnotation(key, clickedElement = null) {
 }
 
 async function showDesktopAnnotation(key) {
-    const annotationContent = document.getElementById('annotation-content');
+    const annotationContent = DOM.byId('annotation-content');
 
     // Destroy any existing Typed instance
     if (currentTyped) {
@@ -499,7 +560,7 @@ async function showInlineAnnotation(key, clickedElement) {
     if (!clickedElement) return;
 
     // Remove any existing inline annotations
-    const existingAnnotations = document.querySelectorAll('.inline-annotation');
+    const existingAnnotations = DOM.queryAll('.inline-annotation');
     existingAnnotations.forEach(annotation => {
         annotation.remove();
     });
@@ -663,7 +724,7 @@ function clearAnnotationContent() {
     `;
 
     // Remove any existing inline annotations
-    const existingAnnotations = document.querySelectorAll('.inline-annotation');
+    const existingAnnotations = DOM.queryAll('.inline-annotation');
     existingAnnotations.forEach(annotation => {
         annotation.remove();
     });
@@ -681,7 +742,7 @@ function initAnnotationContent() {
 
 // Initialize scroll-to-top functionality
 function initScrollToTop() {
-    const scrollToTopBtn = document.getElementById('scroll-to-top');
+    const scrollToTopBtn = DOM.byId('scroll-to-top');
     
     if (!scrollToTopBtn) return;
 
@@ -1041,23 +1102,27 @@ function initHeaderCellularAutomata() {
     new HeaderCellularAutomata();
 }
 
-// Rule indicator update functions
-function updateBackgroundRuleIndicator() {
-    const bgRuleText = document.getElementById('bg-rule-text');
-    if (bgRuleText) {
-        const bgText = translations[currentLanguage]['rule-bg'] || 'BG';
-        const ruleText = translations[currentLanguage]['rule'] || 'Rule';
-        bgRuleText.textContent = `${bgText}: ${ruleText} 30`;
+// Rule indicator update functions (consolidated)
+const RuleIndicators = {
+    update: function(type, ruleNumber) {
+        const elementId = type === 'background' ? 'bg-rule-text' : 'header-rule-text';
+        const element = DOM.byId(elementId);
+        
+        if (element) {
+            const typeKey = type === 'background' ? 'rule-bg' : 'rule-header';
+            const typeText = translations[currentLanguage][typeKey] || (type === 'background' ? 'BG' : 'Header');
+            const ruleText = translations[currentLanguage]['rule'] || 'Rule';
+            element.textContent = `${typeText}: ${ruleText} ${ruleNumber}`;
+        }
     }
+};
+
+function updateBackgroundRuleIndicator() {
+    RuleIndicators.update('background', '30');
 }
 
 function updateHeaderRuleIndicator() {
-    const headerRuleText = document.getElementById('header-rule-text');
-    if (headerRuleText) {
-        const headerText = translations[currentLanguage]['rule-header'] || 'Header';
-        const ruleText = translations[currentLanguage]['rule'] || 'Rule';
-        headerRuleText.textContent = `${headerText}: ${ruleText} ${headerRuleName}`;
-    }
+    RuleIndicators.update('header', headerRuleName);
 }
 
 function updateRuleIndicators() {
@@ -1868,34 +1933,31 @@ function initLanguageSystem() {
 }
 
 function updateLanguageButtons() {
-    const langOptions = document.querySelectorAll('.lang-option');
+    const langOptions = DOM.queryAll('.lang-option');
     
     langOptions.forEach(button => {
         const buttonLang = button.getAttribute('data-lang');
-        if (buttonLang === currentLanguage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
+        button.classList.toggle('active', buttonLang === currentLanguage);
     });
 }
 
 function updatePageLanguage() {
-    const elements = document.querySelectorAll('[data-i18n]');
+    const elements = DOM.queryAll('[data-i18n]');
+    const currentTranslations = translations[currentLanguage] || {};
 
     elements.forEach(element => {
         const key = element.getAttribute('data-i18n');
-        if (translations[currentLanguage] && translations[currentLanguage][key]) {
-            element.textContent = translations[currentLanguage][key];
+        if (currentTranslations[key]) {
+            element.textContent = currentTranslations[key];
         }
     });
 
     // Update placeholder text for inputs
-    const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+    const placeholderElements = DOM.queryAll('[data-i18n-placeholder]');
     placeholderElements.forEach(element => {
         const key = element.getAttribute('data-i18n-placeholder');
-        if (translations[currentLanguage] && translations[currentLanguage][key]) {
-            element.placeholder = translations[currentLanguage][key];
+        if (currentTranslations[key]) {
+            element.placeholder = currentTranslations[key];
         }
     });
 
@@ -1904,11 +1966,13 @@ function updatePageLanguage() {
 }
 
 function updateChapterLinks() {
-    const chapterLinks = document.querySelectorAll('.chapter-link');
+    const chapterLinks = DOM.queryAll('.chapter-link');
+    const currentTranslations = translations[currentLanguage] || {};
+    
     chapterLinks.forEach(link => {
         const chapterKey = link.getAttribute('data-chapter');
-        if (translations[currentLanguage] && translations[currentLanguage][chapterKey]) {
-            link.textContent = translations[currentLanguage][chapterKey];
+        if (currentTranslations[chapterKey]) {
+            link.textContent = currentTranslations[chapterKey];
         }
     });
 }
