@@ -1928,6 +1928,24 @@ header {
         transform: scale(1.05);
     }
     
+    /* Visual indicator when there's chat history */
+    .nks-chat-container .mobile-round-button.has-history {
+        border-color: var(--accent-gold);
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .nks-chat-container .mobile-round-button.has-history::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        background: var(--accent-gold);
+        border-radius: 50%;
+        border: 2px solid var(--primary-bg);
+    }
+    
     /* Hide desktop input bar completely on mobile */
     .nks-chat-container .chat-input-bar {
         display: none !important;

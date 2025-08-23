@@ -2120,6 +2120,13 @@ class NKSChatbot {
             }
         });
         
+        // Click on quick input field - open conversation if there's existing history
+        this.quickInput.addEventListener('click', () => {
+            if (this.messageHistory.length > 0 && !this.isExpanded) {
+                this.expandChat();
+            }
+        });
+        
         // Full chat events (expanded state)
         this.sendButton.addEventListener('click', () => this.sendMessage());
         this.inputField.addEventListener('keypress', (e) => {
@@ -2150,7 +2157,8 @@ class NKSChatbot {
     
     handleMobileButtonClick() {
         if (this.isMobile) {
-            // On mobile: directly open full conversation view
+            // On mobile: always open the conversation view
+            // If there's history, user will see it; if not, they'll see empty state
             this.expandChat();
         }
     }
@@ -2290,6 +2298,9 @@ class NKSChatbot {
         // Save to localStorage
         this.saveChatHistory();
         
+        // Update UI state (might be first message)
+        this.updateUIState();
+        
         // Scroll to bottom
         this.scrollToBottom();
     }
@@ -2403,6 +2414,7 @@ class NKSChatbot {
             // Restore messages to UI if there are any
             if (this.messageHistory.length > 0) {
                 this.restoreMessagesToUI();
+                this.updateUIState();
             }
             
         } catch (error) {
@@ -2464,6 +2476,35 @@ class NKSChatbot {
     clearHistory() {
         if (confirm('Are you sure you want to clear your chat history? This cannot be undone.')) {
             this.clearChatHistory();
+            this.updateUIState();
+        }
+    }
+    
+    // Update UI state based on whether there's chat history
+    updateUIState() {
+        const hasHistory = this.messageHistory.length > 0;
+        
+        // Update mobile button appearance when there's history
+        if (this.isMobile && this.mobileButton) {
+            if (hasHistory) {
+                this.mobileButton.classList.add('has-history');
+                this.mobileButton.title = 'View chat history';
+            } else {
+                this.mobileButton.classList.remove('has-history');
+                this.mobileButton.title = 'Start chatting';
+            }
+        }
+        
+        // Update quick input placeholder for desktop
+        if (!this.isMobile && this.quickInput) {
+            const placeholderKey = hasHistory ? 'chat-quick-placeholder-history' : 'chat-quick-placeholder';
+            const fallbackText = hasHistory ? '💬 Continue conversation...' : '💡 Ask about A New Kind of Science...';
+            
+            if (translations[currentLanguage] && translations[currentLanguage][placeholderKey]) {
+                this.quickInput.placeholder = translations[currentLanguage][placeholderKey];
+            } else {
+                this.quickInput.placeholder = fallbackText;
+            }
         }
     }
 }
