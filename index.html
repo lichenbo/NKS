@@ -189,6 +189,10 @@
     <script src="js/chatbot.js"></script>
     <script src="js/game-of-life.js"></script>
     <script src="js/cellular-automata.js"></script>
+    <script src="js/gpu-cellular-automata.js"></script>
+    <script src="js/gpu-cellular-automata-impl.js"></script>
+    <script src="js/gpu-performance-test.js"></script>
+    <script src="js/gpu-debug-console.js"></script>
     <script src="script.js"></script>
     
     <script>
@@ -200,9 +204,16 @@
             offset: 50
         });
         
-        // Initialize cellular automata background
-        initCellularAutomataBackground();
-        initHeaderCellularAutomata();
+        // Initialize smart cellular automata manager
+        window.smartCAManager = new APP.CellularAutomata.SmartManager();
+        window.smartCAManager.initialize().then(implementation => {
+            console.log(`🎯 Cellular automata initialized with ${implementation} implementation`);
+        }).catch(error => {
+            console.error('Smart CA manager initialization failed, falling back to CPU:', error);
+            // Fallback to original CPU initialization
+            initCellularAutomataBackground();
+            initHeaderCellularAutomata();
+        });
         
         // Initialize chatbot
         APP.Chatbot.initChatbot();
