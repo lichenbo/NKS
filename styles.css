@@ -1585,13 +1585,22 @@ header {
     /* Container acts as positioning context for children */
 }
 
-/* Desktop positioning using CSS Grid alignment */
+/* Desktop positioning - align exactly with annotations column */
 @media (min-width: 769px) {
     .nks-chat-container {
-        /* Align with annotations column using grid positioning */
-        right: max(var(--spacing-lg), calc((100vw - 1800px) / 2 + var(--spacing-lg))); /* Match three-column-layout positioning */
-        width: clamp(200px, min(280px, 20vw), 320px); /* Responsive width matching annotations column */
-        max-width: calc(100vw - 2rem); /* Prevent viewport overflow */
+        /* Use JavaScript-like positioning but with CSS */
+        left: auto;
+        right: var(--spacing-lg); /* Same right margin as annotations column */
+        width: 280px; /* Match annotations column min-width */
+    }
+    
+    /* Make width responsive to match the grid column exactly */
+    .three-column-layout {
+        --sidebar-width: minmax(280px, 320px);
+    }
+    
+    .nks-chat-container {
+        width: min(320px, max(280px, 20vw)); /* Match the grid column width calculation */
     }
 }
 
