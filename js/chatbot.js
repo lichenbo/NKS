@@ -289,7 +289,6 @@ window.APP = window.APP || {};
                 
                 // API returns pure text, so get it as text instead of JSON
                 const botResponse = await response.text();
-                console.log('🤖 API Response received:', botResponse);
                 
                 // Hide typing indicator and add bot response
                 this.hideTypingIndicator();
@@ -469,7 +468,6 @@ window.APP = window.APP || {};
                     version: '1.0' // For future compatibility
                 };
                 localStorage.setItem(this.storageKey, JSON.stringify(historyData));
-                console.log('💾 Chat history saved to localStorage');
             } catch (error) {
                 console.warn('⚠️ Failed to save chat history:', error);
             }
@@ -487,7 +485,6 @@ window.APP = window.APP || {};
             try {
                 const storedData = localStorage.getItem(this.storageKey);
                 if (!storedData) {
-                    console.log('📭 No chat history found in localStorage');
                     return;
                 }
                 
@@ -503,13 +500,11 @@ window.APP = window.APP || {};
                 // Check if history is too old (optional: clear after 30 days)
                 const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
                 if (historyData.timestamp && historyData.timestamp < thirtyDaysAgo) {
-                    console.log('🗓️ Chat history expired, clearing...');
                     this.clearChatHistory();
                     return;
                 }
                 
                 this.messageHistory = historyData.messages;
-                console.log(`📚 Loaded ${this.messageHistory.length} messages from chat history`);
                 
                 // Restore messages to UI if there are any
                 if (this.messageHistory.length > 0) {
@@ -542,7 +537,6 @@ window.APP = window.APP || {};
                 this.displayMessageInUI(type, content, isError);
             });
             
-            console.log('🔄 Chat history restored to UI');
         }
         
         /**
@@ -589,7 +583,6 @@ window.APP = window.APP || {};
                 if (this.messagesContainer) {
                     this.messagesContainer.innerHTML = '';
                 }
-                console.log('🗑️ Chat history cleared');
             } catch (error) {
                 console.warn('⚠️ Failed to clear chat history:', error);
             }
@@ -659,9 +652,7 @@ window.APP = window.APP || {};
      * @returns {void}
      */
     function initChatbot() {
-        console.log('🤖 Initializing NKS Chatbot...');
         window.nksChatbot = new NKSChatbot();
-        console.log('✅ NKS Chatbot initialized');
         
         // No positioning needed - handled by pure CSS!
     }
