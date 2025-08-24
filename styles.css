@@ -1465,12 +1465,7 @@ header {
 
 .toggle-icon {
     font-size: 0.8rem;
-    transition: transform 0.3s ease;
     font-weight: bold;
-}
-
-.expand-toggle[data-expanded="true"] .toggle-icon {
-    transform: rotate(180deg);
 }
 
 .toggle-text {

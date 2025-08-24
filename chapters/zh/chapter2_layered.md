@@ -26,7 +26,7 @@
 任何程序在某种层面上都可以被看作是一套规则的集合，这些规则指定了程序在每一步应该做什么。设置这些规则的方式多种多样——实际上，在本书的进程中，我们将会研究其中的几种。但现在，我将考虑一类特殊的例子，称为[细胞自动机](annotation:cellular-automata)，这是我在1980年代初研究的第一类简单程序。
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -54,7 +54,7 @@
 ![Rule 254 Diagram](https://wolframscience.com/nks/images/rule-254-diagram.png)
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -111,7 +111,7 @@
 这张图片展示了从一个黑色单元格开始，反复应用此规则后发生的情况。我们看到的是一些相当惊人的东西——可能是我有史以来做出的最令人惊讶的科学发现。我们可能期望得到一个简单的规则模式，但这个细胞自动机产生的模式看起来却极其不规则和复杂。
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -161,7 +161,7 @@
 但与工程不同，自然界在这样的约束下运作。因此，没有什么能阻止像上一节末尾那样的系统出现。事实上，本书的重要结论之一是，这样的系统在自然界中实际上非常普遍。
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -193,7 +193,7 @@
 看看装饰艺术的历史例子，似乎没有理由认为许多细胞自动机的行为在几个世纪甚至几千年前就不能被计算出来。也许有一天，会出土一件使用规则30细胞自动机创造的巴比伦文物。但我非常怀疑。因为我倾向于认为，如果像规则30那样的图片在古代真的被看到过，那么科学就会走上一条与它实际所走的截然不同的道路。
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>

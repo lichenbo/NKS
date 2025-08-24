@@ -62,7 +62,7 @@
 但是，从[计算等价性原理](annotation:computational-equivalence)中也出现了一种新的统一性：因为在各种各样的系统中，从简单的程序到大脑再到我们的整个宇宙，该原理意味着存在一种基本的等价性，使得相同的基本现象发生，并允许使用相同的基本科学思想和方法。正是这一点，最终决定了我在这本书中描述的新科学的巨大力量。
 </div>
 
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -82,7 +82,7 @@
 
 我在本书中发展的框架也表明，通过从根本上以计算的方式看待数学过程，有可能解决关于甚至现有数学基础的重要问题。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -100,7 +100,7 @@
 
 在物理学的未来，最大的胜利无疑是为我们的整个宇宙找到一个真正基础的理论。然而，尽管偶尔有乐观情绪，传统方法并没有使这看起来近在咫尺。但是，通过我在这本书中发展的方法和直觉，我相信最终有一种严肃的可能性，即这样的理论实际上可以被找到。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -114,7 +114,7 @@
 
 因此，这意味着有可能为生物系统制作各种各样的新模型——并有可能看到如何模拟其操作的本质，比如说用于医疗目的。而且，只要存在关于简单程序的一般原则，这些原则也应该适用于生物有机体——使得想象构建新的通用抽象生物学理论成为可能。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -126,7 +126,7 @@
 <div class="content-layer detailed">
 从经济学到心理学，一直存在一个广泛但有争议的假设——无疑是源于物理科学的成功——即坚实的理论必须总是以数字、方程和传统数学的形式来表述。但我怀疑，通过使用我在本书中发展的基于简单程序的新科学，人们通常会有更好的机会捕捉社会科学中现象的基本机制。毫无疑问，很快就会有各种关于将我的思想应用于社会科学的主张。的确，从本书中出现的新直觉很可能几乎立刻就能解释过去看起来相当神秘的现象。但本书的结果本身表明，科学方法的应用将不可避免地存在根本性的限制。将会提出新的问题，但在明确何时可能有一船理论，以及何时必须不可避免地依赖于具体案例的判断细节之前，还需要时间。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -140,7 +140,7 @@
 
 一个后果是计算思想可以应用的领域的急剧扩大——特别是包括关于自然和数学的各种基本问题。另一个后果是对计算机科学中现有问题的新视角——特别是与执行一般类型的计算任务所需的最终资源有关的问题。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -152,7 +152,7 @@
 <div class="content-layer detailed">
 在任何历史时期，都有一些关于宇宙和我们在其中角色的问题，似乎只能通过哲学的一般论证来触及。但科学的进步常常最终提供一个更明确的背景。我相信，本书中的新科学将为自古以来就被认为是基础的各种问题做到这一点。其中包括关于知识的最终极限、自由意志、人类状况的独特性以及数学的必然性等问题。在哲学史上，关于这些问题的每一个都已经说了很多。然而，不可避免地，它只被关于事物应该如何运作的当前直觉所告知。但我在本书中的发现导致了全新的直觉。有了这种直觉，事实证明，人们可以第一次开始看到许多长期存在问题的解决方案——通常沿着与基于传统一般哲学论证所预期的相当不同的路线。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -164,7 +164,7 @@
 <div class="content-layer detailed">
 自然界似乎很容易就能创造出极具美感的形式。然而在过去，艺术大多只能满足于模仿这些形式。但现在，随着发现简单的程序可以捕捉自然界中各种复杂行为的基本机制，人们可以想象仅仅通过抽样这些程序来探索我们所见自然形式的概括。传统的科学直觉——以及早期的[计算机艺术](annotation:computational-art)——可能会让人认为，简单的程序总是会产生过于简单和僵硬的图片，以至于没有艺术趣味。但通读本书就会清楚地发现，即使是一个规则可能极其简单的程序，也常常能够生成具有惊人美学品质的图片——有时让人联想到自然，但常常又不同于以往所见的任何事物。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -178,7 +178,7 @@
 
 传统工程的经验导致了这样一种普遍假设：要执行一项复杂的任务，需要构建一个其基本规则在某种程度上相应复杂的系统。但本书中的发现表明，情况并非如此，事实上，极其简单的底层规则——例如，可能直接在原子层面实现的规则——往往就是所需要的全部。我在本书中的主要关注点是基础科学。但我毫不怀疑，在几十年内，我所做的工作将导致技术基础的一些戏剧性变化——以及我们利用宇宙所提供的东西并将其应用于我们自己的人类目的的基本能力。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -192,7 +192,7 @@
 <div class="content-layer detailed">
 当电子计算机首次被发明时，人们普遍认为不久之后它们就能够进行类似人类的思考。在1960年代，人工智能领域应运而生，其目标是理解人类思维过程并在计算机上实现它们。但事实证明，这比预期的要困难得多，在一些衍生品之后，几乎没有取得根本性的进展。然而，在某种程度上，基本问题一直是理解大脑中看似简单的组件如何能够导致思维的所有复杂性。但现在，有了本书中发展的框架，人们终于有了一个有意义的基础来做这件事。的确，基于本书中的理论和实践思想，我怀疑最终有可能在创造能够进行类似人类思考的技术系统方面取得巨大进展。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -204,7 +204,7 @@
 <div class="content-layer detailed">
 自从机器存在以来，人们就一直在想，它们在多大程度上能够模仿生命系统。从1980年代中期到1990年代中期最为活跃的人工生命领域，主要关注的是展示计算机程序可以被用来模拟生物系统的各种特征。但通常假设所需的程序必须相当复杂。然而，本书中的发现表明，事实上非常简单的程序就足够了。这样的程序使得行为的基本机制更清晰——并且可能更接近于真实生物系统中实际发生的情况。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -223,7 +223,7 @@
 **[分形几何](annotation:fractals)**
 直到最近，科学和数学中广泛讨论的唯一形状类型是那些规则或平滑的形状。但从1970年代末开始，分形几何领域强调了包含任意复杂部分的嵌套形状的重要性，并论证说这种形状在自然界中很常见。在本书中，我们将遇到相当数量的产生这种嵌套形状的系统。但我们也会发现许多产生更为复杂、没有嵌套结构的形状的系统。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
@@ -309,7 +309,7 @@
 
 当我在1980年代初首次发现关于[细胞自动机](annotation:cellular-automata)的发现时，我怀疑我看到了重要事物的开端。但我不知道它最终会变得多么重要。的确，在过去的二十年里，我所做的发现比我想象的要多得多。我花了如此多精力构建的新科学，似乎已成为未来知识发展的一个日益核心和关键的方向。
 </div>
-<button class="expand-toggle" data-target="simplified">
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
   <span class="toggle-text">展开详细内容</span>
   <span class="toggle-icon">▼</span>
 </button>
