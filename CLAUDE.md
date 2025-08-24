@@ -14,6 +14,7 @@ This is a client-side web application that presents notes and annotations for St
 - **Client-side rendering** - Uses `marked.js` library to parse markdown on the client
 - **Animation libraries** - Uses AOS (Animate On Scroll) and custom incremental typing for visual effects
 - **Multilingual support** - Full English/Chinese/Japanese language system with separate content files
+- **Modular JavaScript architecture** - Core functionality separated into focused modules using IIFE patterns and APP namespace
 
 ## Key Files Structure
 
@@ -22,12 +23,13 @@ This is a client-side web application that presents notes and annotations for St
   - Chapter navigation and loading system with special handling for layered Chapter 1 (Chinese only)
   - Annotation system with custom incremental typing effects and caching
   - Dual cellular automata animations (background Rule 30, header cycling through multiple rules)
-  - Conway's Game of Life demo implementation with 12 sample patterns and mobile touch support
   - Markdown parsing with annotation link preprocessing
-  - Complete internationalization system with localStorage persistence (EN/ZH/JA)
   - Visual enhancement system with educational images and computational art examples
   - **Layered content system with expand/collapse functionality for progressive disclosure**
-  - **AI-powered chatbot integration with RAG model API for answering questions about "A New Kind of Science"**
+- `js/` - Modular JavaScript components organized for maintainability:
+  - `js/translations.js` - Complete trilingual translation system (EN/ZH/JA) with fallback mechanisms and localStorage persistence
+  - `js/chatbot.js` - **AI-powered NKS Assistant with RAG model API integration for intelligent Q&A about "A New Kind of Science"**
+  - `js/game-of-life.js` - **Conway's Game of Life implementation with 12 famous patterns, multiple grid sizes, and mobile optimization**
 - `styles.css` - Modern CSS with:
   - CSS Grid responsive three-column layout
   - Glass-morphism design with hover effects
@@ -212,6 +214,25 @@ Since this is a static HTML/CSS/JS project with no build system:
 - **Language Support**: Multilingual placeholders and UI elements with automatic translation updates
 - **Error Handling**: Graceful fallbacks for API failures with user-friendly error messages
 - **Visual Consistency**: Glass-morphism design with golden accents matching site aesthetic
+
+### Modular JavaScript Architecture
+- **IIFE Pattern**: All modules use Immediately Invoked Function Expression pattern for encapsulation
+- **APP Namespace**: Consistent `window.APP` namespace prevents global scope pollution
+- **Revealing Module Pattern**: Each module exposes only necessary public methods through APP namespace
+- **Loading Order**: Critical dependency order: `translations.js` → `chatbot.js` → `game-of-life.js` → `script.js`
+- **Backward Compatibility**: Global window exposure maintained for existing functionality
+- **Module Structure**:
+  ```javascript
+  (function(APP) {
+      'use strict';
+      // Module implementation
+      APP.ModuleName = {
+          publicMethod1,
+          publicMethod2
+      };
+  })(window.APP = window.APP || {});
+  ```
+- **Benefits**: Improved maintainability, reduced script.js size from ~3000+ to ~1750 lines (40% reduction)
 
 ## Dependencies
 
