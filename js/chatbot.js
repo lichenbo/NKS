@@ -90,7 +90,9 @@ window.APP = window.APP || {};
          */
         bindEvents() {
             // Mobile round button click
-            this.mobileButton.addEventListener('click', () => this.handleMobileButtonClick());
+            if (this.mobileButton) {
+                this.mobileButton.addEventListener('click', () => this.handleMobileButtonClick());
+            }
             
             // Quick input events (collapsed state)
             this.quickSendButton.addEventListener('click', () => this.sendQuickMessage());
@@ -120,12 +122,7 @@ window.APP = window.APP || {};
             // Minimize button
             this.minimizeButton.addEventListener('click', () => this.minimizeChat());
             
-            // Close chat when clicking outside (only when expanded)
-            document.addEventListener('click', (e) => {
-                if (this.isExpanded && !this.chatContainer.contains(e.target)) {
-                    this.minimizeChat();
-                }
-            });
+            // Chat can only be closed via the minimize button
             
             // Handle window resize
             window.addEventListener('resize', () => {
@@ -224,6 +221,19 @@ window.APP = window.APP || {};
             this.isExpanded = true;
             this.inputBar.style.display = 'none';
             this.conversation.classList.remove('hidden');
+            
+            // On mobile, move to body and ensure full-screen positioning
+            if (this.isMobile) {
+                document.body.appendChild(this.conversation);
+                this.conversation.style.position = 'fixed';
+                this.conversation.style.top = '0';
+                this.conversation.style.left = '0';
+                this.conversation.style.right = '0';
+                this.conversation.style.bottom = '0';
+                this.conversation.style.width = '100vw';
+                this.conversation.style.height = '100vh';
+                this.conversation.style.zIndex = '9999';
+            }
             
             // Focus on the main input field
             setTimeout(() => {

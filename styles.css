@@ -1100,9 +1100,75 @@ header {
 }
 
 /* ================================
+   MOBILE ACTIONS CONTAINER
+   ================================ */
+.mobile-actions-container {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    display: none; /* Hidden by default, shown only on mobile */
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+    pointer-events: auto; /* Ensure container allows clicks */
+}
+
+/* Show container on mobile */
+@media (max-width: 768px) {
+    .mobile-actions-container {
+        display: flex;
+    }
+    
+    /* Mobile chat button inside flexbox container */
+    .mobile-actions-container .mobile-round-button {
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(26, 26, 26, 0.95);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        order: 2; /* Chat button is second (below scroll button) */
+        pointer-events: auto; /* Ensure button is clickable */
+        position: relative; /* Ensure proper stacking context */
+        z-index: 1; /* Make sure it's above other elements */
+    }
+    
+    .mobile-actions-container .mobile-round-button:hover {
+        background: rgba(26, 26, 26, 1);
+        border-color: var(--accent-gold);
+        box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+        transform: scale(1.05);
+    }
+    
+    .mobile-actions-container .mobile-round-button.has-history {
+        border-color: var(--accent-gold);
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .mobile-actions-container .mobile-round-button.has-history::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        background: var(--accent-gold);
+        border-radius: 50%;
+        border: 2px solid var(--primary-bg);
+    }
+}
+
+/* ================================
    SCROLL TO TOP BUTTON
    ================================ */
 .scroll-to-top {
+    /* Desktop positioning (unchanged) */
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -1145,14 +1211,14 @@ header {
     color: var(--primary-bg);
 }
 
-/* Mobile and tablet specific styles for scroll-to-top */
+/* Mobile styles - button now inside flexbox container */
 @media (max-width: 768px) {
     .scroll-to-top {
+        position: static; /* Remove fixed positioning */
         display: flex;
-        bottom: 12px;
-        right: 12px;
         width: 40px;
         height: 40px;
+        order: 1; /* Scroll-to-top is first (above chat button) */
     }
     
     .scroll-to-top-icon {
@@ -1524,9 +1590,14 @@ header {
     opacity: 1;
 }
 
-/* Hide mobile round button on desktop */
+/* Hide mobile round button by default - will be shown in mobile actions container */
 .mobile-round-button {
     display: none;
+}
+
+/* Show mobile round button inside the mobile actions container */
+.mobile-actions-container .mobile-round-button {
+    display: flex;
 }
 
 /* Collapsed State: Single Line Input */
@@ -1886,61 +1957,6 @@ header {
 
 /* Mobile Chat - Simple Two-State Behavior */
 @media (max-width: 768px) {
-    .nks-chat-container {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: auto;
-        z-index: 1001;
-        transition: all 0.3s ease;
-    }
-    
-    /* Mobile-only round button state */
-    .nks-chat-container .mobile-round-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: rgba(26, 26, 26, 0.95);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-        cursor: pointer;
-        font-size: 1.5rem;
-        transition: all 0.3s ease;
-        /* Ensure button stays within container bounds and aligned to right */
-        position: absolute;
-        right: 0;
-        top: 0;
-    }
-    
-    .nks-chat-container .mobile-round-button:hover {
-        background: rgba(26, 26, 26, 1);
-        border-color: var(--accent-gold);
-        box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
-        transform: scale(1.05);
-    }
-    
-    /* Visual indicator when there's chat history */
-    .nks-chat-container .mobile-round-button.has-history {
-        border-color: var(--accent-gold);
-        background: rgba(212, 175, 55, 0.1);
-    }
-    
-    .nks-chat-container .mobile-round-button.has-history::after {
-        content: '';
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 12px;
-        height: 12px;
-        background: var(--accent-gold);
-        border-radius: 50%;
-        border: 2px solid var(--primary-bg);
-    }
-    
     /* Hide desktop input bar completely on mobile */
     .nks-chat-container .chat-input-bar {
         display: none !important;
@@ -1965,7 +1981,8 @@ header {
     }
     
     .chat-conversation:not(.hidden) {
-        transform: translateY(0);
+        transform: translateY(0) !important;
+        opacity: 1 !important;
     }
     
     .chat-conversation .chat-messages {
@@ -1975,14 +1992,8 @@ header {
 }
 
 @media (max-width: 480px) {
-    .nks-chat-container {
-        bottom: 1.5rem;
-        right: 1.5rem;
-    }
-    
-    .nks-chat-container .mobile-round-button {
-        width: 52px;
-        height: 52px;
-        font-size: 1.4rem;
+    /* Mobile actions container remains the same size on smaller screens */
+    .mobile-actions-container .mobile-round-button {
+        font-size: 1.1rem; /* Slightly smaller icon to fit */
     }
 }
