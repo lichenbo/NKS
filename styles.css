@@ -1579,16 +1579,38 @@ header {
 .nks-chat-container {
     position: fixed;
     bottom: 2rem;
-    /* Position will be set by JavaScript to match annotations column */
     z-index: 1000;
-    opacity: 0;
+    opacity: 1; /* Always visible on desktop */
     transition: opacity 0.3s ease;
     /* Container acts as positioning context for children */
 }
 
-.nks-chat-container.positioned {
-    opacity: 1;
+/* Desktop positioning using CSS Grid alignment */
+@media (min-width: 769px) {
+    .nks-chat-container {
+        /* Align with annotations column using grid positioning */
+        right: max(var(--spacing-lg), calc((100vw - 1800px) / 2 + var(--spacing-lg))); /* Match three-column-layout positioning */
+        width: clamp(200px, min(280px, 20vw), 320px); /* Responsive width matching annotations column */
+        max-width: calc(100vw - 2rem); /* Prevent viewport overflow */
+    }
 }
+
+/* Larger screen adjustments to match grid breakpoints */
+@media (min-width: 1600px) {
+    .nks-chat-container {
+        right: max(var(--spacing-lg), calc((100vw - 2000px) / 2 + var(--spacing-lg)));
+        width: clamp(200px, min(320px, 20vw), 380px);
+    }
+}
+
+@media (min-width: 2000px) {
+    .nks-chat-container {
+        right: max(var(--spacing-lg), calc((100vw - 2400px) / 2 + var(--spacing-lg)));
+        width: clamp(200px, min(380px, 20vw), 420px);
+    }
+}
+
+/* No longer need .positioned class - pure CSS positioning */
 
 /* Hide mobile round button by default - will be shown in mobile actions container */
 .mobile-round-button {

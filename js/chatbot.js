@@ -646,74 +646,11 @@ window.APP = window.APP || {};
 
     // --- Positioning Functions ---
 
-    /**
-     * Position chat container to align with annotations column on desktop
-     * Calculates optimal positioning while ensuring minimum width and viewport bounds
-     * 
-     * Time Complexity: O(1)
-     * Space Complexity: O(1)
-     * 
-     * @function positionChatWithAnnotationsColumn
-     * @returns {void}
-     */
-    function positionChatWithAnnotationsColumn() {
-        const annotationsColumn = document.querySelector('.annotations-column');
-        const chatContainer = document.querySelector('.nks-chat-container');
-        
-        if (!annotationsColumn || !chatContainer) return;
-        
-        // Only position on desktop (width > 768px)
-        // Also check if we're actually showing mobile UI elements
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            // Remove any inline positioning on mobile to let CSS take over
-            chatContainer.style.left = '';
-            chatContainer.style.width = '';
-            chatContainer.classList.add('positioned');
-            return;
-        }
-        
-        const rect = annotationsColumn.getBoundingClientRect();
-        const columnLeft = rect.left + window.scrollX;
-        const columnWidth = rect.width;
-        
-        // Ensure minimum width for the chat component
-        const minChatWidth = 200; // Matches CSS min-width
-        const adjustedWidth = Math.max(columnWidth, minChatWidth);
-        
-        // If we need more width than the column provides, adjust positioning
-        let adjustedLeft = columnLeft;
-        if (adjustedWidth > columnWidth) {
-            // Try to center the chat over the column
-            adjustedLeft = columnLeft - (adjustedWidth - columnWidth) / 2;
-            
-            // Ensure we don't go off the left edge of the viewport
-            adjustedLeft = Math.max(10, adjustedLeft);
-            
-            // Ensure we don't go off the right edge of the viewport
-            const rightEdge = adjustedLeft + adjustedWidth;
-            if (rightEdge > window.innerWidth - 10) {
-                adjustedLeft = window.innerWidth - adjustedWidth - 10;
-            }
-        }
-        
-        console.log('📍 Positioning chat:', {
-            columnLeft,
-            columnWidth,
-            adjustedLeft,
-            adjustedWidth,
-            viewportWidth: window.innerWidth,
-            isMobile
-        });
-        
-        chatContainer.style.left = adjustedLeft + 'px';
-        chatContainer.style.width = adjustedWidth + 'px';
-        chatContainer.classList.add('positioned');
-    }
+    // Chat positioning now handled by pure CSS - no JavaScript needed!
 
     /**
-     * Initialize chatbot system with positioning
-     * Creates NKSChatbot instance and sets up responsive positioning
+     * Initialize chatbot system
+     * Creates NKSChatbot instance with pure CSS positioning
      * 
      * Time Complexity: O(h) where h is chat history size
      * Space Complexity: O(1)
@@ -726,21 +663,12 @@ window.APP = window.APP || {};
         window.nksChatbot = new NKSChatbot();
         console.log('✅ NKS Chatbot initialized');
         
-        // Position chat to align with annotations column after a small delay
-        setTimeout(() => {
-            positionChatWithAnnotationsColumn();
-        }, 100);
-        
-        // Reposition on window resize
-        window.addEventListener('resize', () => {
-            setTimeout(positionChatWithAnnotationsColumn, 50);
-        });
+        // No positioning needed - handled by pure CSS!
     }
 
     // Expose to APP namespace
     APP.Chatbot = {
         NKSChatbot,
-        positionChatWithAnnotationsColumn,
         initChatbot
     };
 
