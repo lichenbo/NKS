@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Cellular Automata Test - NKS Project</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #d4af37;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 200px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #f4d03f, #d4af37);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .status.success { border-left: 4px solid #4ade80; }
+        .status.warning { border-left: 4px solid #fbbf24; }
+        .status.error { border-left: 4px solid #ef4444; }
+        .status.info { border-left: 4px solid #3b82f6; }
+
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #d4af37;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+
+        .benchmark-results {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            color: #ccc;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            button {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebGPU Cellular Automata Test</h1>
+        
+        <!-- GPU Capability Detection -->
+        <div class="test-section">
+            <h2>GPU Capability Detection</h2>
+            <div class="controls">
+                <button onclick="detectGPUCapabilities()">Detect GPU Capabilities</button>
+                <button onclick="runPerformanceBenchmark()">Run Performance Benchmark</button>
+            </div>
+            <div id="gpu-status" class="status info">
+                Click "Detect GPU Capabilities" to test WebGPU/WebGL support...
+            </div>
+        </div>
+
+        <!-- WebGPU Background Test -->
+        <div class="test-section">
+            <h2>WebGPU Background Cellular Automata (Rule 30)</h2>
+            <div class="canvas-container">
+                <canvas id="webgpu-bg-canvas" width="800" height="200"></canvas>
+            </div>
+            <div class="controls">
+                <button onclick="startWebGPUBackground()">Start WebGPU Background</button>
+                <button onclick="stopWebGPUBackground()">Stop</button>
+                <button onclick="resetWebGPUBackground()">Reset</button>
+            </div>
+            <div id="webgpu-bg-status" class="status info">
+                Click "Start WebGPU Background" to test Rule 30 with WebGPU acceleration...
+            </div>
+        </div>
+
+        <!-- WebGPU Header Test -->
+        <div class="test-section">
+            <h2>WebGPU Header Cellular Automata (Multi-Rule)</h2>
+            <div class="canvas-container">
+                <canvas id="webgpu-header-canvas" width="800" height="200"></canvas>
+            </div>
+            <div class="controls">
+                <button onclick="startWebGPUHeader()">Start WebGPU Header</button>
+                <button onclick="stopWebGPUHeader()">Stop</button>
+                <button onclick="resetWebGPUHeader()">Reset</button>
+            </div>
+            <div id="webgpu-header-status" class="status info">
+                Click "Start WebGPU Header" to test multi-rule cycling with WebGPU acceleration...
+            </div>
+        </div>
+
+        <!-- Performance Statistics -->
+        <div class="test-section">
+            <h2>Performance Statistics</h2>
+            <div class="performance-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="current-fps">--</div>
+                    <div class="stat-label">Current FPS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="average-fps">--</div>
+                    <div class="stat-label">Average FPS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="gpu-time">--</div>
+                    <div class="stat-label">GPU Time (ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="acceleration-path">--</div>
+                    <div class="stat-label">Acceleration Path</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benchmark Results -->
+        <div class="test-section">
+            <h2>Benchmark Results</h2>
+            <div class="benchmark-results">
+                <div id="benchmark-log" class="log">Benchmark results will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load dependencies in correct order -->
+    <script>
+        // Mock APP namespace and required dependencies for testing
+        window.APP = window.APP || {};
+        
+        // Mock translations system
+        window.translations = {
+            en: {
+                'rule-bg': 'Background Rule',
+                'rule-header': 'Header Rule',
+                'rule': 'Rule'
+            }
+        };
+        window.currentLanguage = 'en';
+
+        // Mock base cellular automata classes
+        APP.CellularAutomata = {
+            CellularAutomataCanvas: class CellularAutomataCanvas {
+                constructor(canvasId, cellSize, options = {}) {
+                    this.canvas = document.getElementById(canvasId);
+                    if (!this.canvas) return null;
+                    
+                    this.ctx = this.canvas.getContext('2d');
+                    this.cellSize = cellSize;
+                    this.cols = Math.floor(this.canvas.width / this.cellSize);
+                    this.rows = Math.floor(this.canvas.height / this.cellSize);
+                    this.grid = [];
+                    this.currentRow = 0;
+                    this.animationInterval = null;
+                    this.animationSpeed = options.animationSpeed || 200;
+                    
+                    this.initAnimation();
+                }
+                
+                initAnimation() {
+                    this.grid = new Array(this.cols).fill(0);
+                    this.grid[Math.floor(this.cols / 2)] = 1;
+                    this.currentRow = 0;
+                }
+                
+                startAnimation() {
+                    if (this.animationInterval) {
+                        clearInterval(this.animationInterval);
+                    }
+                    this.animationInterval = setInterval(() => this.animate(), this.animationSpeed);
+                }
+                
+                stopAnimation() {
+                    if (this.animationInterval) {
+                        clearInterval(this.animationInterval);
+                        this.animationInterval = null;
+                    }
+                }
+                
+                animate() {
+                    console.log('Base animate() called');
+                }
+                
+                cleanup() {
+                    this.stopAnimation();
+                }
+            },
+            
+            BackgroundCellularAutomata: class BackgroundCellularAutomata {
+                constructor() {
+                    console.log('CPU Background Cellular Automata created');
+                }
+            },
+            
+            HeaderCellularAutomata: class HeaderCellularAutomata {
+                constructor() {
+                    console.log('CPU Header Cellular Automata created');
+                }
+            }
+        };
+    </script>
+
+    <!-- Load GPU implementations -->
+    <script src="webgpu-cellular-automata.js"></script>
+    <script src="webgl-cellular-automata.js"></script>
+    <script src="gpu-cellular-automata-manager.js"></script>
+
+    <!-- Test Implementation -->
+    <script>
+        // Global test variables
+        let webgpuBackground = null;
+        let webgpuHeader = null;
+        let gpuManager = null;
+        let performanceUpdateInterval = null;
+
+        // Initialize GPU manager
+        async function initializeGPUManager() {
+            try {
+                gpuManager = new APP.GPUCellularAutomata.GPUCellularAutomataManager();
+                await gpuManager.initialize();
+                return gpuManager;
+            } catch (error) {
+                console.error('GPU manager initialization failed:', error);
+                return null;
+            }
+        }
+
+        // GPU Capability Detection
+        async function detectGPUCapabilities() {
+            const statusDiv = document.getElementById('gpu-status');
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Detecting GPU capabilities...';
+
+            try {
+                if (!gpuManager) {
+                    gpuManager = await initializeGPUManager();
+                }
+
+                const status = gpuManager.getAccelerationStatus();
+                const capabilities = status.capabilities;
+                const browserInfo = status.browserInfo;
+
+                let statusText = `GPU Capability Detection Results:\n\n`;
+                statusText += `Selected Path: ${capabilities.selectedPath.toUpperCase()}\n`;
+                statusText += `Browser: ${browserInfo.userAgent}\n\n`;
+
+                statusText += `WebGPU Support: ${capabilities.capabilities.webgpu ? '✅ Available' : '❌ Not Available'}\n`;
+                statusText += `WebGL 2.0 Support: ${capabilities.capabilities.webgl2 ? '✅ Available' : '❌ Not Available'}\n`;
+                statusText += `WebGL 1.0 Support: ${capabilities.capabilities.webgl1 ? '✅ Available' : '❌ Not Available'}\n\n`;
+
+                if (capabilities.detectionResults) {
+                    Object.entries(capabilities.detectionResults).forEach(([api, result]) => {
+                        if (result.reason) {
+                            statusText += `${api.toUpperCase()}: ${result.reason}\n`;
+                        }
+                        if (result.error) {
+                            statusText += `  Error: ${result.error}\n`;
+                        }
+                    });
+                }
+
+                statusDiv.className = capabilities.selectedPath === 'webgpu' ? 'status success' : 
+                                    capabilities.selectedPath === 'webgl2' ? 'status warning' : 'status error';
+                statusDiv.textContent = statusText;
+
+                // Update acceleration path display
+                document.getElementById('acceleration-path').textContent = capabilities.selectedPath.toUpperCase();
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `GPU detection failed: ${error.message}`;
+                console.error('GPU detection error:', error);
+            }
+        }
+
+        // WebGPU Background Test
+        async function startWebGPUBackground() {
+            const statusDiv = document.getElementById('webgpu-bg-status');
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Starting WebGPU background cellular automata...';
+
+            try {
+                if (!gpuManager) {
+                    gpuManager = await initializeGPUManager();
+                }
+
+                // Create canvas element with correct ID
+                const canvas = document.getElementById('webgpu-bg-canvas');
+                if (!canvas) {
+                    throw new Error('Background canvas not found');
+                }
+                canvas.id = 'webgpu-bg-test';
+
+                webgpuBackground = await gpuManager.createBackgroundCellularAutomata();
+                
+                // Wait a moment for async initialization to complete
+                statusDiv.textContent = 'Waiting for WebGPU initialization...';
+                
+                // Wait up to 3 seconds for WebGPU to be ready
+                let attempts = 0;
+                const maxAttempts = 30;
+                
+                while (attempts < maxAttempts) {
+                    if (webgpuBackground && webgpuBackground.isWebGPUReady && webgpuBackground.isWebGPUReady()) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = 'WebGPU background cellular automata started successfully!\nRule 30 evolution with GPU acceleration active.';
+                        startPerformanceMonitoring(webgpuBackground);
+                        break;
+                    } else if (webgpuBackground && webgpuBackground.initializationError) {
+                        statusDiv.className = 'status warning';
+                        statusDiv.textContent = 'Background cellular automata started with CPU fallback.\nWebGPU initialization failed: ' + webgpuBackground.initializationError.message;
+                        break;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    statusDiv.className = 'status warning';
+                    statusDiv.textContent = 'Background cellular automata started with CPU fallback.\nWebGPU initialization timeout.';
+                }
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `WebGPU background start failed: ${error.message}`;
+                console.error('WebGPU background error:', error);
+            }
+        }
+
+        // WebGPU Header Test  
+        async function startWebGPUHeader() {
+            const statusDiv = document.getElementById('webgpu-header-status');
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Starting WebGPU header cellular automata...';
+
+            try {
+                if (!gpuManager) {
+                    gpuManager = await initializeGPUManager();
+                }
+
+                // Create canvas element with correct ID
+                const canvas = document.getElementById('webgpu-header-canvas');
+                if (!canvas) {
+                    throw new Error('Header canvas not found');
+                }
+                canvas.id = 'webgpu-header-test';
+
+                webgpuHeader = await gpuManager.createHeaderCellularAutomata();
+                
+                // Wait a moment for async initialization to complete
+                statusDiv.textContent = 'Waiting for WebGPU initialization...';
+                
+                // Wait up to 3 seconds for WebGPU to be ready
+                let attempts = 0;
+                const maxAttempts = 30;
+                
+                while (attempts < maxAttempts) {
+                    if (webgpuHeader && webgpuHeader.isWebGPUReady && webgpuHeader.isWebGPUReady()) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = 'WebGPU header cellular automata started successfully!\nMulti-rule cycling with GPU acceleration active.';
+                        startPerformanceMonitoring(webgpuHeader);
+                        break;
+                    } else if (webgpuHeader && webgpuHeader.initializationError) {
+                        statusDiv.className = 'status warning';
+                        statusDiv.textContent = 'Header cellular automata started with CPU fallback.\nWebGPU initialization failed: ' + webgpuHeader.initializationError.message;
+                        break;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    statusDiv.className = 'status warning';
+                    statusDiv.textContent = 'Header cellular automata started with CPU fallback.\nWebGPU initialization timeout.';
+                }
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `WebGPU header start failed: ${error.message}`;
+                console.error('WebGPU header error:', error);
+            }
+        }
+
+        // Stop functions
+        function stopWebGPUBackground() {
+            if (webgpuBackground) {
+                webgpuBackground.cleanup();
+                webgpuBackground = null;
+                const statusDiv = document.getElementById('webgpu-bg-status');
+                if (statusDiv) {
+                    statusDiv.textContent = 'WebGPU background stopped.';
+                }
+                stopPerformanceMonitoring();
+            }
+            
+            // Restore original canvas ID (check both possible IDs)
+            let canvas = document.getElementById('webgpu-bg-test');
+            if (!canvas) {
+                canvas = document.getElementById('webgpu-bg-canvas');
+            }
+            if (canvas && canvas.id === 'webgpu-bg-test') {
+                canvas.id = 'webgpu-bg-canvas';
+            }
+        }
+
+        function stopWebGPUHeader() {
+            if (webgpuHeader) {
+                webgpuHeader.cleanup();
+                webgpuHeader = null;
+                const statusDiv = document.getElementById('webgpu-header-status');
+                if (statusDiv) {
+                    statusDiv.textContent = 'WebGPU header stopped.';
+                }
+                stopPerformanceMonitoring();
+            }
+            
+            // Restore original canvas ID (check both possible IDs)
+            let canvas = document.getElementById('webgpu-header-test');
+            if (!canvas) {
+                canvas = document.getElementById('webgpu-header-canvas');
+            }
+            if (canvas && canvas.id === 'webgpu-header-test') {
+                canvas.id = 'webgpu-header-canvas';
+            }
+        }
+
+        // Reset functions
+        function resetWebGPUBackground() {
+            stopWebGPUBackground();
+            
+            // Clear canvas (check both possible IDs)
+            let canvas = document.getElementById('webgpu-bg-canvas');
+            if (!canvas) {
+                canvas = document.getElementById('webgpu-bg-test');
+            }
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
+            // Reset status
+            const statusDiv = document.getElementById('webgpu-bg-status');
+            if (statusDiv) {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = 'Background reset. Click "Start WebGPU Background" to begin.';
+            }
+        }
+
+        function resetWebGPUHeader() {
+            stopWebGPUHeader();
+            
+            // Clear canvas (check both possible IDs)
+            let canvas = document.getElementById('webgpu-header-canvas');
+            if (!canvas) {
+                canvas = document.getElementById('webgpu-header-test');
+            }
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
+            // Reset status
+            const statusDiv = document.getElementById('webgpu-header-status');
+            if (statusDiv) {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = 'Header reset. Click "Start WebGPU Header" to begin.';
+            }
+        }
+
+        // Performance monitoring
+        function startPerformanceMonitoring(caInstance) {
+            stopPerformanceMonitoring(); // Stop any existing monitoring
+            
+            performanceUpdateInterval = setInterval(() => {
+                if (caInstance && caInstance.performanceMonitor) {
+                    const stats = caInstance.performanceMonitor.getPerformanceStats();
+                    
+                    document.getElementById('current-fps').textContent = stats.currentFPS.toFixed(1);
+                    document.getElementById('average-fps').textContent = stats.averageFPS.toFixed(1);
+                    document.getElementById('gpu-time').textContent = stats.gpuComputeTime?.toFixed(2) || stats.renderTime?.toFixed(2) || '--';
+                }
+            }, 1000);
+        }
+
+        function stopPerformanceMonitoring() {
+            if (performanceUpdateInterval) {
+                clearInterval(performanceUpdateInterval);
+                performanceUpdateInterval = null;
+            }
+        }
+
+        // Performance benchmark
+        async function runPerformanceBenchmark() {
+            const logDiv = document.getElementById('benchmark-log');
+            logDiv.textContent = 'Starting performance benchmark...\n\n';
+
+            try {
+                if (!gpuManager) {
+                    gpuManager = await initializeGPUManager();
+                }
+
+                const gridSizes = [100, 500, 1000];
+                logDiv.textContent += `Testing grid sizes: ${gridSizes.join(', ')}\n\n`;
+
+                const results = await gpuManager.runPerformanceBenchmark(gridSizes);
+                
+                let benchmarkText = 'Performance Benchmark Results:\n';
+                benchmarkText += '================================\n\n';
+
+                Object.entries(results).forEach(([gridSize, implementations]) => {
+                    benchmarkText += `Grid Size: ${gridSize}x1\n`;
+                    benchmarkText += '-'.repeat(20) + '\n';
+                    
+                    Object.entries(implementations).forEach(([impl, result]) => {
+                        if (result.error) {
+                            benchmarkText += `❌ ${impl.toUpperCase()}: ${result.error}\n`;
+                        } else {
+                            const speedup = impl !== 'cpu' && implementations.cpu ? 
+                                (result.iterationsPerSecond / implementations.cpu.iterationsPerSecond).toFixed(1) : 
+                                '1.0';
+                            benchmarkText += `✅ ${impl.toUpperCase()}: ${result.iterationsPerSecond.toFixed(1)} iter/sec (${speedup}x speedup)\n`;
+                        }
+                    });
+                    benchmarkText += '\n';
+                });
+
+                logDiv.textContent = benchmarkText;
+
+            } catch (error) {
+                logDiv.textContent += `\nBenchmark failed: ${error.message}`;
+                console.error('Benchmark error:', error);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            console.log('WebGPU Cellular Automata Test Page Loaded');
+            await detectGPUCapabilities();
+        });
+    </script>
+</body>
+</html>
