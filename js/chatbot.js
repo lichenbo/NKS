@@ -155,17 +155,6 @@ window.APP = window.APP || {};
          * @returns {void}
          * @public
          */
-        minimizeChat() {
-            if (this.isMobile) {
-                // On mobile: return to round button state
-                this.isExpanded = false;
-                this.conversation.classList.add('hidden');
-            } else {
-                // Desktop behavior unchanged
-                this.isExpanded = false;
-                this.conversation.classList.add('hidden');
-            }
-        }
         
         /**
          * Send message from quick input field (collapsed state)
@@ -253,6 +242,9 @@ window.APP = window.APP || {};
             this.isExpanded = false;
             this.conversation.classList.add('hidden');
             this.inputBar.style.display = 'flex';
+            
+            // Update placeholder text to current language
+            this.updateLanguageElements();
             
             // Clear the quick input when minimizing
             setTimeout(() => {
