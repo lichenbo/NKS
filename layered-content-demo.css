@@ -63,11 +63,18 @@
 
 .content-layer.detailed {
     overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.3s ease-in-out,
+                transform 0.3s ease-in-out;
 }
 
-.content-layer.detailed.expanding {
-    max-height: none !important;
+section.is-expanded .content-layer.detailed {
+    max-height: 2000px; /* Large enough value for content */
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Active layer highlighting */
@@ -276,11 +283,6 @@
 }
 
 /* Smooth expand/collapse animation */
-.expand-toggle[data-expanded="true"] .toggle-icon {
+section.is-expanded .expand-toggle .toggle-icon {
     transform: rotate(180deg);
-}
-
-.content-layer.detailed[style*="max-height: 0px"] {
-    opacity: 0;
-    transform: translateY(-10px);
 }

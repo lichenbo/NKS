@@ -1291,57 +1291,36 @@ function initLayeredContentSystem() {
 }
 
 function toggleLayeredSection(toggleButton) {
-    const isExpanded = toggleButton.dataset.expanded === 'true';
-    
-    // Find the detailed content layer in the same section
-    let detailedLayer;
-    let currentElement = toggleButton.previousElementSibling;
-    
-    // Look backwards for the detailed content layer
-    while (currentElement) {
-        const detailedContent = currentElement.querySelector('.content-layer.detailed');
-        if (detailedContent) {
-            detailedLayer = detailedContent;
-            break;
-        }
-        if (currentElement.classList.contains('content-layer') && currentElement.classList.contains('detailed')) {
-            detailedLayer = currentElement;
-            break;
-        }
-        currentElement = currentElement.previousElementSibling;
-    }
-    
-    if (!detailedLayer) {
-        console.warn('No detailed content layer found for toggle button');
+    // Use closest() to find the parent section, which is more robust
+    const section = toggleButton.closest('section');
+    if (!section) {
+        console.warn('Layered content toggle button must be inside a <section> element.');
         return;
     }
+
+    // Check the new state by checking for the class's existence *before* toggling
+    const isCurrentlyExpanded = section.classList.contains('is-expanded');
     
-    if (!isExpanded) {
-        // Expand to show detailed content
-        detailedLayer.style.display = 'block';
-        detailedLayer.style.maxHeight = 'none';
-        detailedLayer.style.opacity = '1';
-        toggleButton.dataset.expanded = 'true';
-        
-        // Smooth scroll to bring detailed content into view
-        setTimeout(() => {
-            detailedLayer.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start',
-                inline: 'nearest' 
-            });
-        }, 100);
-    } else {
-        // Collapse to hide detailed content
-        detailedLayer.style.maxHeight = '0px';
-        detailedLayer.style.opacity = '0';
-        setTimeout(() => {
-            detailedLayer.style.display = 'none';
-        }, 300);
-        toggleButton.dataset.expanded = 'false';
+    // Toggle the class on the parent section to trigger CSS animations
+    section.classList.toggle('is-expanded');
+
+    // Update the button text based on the *new* state
+    updateToggleText(toggleButton, !isCurrentlyExpanded);
+
+    // If the section is now expanded, scroll it into view
+    if (!isCurrentlyExpanded) {
+        const detailedLayer = section.querySelector('.content-layer.detailed');
+        if (detailedLayer) {
+            // Use a small timeout to allow the CSS transition to begin
+            setTimeout(() => {
+                detailedLayer.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                    inline: 'nearest'
+                });
+            }, 100);
+        }
     }
-    
-    updateToggleText(toggleButton, !isExpanded);
 }
 
 function updateToggleText(toggle, isExpanded) {
@@ -1359,6 +1338,7 @@ function updateToggleText(toggle, isExpanded) {
     }
     
     if (iconElement) {
-        iconElement.textContent = isExpanded ? '▲' : '▼';
+        // The icon is now rotated via CSS transform, so we no longer need to change the character
+        // iconElement.textContent = isExpanded ? '▲' : '▼';
     }
 }
