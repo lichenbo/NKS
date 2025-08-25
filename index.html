@@ -55,6 +55,8 @@
             <span id="bg-rule-text">BG: Rule 30</span>
             <span class="rule-divider">|</span>
             <span id="header-rule-text">Header: Rule 110</span>
+            <span class="rule-divider">|</span>
+            <span id="gpu-status-text">GPU: Detecting...</span>
         </div>
         <div class="header-content">
             <div class="author-name" data-i18n="author">Stephen Wolfram</div>
@@ -188,7 +190,12 @@
     <script src="js/translations.js"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/game-of-life.js"></script>
+    <!-- Main cellular automata script (must load first to define base classes) -->
     <script src="js/cellular-automata.js"></script>
+    <!-- GPU acceleration scripts (loaded after base classes) -->
+    <script src="js/webgpu-cellular-automata.js"></script>
+    <script src="js/webgl-cellular-automata.js"></script>
+    <script src="js/gpu-cellular-automata-manager.js"></script>
     <script src="script.js"></script>
     
     <script>
@@ -200,9 +207,17 @@
             offset: 50
         });
         
-        // Initialize cellular automata background
-        initCellularAutomataBackground();
-        initHeaderCellularAutomata();
+        // Initialize cellular automata with GPU support (async)
+        async function initializeCellularAutomata() {
+            try {
+                await initCellularAutomataBackground();
+                await initHeaderCellularAutomata();
+            } catch (error) {
+                console.error('Cellular automata initialization failed:', error);
+            }
+        }
+        
+        initializeCellularAutomata();
         
         // Initialize chatbot
         APP.Chatbot.initChatbot();

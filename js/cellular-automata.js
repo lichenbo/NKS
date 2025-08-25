@@ -87,10 +87,16 @@ window.APP = window.APP || {};
                 this.canvas.width = parent.clientWidth;
                 this.canvas.height = parent.clientHeight;
             } else {
-                // Use window dimensions (for background)
+                // Use window dimensions (for background)  
                 this.canvas.width = window.innerWidth;
                 this.canvas.height = window.innerHeight;
             }
+            
+            // Set CSS dimensions to match canvas dimensions for 1:1 pixel ratio
+            this.canvas.style.width = this.canvas.width + 'px';
+            this.canvas.style.height = this.canvas.height + 'px';
+            
+            // Ensure no image smoothing for crisp pixels
             this.ctx.imageSmoothingEnabled = false;
         }
         
@@ -238,8 +244,8 @@ window.APP = window.APP || {};
      */
     class HeaderCellularAutomata extends CellularAutomataCanvas {
         constructor() {
-            super('header-cellular-automata', 2, { 
-                animationSpeed: 150, 
+            super('header-cellular-automata', 3, { 
+                animationSpeed: 200, 
                 parentElement: true,
                 resizeDebounce: 250 
             });
@@ -389,18 +395,132 @@ window.APP = window.APP || {};
         RuleIndicators.update('header', headerRuleName);
     }
 
+    function updateGPUStatusIndicator(status = null) {
+        const element = document.getElementById('gpu-status-text');
+        if (element) {
+            if (status === null) {
+                // Detect current status
+                if (gpuManager && gpuManager.getAccelerationStatus) {
+                    try {
+                        const accelerationStatus = gpuManager.getAccelerationStatus();
+                        if (accelerationStatus && accelerationStatus.capabilities) {
+                            const path = accelerationStatus.capabilities.selectedPath;
+                            element.textContent = `GPU: ${path.toUpperCase()}`;
+                            element.style.color = path === 'webgpu' ? '#4ade80' : 
+                                                 path === 'webgl2' ? '#fbbf24' : 
+                                                 path === 'webgl1' ? '#fb923c' : '#ef4444';
+                        } else {
+                            element.textContent = 'GPU: Detecting...';
+                            element.style.color = '#999';
+                        }
+                    } catch (error) {
+                        element.textContent = 'GPU: CPU';
+                        element.style.color = '#ef4444';
+                    }
+                } else {
+                    element.textContent = 'GPU: Detecting...';
+                    element.style.color = '#999';
+                }
+            } else {
+                element.textContent = `GPU: ${status}`;
+                // Set color based on status
+                const statusLower = status.toLowerCase();
+                element.style.color = statusLower.includes('webgpu') ? '#4ade80' : 
+                                     statusLower.includes('webgl2') ? '#fbbf24' : 
+                                     statusLower.includes('webgl') ? '#fb923c' : '#ef4444';
+            }
+        }
+    }
+
     function updateRuleIndicators() {
         updateBackgroundRuleIndicator();
         updateHeaderRuleIndicator();
+        // Only update GPU status if GPU scripts are loaded
+        if (window.APP && window.APP.GPUCellularAutomata) {
+            updateGPUStatusIndicator();
+        }
     }
+
+    // GPU Manager for acceleration
+    let gpuManager = null;
+    let useGPUAcceleration = true; // Default to GPU when available
 
     // Initialization functions
-    function initCellularAutomataBackground() {
-        new BackgroundCellularAutomata();
+    async function initCellularAutomataBackground() {
+        if (useGPUAcceleration && window.APP && window.APP.GPUCellularAutomata) {
+            try {
+                // Try GPU acceleration first
+                if (!gpuManager) {
+                    gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
+                    await gpuManager.initialize();
+                }
+                
+                const gpuBackground = await gpuManager.createBackgroundCellularAutomata();
+                console.log('Background: Using GPU acceleration');
+                updateGPUStatusIndicator();
+                return gpuBackground;
+            } catch (error) {
+                console.warn('GPU background initialization failed, falling back to CPU:', error);
+                // Fall through to CPU implementation
+            }
+        }
+        
+        // CPU fallback
+        console.log('Background: Using CPU implementation');
+        updateGPUStatusIndicator('CPU');
+        return new BackgroundCellularAutomata();
     }
 
-    function initHeaderCellularAutomata() {
-        new HeaderCellularAutomata();
+    async function initHeaderCellularAutomata() {
+        if (useGPUAcceleration && window.APP && window.APP.GPUCellularAutomata) {
+            try {
+                // Try GPU acceleration first
+                if (!gpuManager) {
+                    gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
+                    await gpuManager.initialize();
+                }
+                
+                const gpuHeader = await gpuManager.createHeaderCellularAutomata();
+                console.log('Header: Using GPU acceleration');
+                updateGPUStatusIndicator();
+                return gpuHeader;
+            } catch (error) {
+                console.warn('GPU header initialization failed, falling back to CPU:', error);
+                // Fall through to CPU implementation
+            }
+        }
+        
+        // CPU fallback
+        console.log('Header: Using CPU implementation');
+        updateGPUStatusIndicator('CPU');
+        return new HeaderCellularAutomata();
+    }
+
+    // GPU acceleration control functions
+    function setGPUAcceleration(enabled) {
+        useGPUAcceleration = enabled;
+        console.log(`GPU acceleration ${enabled ? 'enabled' : 'disabled'}`);
+    }
+
+    function isGPUAccelerationEnabled() {
+        return useGPUAcceleration;
+    }
+
+    function getGPUManager() {
+        return gpuManager;
+    }
+
+    async function getGPUCapabilities() {
+        if (!gpuManager) {
+            try {
+                gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
+                await gpuManager.initialize();
+            } catch (error) {
+                console.warn('Failed to initialize GPU manager:', error);
+                return null;
+            }
+        }
+        return gpuManager.getAccelerationStatus();
     }
 
     // Expose to APP namespace
@@ -412,12 +532,45 @@ window.APP = window.APP || {};
         initHeaderCellularAutomata,
         updateRuleIndicators,
         updateBackgroundRuleIndicator,
-        updateHeaderRuleIndicator
+        updateHeaderRuleIndicator,
+        updateGPUStatusIndicator,
+        // GPU control functions
+        setGPUAcceleration,
+        isGPUAccelerationEnabled,
+        getGPUManager,
+        getGPUCapabilities
     };
 
     // Backward compatibility - expose to global scope
     window.initCellularAutomataBackground = initCellularAutomataBackground;
     window.initHeaderCellularAutomata = initHeaderCellularAutomata;
     window.updateRuleIndicators = updateRuleIndicators;
+    window.headerRuleName = headerRuleName; // Expose for WebGPU module access
+    window.RuleIndicators = RuleIndicators; // Expose for WebGPU module access
+
+    // Development helper functions - expose to global scope for console access
+    window.toggleGPUAcceleration = function() {
+        const newState = !useGPUAcceleration;
+        setGPUAcceleration(newState);
+        console.log(`GPU acceleration toggled: ${newState ? 'ON' : 'OFF'}`);
+        console.log('Reload the page to see the effect.');
+        return newState;
+    };
+
+    window.checkGPUStatus = async function() {
+        try {
+            const capabilities = await getGPUCapabilities();
+            if (capabilities) {
+                console.log('GPU Capabilities:', capabilities);
+                return capabilities;
+            } else {
+                console.log('GPU not available, using CPU fallback');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error checking GPU status:', error);
+            return null;
+        }
+    };
 
 })(window.APP);
