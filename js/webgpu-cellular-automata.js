@@ -19,7 +19,7 @@
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     /**
@@ -30,7 +30,7 @@ window.APP = window.APP || {};
     class WebGPUCellularAutomataCanvas extends APP.CellularAutomata.CellularAutomataCanvas {
         constructor(canvasId, cellSize, options = {}) {
             super(canvasId, cellSize, options);
-            
+
             // Debug: log dimensions after base class initialization
             console.log('WebGPU CA initialized with dimensions:', {
                 cols: this.cols,
@@ -38,7 +38,7 @@ window.APP = window.APP || {};
                 canvasWidth: this.canvas?.width,
                 canvasHeight: this.canvas?.height
             });
-            
+
             // WebGPU specific properties
             this.webgpuDevice = null;
             this.webgpuAdapter = null;
@@ -48,37 +48,35 @@ window.APP = window.APP || {};
             this.outputBuffer = null;
             this.uniformBuffer = null;
             this.readBuffer = null;
-            
+
             // Buffer state tracking
             this.bufferMapped = false;
             this.recreatingResources = false; // Track resource recreation state
-            
+
             // GPU state
             this.useWebGPU = false;
             this.initializationError = null;
-            
+            this.deviceLost = false; // track device loss
+
             // Performance monitoring
             this.performanceMonitor = new WebGPUPerformanceMonitor(this);
-            
-            // Initialize GPU acceleration
-            console.log('Starting WebGPU initialization chain...');
-            this.initializeWebGPU().then((success) => {
-                console.log('WebGPU device initialization result:', success);
-                if (this.useWebGPU) {
-                    console.log('WebGPU cellular automata acceleration enabled');
+
+            // Start initialization, but don't block the constructor.
+            // Subclasses will chain onto this promise to start their animations.
+            this.initializationPromise = this.initializeWebGPU().then(success => {
+                if (success) {
                     return this.setupWebGPUCompute();
                 }
-            }).then(() => {
-                console.log('WebGPU compute setup complete');
-                // GPU setup complete, trigger any waiting initialization
-                if (this.onGPUReady) {
-                    console.log('Calling onGPUReady callback');
-                    this.onGPUReady();
-                }
+                // If WebGPU is not supported, reject to trigger the catch block
+                return Promise.reject(new Error('WebGPU not supported or device request failed'));
             }).catch(error => {
-                console.warn('WebGPU initialization failed:', error);
+                // This catch block handles both WebGPU setup failures and explicit rejections.
+                console.warn(`WebGPU initialization failed: ${error.message}`);
                 this.initializationError = error;
                 this.fallbackToCPU();
+                // We resolve the promise here so that subclasses can still proceed
+                // with their CPU-based animation setup in their .then() chains.
+                return Promise.resolve();
             });
         }
 
@@ -96,7 +94,7 @@ window.APP = window.APP || {};
             try {
                 // Request adapter
                 this.webgpuAdapter = await navigator.gpu.requestAdapter();
-                
+
                 if (!this.webgpuAdapter) {
                     console.log('No suitable WebGPU adapter found');
                     return false;
@@ -111,11 +109,12 @@ window.APP = window.APP || {};
                 // Handle device lost
                 this.webgpuDevice.lost.then((info) => {
                     console.warn('WebGPU device lost:', info.message);
+                    this.deviceLost = true;
                     this.useWebGPU = false;
-                    // Fallback to CPU
                     this.fallbackToCPU();
                 });
 
+                this.deviceLost = false;
                 this.useWebGPU = true;
                 return true;
 
@@ -164,18 +163,13 @@ window.APP = window.APP || {};
         generateComputeShader() {
             return `
 struct Params {
+    // 8 values packed as 2 vec4<u32> to satisfy 16-byte alignment rules
+    rule: array<vec4<u32>, 2>,
     grid_size: u32,
-    rule0: u32,
-    rule1: u32,
-    rule2: u32,
-    rule3: u32,
-    rule4: u32,
-    rule5: u32,
-    rule6: u32,
-    rule7: u32,
-    padding0: u32,
-    padding1: u32,
-    padding2: u32,
+    // Padding to keep struct size/alignment a multiple of 16 bytes
+    _pad1: u32,
+    _pad2: u32,
+    _pad3: u32,
 };
 
 @group(0) @binding(0) var<storage, read> input_cells: array<u32>;
@@ -188,33 +182,31 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     if (index >= params.grid_size) {
         return;
     }
-    
-    // Get neighboring cells with wraparound boundary conditions
+
+    // Wraparound neighbors
     let left_index = select(index - 1u, params.grid_size - 1u, index == 0u);
     let right_index = select(index + 1u, 0u, index == params.grid_size - 1u);
-    
+
     let left = input_cells[left_index];
     let center = input_cells[index];
     let right = input_cells[right_index];
-    
-    // Calculate rule index (0-7) for Elementary CA
+
+    // Elementary CA rule index [0..7]
     let rule_index = (left << 2u) | (center << 1u) | right;
-    
-    // Apply cellular automata rule using individual rule values
-    var result: u32 = 0u;
-    switch (rule_index) {
-        case 0u: { result = params.rule0; }
-        case 1u: { result = params.rule1; }
-        case 2u: { result = params.rule2; }
-        case 3u: { result = params.rule3; }
-        case 4u: { result = params.rule4; }
-        case 5u: { result = params.rule5; }
-        case 6u: { result = params.rule6; }
-        case 7u: { result = params.rule7; }
-        default: { result = 0u; }
+
+    // Map rule_index -> vec index/component
+    let vec_idx = rule_index >> 2u;   // 0..1
+    let comp    = rule_index & 3u;    // 0..3
+
+    var value: u32;
+    switch (comp) {
+        case 0u: { value = params.rule[vec_idx].x; }
+        case 1u: { value = params.rule[vec_idx].y; }
+        case 2u: { value = params.rule[vec_idx].z; }
+        default: { value = params.rule[vec_idx].w; }
     }
-    
-    output_cells[index] = result;
+
+    output_cells[index] = value;
 }
             `;
         }
@@ -228,15 +220,15 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 console.error('WebGPU device not available for buffer creation');
                 throw new Error('WebGPU device not available for buffer creation');
             }
-            
+
             if (!this.cols || this.cols <= 0) {
                 console.error('Invalid grid size for WebGPU buffer creation:', this.cols);
                 throw new Error('Invalid grid size for buffer creation');
             }
-            
+
             // Clean up existing buffers first
             this.cleanupStorageBuffers();
-            
+
             const bufferSize = Math.ceil(this.cols) * 4; // 4 bytes per u32
 
             // Input buffer (needs COPY_SRC for ping-pong swapping)
@@ -259,7 +251,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             // Initialize buffer mapping state
             this.bufferMapped = false;
-            
+
             // Clear recreation flag after successful setup
             this.recreatingResources = false;
 
@@ -316,27 +308,23 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 console.error('GPU device or uniform buffer not available');
                 return;
             }
-            
+
             if (!this.cols || this.cols <= 0) {
                 console.error('Invalid grid size for uniform update:', this.cols);
                 return;
             }
-            
+
             console.log('Updating GPU uniforms for rule', ruleNumber, 'with grid size', this.cols);
-            
+
             const rule = this.convertRuleToGPUFormat(ruleNumber);
-            
-            // Create uniform data (12 u32 values)
+
+            // Create uniform data (12 u32 values: 8 for rule, 1 for size, 3 for padding)
             const uniformData = new Uint32Array(12);
-            uniformData[0] = this.cols; // grid_size
-            
-            // Copy rule data to individual fields
-            for (let i = 0; i < 8; i++) {
-                uniformData[i + 1] = rule[i]; // rule0 through rule7
-            }
-            
+            uniformData.set(rule, 0); // rule
+            uniformData[8] = this.cols; // grid_size
+
             // Padding (3 values) is automatically zero-initialized
-            
+
             try {
                 // Upload to GPU
                 this.webgpuDevice.queue.writeBuffer(this.uniformBuffer, 0, uniformData);
@@ -364,12 +352,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             if (!this.useWebGPU || !this.computePipeline) {
                 throw new Error('WebGPU not available');
             }
-            
+
             // Check if we're in the middle of resource recreation
             if (this.recreatingResources) {
                 throw new Error('WebGPU resources being recreated');
             }
-            
+
             // Ensure GPU buffers are created
             this.ensureGPUBuffers();
 
@@ -401,60 +389,36 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             // Submit commands and wait for completion
             const submission = this.webgpuDevice.queue.submit([commandEncoder.finish()]);
-            
+
             // Wait for GPU operations to complete before reading
             await this.webgpuDevice.queue.onSubmittedWorkDone();
 
-            // Read results with improved error handling and state tracking
+            // Read results with a more robust try/finally block to ensure unmapping
             try {
-                // Check if buffer is already mapped
-                if (this.bufferMapped) {
-                    console.warn('Buffer already mapped, unmapping first');
-                    try {
-                        this.readBuffer.unmap();
-                    } catch (unmapError) {
-                        console.warn('Failed to unmap previously mapped buffer:', unmapError);
-                    }
-                    this.bufferMapped = false;
-                }
-                
-                // Wait for any pending operations before mapping
-                await this.webgpuDevice.queue.onSubmittedWorkDone();
-                
                 // Additional check before mapping to ensure buffer is ready
                 if (this.recreatingResources) {
                     throw new Error('Cannot map buffer during resource recreation');
                 }
-                
+
                 await this.readBuffer.mapAsync(GPUMapMode.READ);
-                this.bufferMapped = true;
-                
+
                 const resultData = new Uint32Array(this.readBuffer.getMappedRange());
-                const result = new Uint32Array(resultData); // Copy data
-                
-                this.readBuffer.unmap();
-                this.bufferMapped = false;
-                
-                // Swap buffers for next iteration
+                const result = new Uint32Array(resultData); // Copy data before unmapping
+
+                // The read is complete, now we can swap buffers for the next frame
                 [this.inputBuffer, this.outputBuffer] = [this.outputBuffer, this.inputBuffer];
-                
-                // Update bind group with swapped buffers
                 this.setupBindGroup();
 
                 return result;
+
             } catch (error) {
-                console.error('WebGPU buffer mapping failed:', error);
-                // Try to unmap if it was partially mapped
-                try {
-                    if (this.bufferMapped && this.readBuffer) {
-                        this.readBuffer.unmap();
-                        this.bufferMapped = false;
-                    }
-                } catch (unmapError) {
-                    // Ignore unmap errors
-                    console.warn('Failed to cleanup mapped buffer:', unmapError);
+                console.error('WebGPU buffer mapping or computation failed:', error);
+                throw error; // Re-throw to be handled by the animation loop
+            } finally {
+                // Ensure the buffer is always unmapped, even if errors occur
+                if (this.readBuffer && this.readBuffer.mapState !== 'unmapped') {
+                    this.readBuffer.unmap();
                 }
-                throw error;
             }
         }
 
@@ -464,10 +428,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         fallbackToCPU() {
             console.log('Falling back to CPU cellular automata implementation');
             this.useWebGPU = false;
-            
+
             // Clean up GPU resources
             this.cleanupWebGPU();
-            
+
             // Resume normal CPU animation
             if (!this.animationInterval) {
                 this.startAnimation();
@@ -479,20 +443,17 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          */
         cleanupStorageBuffers() {
             try {
-                // Mark that we're recreating resources
                 this.recreatingResources = true;
-                
-                // Unmap read buffer if mapped
-                if (this.readBuffer && this.bufferMapped) {
+
+                // Unmap read buffer if mapped, regardless of our own flags
+                if (this.readBuffer && this.readBuffer.mapState && this.readBuffer.mapState !== 'unmapped') {
                     try {
                         this.readBuffer.unmap();
                     } catch (e) {
-                        // Buffer might not be mapped, ignore error
                         console.warn('Failed to unmap read buffer during cleanup:', e.message);
                     }
-                    this.bufferMapped = false;
                 }
-                
+
                 // Destroy buffers with error handling
                 if (this.inputBuffer) {
                     try {
@@ -526,13 +487,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     }
                     this.uniformBuffer = null;
                 }
-                
+
                 this.bindGroup = null;
-                
+
             } catch (error) {
                 console.warn('Error during storage buffer cleanup:', error);
             } finally {
-                // Clear the recreation flag
                 this.recreatingResources = false;
             }
         }
@@ -542,17 +502,13 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          */
         cleanupWebGPU() {
             try {
-                // Clean up storage buffers first
                 this.cleanupStorageBuffers();
-                
                 this.computePipeline = null;
-                
-                if (this.webgpuDevice && !this.webgpuDevice.lost) {
-                    this.webgpuDevice.destroy();
-                }
+
+                // Remove: if (this.webgpuDevice && !this.webgpuDevice.lost) { this.webgpuDevice.destroy(); }
                 this.webgpuDevice = null;
                 this.webgpuAdapter = null;
-                
+
             } catch (error) {
                 console.warn('Error during WebGPU cleanup:', error);
             }
@@ -574,7 +530,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          */
         initAnimation() {
             super.initAnimation();
-            
+
             // Setup GPU buffers if WebGPU is available and properly initialized
             if (this.useWebGPU && this.webgpuDevice && this.computePipeline && this.cols > 0) {
                 try {
@@ -600,7 +556,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                         this.setupBindGroup();
                         console.log('GPU buffers created successfully:', {
                             hasInputBuffer: !!this.inputBuffer,
-                            hasOutputBuffer: !!this.outputBuffer, 
+                            hasOutputBuffer: !!this.outputBuffer,
                             hasUniformBuffer: !!this.uniformBuffer,
                             hasBindGroup: !!this.bindGroup
                         });
@@ -624,13 +580,14 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          * @returns {boolean} True if WebGPU is ready
          */
         isWebGPUReady() {
-            return this.useWebGPU && 
-                   this.webgpuDevice && 
-                   this.computePipeline && 
-                   this.cols > 0 && 
-                   this.inputBuffer && 
-                   this.outputBuffer &&
-                   this.bindGroup;
+            return this.useWebGPU &&
+                this.webgpuDevice &&
+                !this.deviceLost &&
+                this.computePipeline &&
+                this.cols > 0 &&
+                this.inputBuffer &&
+                this.outputBuffer &&
+                this.bindGroup;
         }
     }
 
@@ -649,7 +606,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.cpuFallbackThreshold = 20; // FPS threshold for fallback
             this.measurements = [];
             this.maxMeasurements = 60; // Keep 60 frame samples
-            
+
             this.isMonitoring = false;
         }
 
@@ -732,53 +689,19 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.drawnRows = [];
             this.animatingGPU = false; // Prevent concurrent GPU animations
 
-            // Wait for WebGPU initialization before starting
-            this.initializeAsync();
-        }
-
-        async initializeAsync() {
-            // Wait for WebGPU initialization to complete with a timeout
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds total
-            
-            console.log('Starting WebGPU initialization wait...');
-            
-            while (attempts < maxAttempts) {
-                console.log(`Attempt ${attempts + 1}/${maxAttempts}:`, {
-                    useWebGPU: this.useWebGPU,
-                    hasDevice: !!this.webgpuDevice,
-                    hasPipeline: !!this.computePipeline,
-                    hasError: !!this.initializationError
-                });
-                
-                if (this.useWebGPU && this.webgpuDevice && this.computePipeline) {
-                    // WebGPU is ready
-                    console.log('WebGPU ready, initializing rule 30');
-                    await this.initializeForRule(30);
-                    console.log('Rule 30 initialized, buffers ready:', {
-                        hasInputBuffer: !!this.inputBuffer,
-                        hasOutputBuffer: !!this.outputBuffer,
-                        hasBindGroup: !!this.bindGroup
+            // Chain onto the base class's initialization promise to set up the rule
+            // and start the animation once the GPU is ready (or has fallen back to CPU).
+            this.initializationPromise.then(() => {
+                if (this.useWebGPU) {
+                    // If GPU is available, initialize with the specific rule.
+                    this.initializeForRule(this.ruleNumber).then(() => {
+                        this.startAnimation();
                     });
-                    break;
-                } else if (this.initializationError) {
-                    // Failed to initialize
-                    console.log('WebGPU failed to initialize, using CPU:', this.initializationError);
-                    break;
+                } else {
+                    // If we fell back to CPU, start the CPU animation right away.
+                    this.startAnimation();
                 }
-                
-                // Wait and retry
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (attempts >= maxAttempts) {
-                console.warn('WebGPU initialization timeout after', attempts * 100, 'ms');
-                this.fallbackToCPU();
-            }
-            
-            // Start animation
-            this.startAnimation();
+            });
         }
 
         async initializeForRule(ruleNumber) {
@@ -786,7 +709,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             if (this.useWebGPU && this.webgpuDevice) {
                 // Ensure buffers are created first
                 this.ensureGPUBuffers();
-                
+
                 if (this.uniformBuffer) {
                     await this.updateGPUUniforms(ruleNumber);
                 } else {
@@ -830,7 +753,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 if (this.currentRow === 0) {
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                     this.drawnRows.length = 0;
-                    
+
                     // Upload initial grid to GPU
                     this.uploadGridToGPU(this.grid);
                 }
@@ -857,7 +780,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             if (!this.grid || !Array.isArray(this.grid)) {
                 this.initAnimation();
             }
-            
+
             // Fallback to original CPU implementation
             // Only clear if starting over
             if (this.currentRow === 0) {
@@ -921,17 +844,17 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     class WebGPUHeaderCellularAutomata extends WebGPUCellularAutomataCanvas {
         constructor(canvasId = 'header-cellular-automata') {
             console.log('Creating WebGPU Header CA with canvas ID:', canvasId);
-            
+
             // Check if this is a test canvas (has fixed dimensions) or production (needs parent sizing)
             const canvas = document.getElementById(canvasId);
             const isTestCanvas = canvas && (canvas.width > 0 && canvas.height > 0);
-            
+
             super(canvasId, 3, {
                 animationSpeed: 200,
                 parentElement: true, // Use header container dimensions
                 resizeDebounce: 250
             });
-            
+
             if (!this.canvas) {
                 console.error('Canvas not found for ID:', canvasId);
                 return;
@@ -962,52 +885,15 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.globalAlpha = 0.3;
 
             // Wait for WebGPU initialization before starting
-            this.initializeAsync();
-        }
-
-        async initializeAsync() {
-            // Wait for WebGPU initialization to complete with a timeout
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds total
-            
-            console.log('Starting WebGPU header initialization wait...');
-            
-            while (attempts < maxAttempts) {
-                console.log(`Header attempt ${attempts + 1}/${maxAttempts}:`, {
-                    useWebGPU: this.useWebGPU,
-                    hasDevice: !!this.webgpuDevice,
-                    hasPipeline: !!this.computePipeline,
-                    hasError: !!this.initializationError
-                });
-                
-                if (this.useWebGPU && this.webgpuDevice && this.computePipeline) {
-                    // WebGPU is ready
-                    console.log('WebGPU ready, initializing header rule', this.currentRuleNumber);
-                    await this.initializeForRule(this.currentRuleNumber);
-                    console.log('Header rule initialized, buffers ready:', {
-                        hasInputBuffer: !!this.inputBuffer,
-                        hasOutputBuffer: !!this.outputBuffer,
-                        hasBindGroup: !!this.bindGroup
+            this.initializationPromise.then(() => {
+                if (this.useWebGPU) {
+                    this.initializeForRule(this.currentRuleNumber).then(() => {
+                        this.startAnimation();
                     });
-                    break;
-                } else if (this.initializationError) {
-                    // Failed to initialize
-                    console.log('WebGPU failed to initialize for header, using CPU:', this.initializationError);
-                    break;
+                } else {
+                    this.startAnimation();
                 }
-                
-                // Wait and retry
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (attempts >= maxAttempts) {
-                console.warn('WebGPU header initialization timeout after', attempts * 100, 'ms');
-                this.fallbackToCPU();
-            }
-            
-            // Start animation
-            this.startAnimation();
+            });
         }
 
         async initializeForRule(ruleNumber) {
@@ -1015,7 +901,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             if (this.useWebGPU && this.webgpuDevice) {
                 // Ensure buffers are created first
                 this.ensureGPUBuffers();
-                
+
                 if (this.uniformBuffer) {
                     await this.updateGPUUniforms(ruleNumber);
                 } else {
@@ -1030,7 +916,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         async cycleToNextRule() {
-            // Choose a random rule that's different from current one
+            // 1. Choose a new rule
             let newRuleIndex;
             do {
                 newRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
@@ -1039,81 +925,42 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.headerRuleIndex = newRuleIndex;
             this.currentRuleNumber = parseInt(this.headerRuleKeys[this.headerRuleIndex]);
             this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
+            console.log(`Header: Switching to Rule ${this.currentRuleNumber}`);
 
-            console.log(`Header: Switching to Rule ${this.currentRuleNumber} (WebGPU: ${this.useWebGPU})`);
-
-            // Update global headerRuleName variable for rule indicator
-            if (typeof window !== 'undefined' && 'headerRuleName' in window) {
-                window.headerRuleName = this.currentRuleNumber.toString();
-            }
-            
-            // Update rule indicator display
-            if (typeof window !== 'undefined' && window.RuleIndicators) {
-                window.RuleIndicators.update('header', this.currentRuleNumber);
-            }
-
-                // Update GPU uniforms for new rule
-            if (this.useWebGPU && this.webgpuDevice) {
-                try {
-                    await this.updateGPUUniforms(this.currentRuleNumber);
-                } catch (error) {
-                    console.warn('Failed to update GPU uniforms, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    return; // Exit early to avoid further WebGPU operations
+            // 2. Update UI
+            if (typeof window !== 'undefined') {
+                if ('headerRuleName' in window) {
+                    window.headerRuleName = this.currentRuleNumber.toString();
+                }
+                if (window.RuleIndicators) {
+                    window.RuleIndicators.update('header', this.currentRuleNumber);
                 }
             }
 
-            // Reset animation for new rule
+            // 3. Re-initialize animation state
             this.initAnimation();
             this.drawnRows.length = 0;
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            // Explicitly reset current row to restart animation from top
             this.currentRow = 0;
-            
-            // Re-setup WebGPU resources for new grid dimensions  
-            if (this.useWebGPU && this.webgpuDevice && this.cols > 0) {
-                try {
-                    // Stop any ongoing GPU animations first
-                    this.animatingGPU = false;
-                    
-                    // Clean up any mapped buffers first
-                    if (this.readBuffer && this.bufferMapped) {
-                        try {
-                            this.readBuffer.unmap();
-                            this.bufferMapped = false;
-                        } catch (e) {
-                            // Buffer might not be mapped, ignore error
-                            this.bufferMapped = false;
-                        }
-                    }
-                    
-                    // Wait for any pending GPU operations to complete
-                    await this.webgpuDevice.queue.onSubmittedWorkDone();
-                    
-                    // Small delay to ensure GPU operations are fully complete
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    
-                    // Clean up and recreate storage buffers for new grid
-                    this.cleanupStorageBuffers();
-                    
-                    // Verify device is still available after cleanup
-                    if (!this.webgpuDevice) {
-                        throw new Error('WebGPU device lost during buffer cleanup');
-                    }
-                    
-                    // Recreate storage buffers and bind group
-                    this.setupStorageBuffers();
-                    this.setupBindGroup();
-                    console.log('WebGPU resources re-initialized for new rule');
-                } catch (error) {
-                    console.warn('Failed to re-initialize WebGPU resources, falling back to CPU:', error);
+
+            // 4. Re-initialize GPU resources in a clean, sequential flow
+            if (this.useWebGPU && this.webgpuDevice) {
+                await this.webgpuDevice.queue.onSubmittedWorkDone();
+                this.cleanupStorageBuffers();
+
+                // FIX: don't test the Promise `device.lost`
+                if (!this.webgpuDevice || this.deviceLost) {
+                    console.warn('WebGPU device not available after cleanup, falling back to CPU');
                     this.fallbackToCPU();
-                    return; // Exit early to avoid further operations
+                    return;
                 }
+
+                this.setupStorageBuffers();
+                this.setupBindGroup();
+                await this.updateGPUUniforms(this.currentRuleNumber);
+
+                console.log('WebGPU resources re-initialized for new rule');
             }
-            
-            console.log(`Rule cycling complete for ${this.currentRuleNumber}, animation should continue from row ${this.currentRow}`);
         }
 
         async animate() {
@@ -1145,22 +992,25 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         async animateWithGPU() {
-            // Prevent concurrent GPU animations
             if (this.animatingGPU) return;
             this.animatingGPU = true;
 
             try {
-                // Check if WebGPU is still available
-                if (!this.useWebGPU || !this.webgpuDevice || this.recreatingResources) {
-                    throw new Error('WebGPU not available or resources being recreated');
+                // If animation has reached the end, cycle to the next rule
+                if (this.currentRow >= this.rows - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1800)); // Preserve delay
+                    await this.cycleToNextRule();
                 }
-                
-                // Only clear if starting over
+
+                // Check if WebGPU is still available after potential cycling
+                if (!this.useWebGPU || !this.webgpuDevice || this.recreatingResources) {
+                    throw new Error('WebGPU not available or resources are being recreated');
+                }
+
+                // On the first row of a new animation, clear canvas and upload initial grid
                 if (this.currentRow === 0) {
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                     this.drawnRows.length = 0;
-                    
-                    // Upload initial grid to GPU
                     this.uploadGridToGPU(this.grid);
                 }
 
@@ -1171,23 +1021,14 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.renderRows();
 
                 // Calculate next generation using GPU
-                if (this.currentRow < this.rows - 1) {
-                    const nextGrid = await this.computeNextGenerationGPU();
-                    this.grid = Array.from(nextGrid);
-                    this.currentRow++;
-                } else {
-                    // Cycle to next rule and restart after delay
-                    setTimeout(async () => {
-                        try {
-                            await this.cycleToNextRule();
-                            // Force reset currentRow after rule cycling to ensure clean restart
-                            this.currentRow = 0;
-                        } catch (error) {
-                            console.warn('Error during rule cycling, falling back to CPU:', error);
-                            this.fallbackToCPU();
-                        }
-                    }, 1800);
-                }
+                const nextGrid = await this.computeNextGenerationGPU();
+                this.grid = Array.from(nextGrid);
+                this.currentRow++;
+
+            } catch (error) {
+                console.warn('GPU animation failed, falling back to CPU:', error);
+                this.fallbackToCPU();
+                this.animateWithCPU(); // Continue animation on CPU
             } finally {
                 this.animatingGPU = false;
             }
