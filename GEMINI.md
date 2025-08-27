@@ -126,6 +126,7 @@ Since this is a static HTML/CSS/JS project with no build system:
   - Smooth animations and auto-scroll for enhanced UX
   - Section-by-section control over content depth
 - **Educational visual system** with computational art examples, cellular automata demonstrations, and mathematical visualizations
+- **Image lightbox overlay** with click-to-zoom functionality for educational images and diagrams with accessibility features
 - **Sticky sidebar panels** for outline and annotations with custom scrollbars
 - **Mobile scroll-to-top button** for improved navigation on mobile devices
 - **AI-powered NKS Chatbot** with intelligent question-answering capabilities:

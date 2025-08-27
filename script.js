@@ -5,10 +5,138 @@ document.addEventListener('DOMContentLoaded', function () {
     initAnnotationSystem();
     initAnnotationContent();
     initScrollToTop();
+    initImageLightbox();
 
     // Load preface by default
     loadChapter('preface');
 });
+
+/**
+ * Initialize image lightbox overlay and delegated click handling
+ * Enables click-to-zoom for images in notes and annotations
+ * 
+ * Behavior:
+ * - Click any <img> inside #notes-content or .annotation-text to open overlay
+ * - Click overlay or press Escape to close
+ * - Prevents default navigation if image is wrapped in a link
+ * 
+ * Time Complexity: O(1) setup, O(1) per click
+ * Space Complexity: O(1)
+ */
+function initImageLightbox() {
+    // Create overlay container once
+    let overlay = document.getElementById('image-lightbox');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'image-lightbox';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Image viewer');
+        overlay.innerHTML = `
+            <div class="image-lightbox-content">
+                <button class="image-lightbox-close" aria-label="Close">×</button>
+                <img alt="" />
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    const imgEl = overlay.querySelector('img');
+    const closeBtn = overlay.querySelector('.image-lightbox-close');
+    let openerEl = null; // element that opened the lightbox
+    let openerHadTabindex = null; // remember original tabindex if we add one
+    let inertElements = [];
+
+    const setInertOutside = (on) => {
+        if (on) {
+            inertElements = Array.from(document.body.children).filter(el => el !== overlay);
+            inertElements.forEach(el => el.setAttribute('inert', ''));
+        } else {
+            inertElements.forEach(el => el.removeAttribute('inert'));
+            inertElements = [];
+        }
+    };
+
+    const close = () => {
+        // Move focus back to the opener before hiding
+        if (openerEl && document.contains(openerEl)) {
+            try { openerEl.focus({ preventScroll: true }); } catch (_) {}
+            // If we temporarily added a tabindex for focus, clean it up
+            if (openerHadTabindex === null && openerEl.hasAttribute('tabindex')) {
+                openerEl.removeAttribute('tabindex');
+            }
+        }
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        setInertOutside(false);
+        imgEl.src = '';
+        imgEl.alt = '';
+        openerEl = null;
+        openerHadTabindex = null;
+    };
+
+    // Close interactions
+    overlay.addEventListener('click', (e) => {
+        // Close when clicking outside the image or on the close button
+        if (e.target === overlay || e.target === closeBtn) {
+            close();
+        }
+    });
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+            close();
+        }
+    });
+
+    // Delegated click handler for images in notes and annotations
+    document.addEventListener('click', (e) => {
+        const targetImg = e.target.closest('img');
+        if (!targetImg) return;
+
+        // Limit to main content and annotations
+        const inNotes = !!document.getElementById('notes-content')?.contains(targetImg);
+        const inAnnotation = !!targetImg.closest('.annotation-text');
+        if (!inNotes && !inAnnotation) return;
+
+        // If image is wrapped in a link to an image file, use that as full-size
+        const anchor = targetImg.closest('a');
+        let hrefSrc = null;
+        if (anchor && anchor.getAttribute('href')) {
+            const href = anchor.getAttribute('href');
+            const isImageHref = /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/i.test(href);
+            if (isImageHref) {
+                e.preventDefault();
+                hrefSrc = href;
+            }
+        }
+
+        // Open overlay with the best available source
+        const src = hrefSrc || targetImg.dataset.fullsize || targetImg.currentSrc || targetImg.src;
+        if (!src) return;
+
+        imgEl.src = src;
+        imgEl.alt = targetImg.alt || '';
+
+        // Track and prepare focus restore target
+        openerEl = anchor || targetImg;
+        openerHadTabindex = openerEl.getAttribute('tabindex');
+        if (openerHadTabindex === null) {
+            // Ensure we can programmatically restore focus even if not tabbable
+            openerEl.setAttribute('tabindex', '-1');
+        }
+
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        setInertOutside(true);
+
+        // Move focus inside dialog (close button is first interactive control)
+        setTimeout(() => { try { closeBtn.focus(); } catch (_) {} }, 0);
+    });
+}
 
 /**
  * Cache for storing loaded annotation content by language to prevent redundant fetches
@@ -348,12 +476,8 @@ class IncrementalTyper {
         this.element.innerHTML = ''; // Clear only once at start
         this.currentStack = [this.element]; // Stack to track current parent element
         
-        // Add cursor
-        this.cursor = document.createElement('span');
-        this.cursor.textContent = '|';
-        this.cursor.className = 'typed-cursor';
-        this.cursor.style.cssText = 'font-weight: 100; color: inherit; animation: typedjsBlink 0.7s infinite;';
-        this.element.appendChild(this.cursor);
+        // No cursor: remove blinking caret during typing
+        this.cursor = null;
         
         this.typeNextToken();
     }
