@@ -320,23 +320,13 @@
         // Apply random effect
         applyRandomEffect: function(element, newRule, callback = () => {}) {
             if (vfxInProgress) {
-                console.log('VFX already in progress, skipping');
                 callback();
                 return;
             }
             
-            console.log('VFX applyRandomEffect called:', {
-                element: element,
-                elementId: element.id,
-                newRule: newRule,
-                currentText: element.textContent
-            });
-            
             vfxInProgress = true;
             const effectNames = Object.keys(effects);
             const randomEffect = effectNames[Math.floor(Math.random() * effectNames.length)];
-            
-            console.log(`Applying VFX effect: ${randomEffect} for rule ${newRule}`);
             
             // Add visual indicator during effect
             element.classList.add('vfx-active');
@@ -344,7 +334,6 @@
             effects[randomEffect](element, newRule, () => {
                 element.classList.remove('vfx-active');
                 vfxInProgress = false;
-                console.log(`VFX effect ${randomEffect} completed`);
                 callback();
             });
         },
@@ -375,17 +364,5 @@
     // Also expose globally for backward compatibility
     window.RuleIndicatorVFX = RuleIndicatorVFX;
 
-    // Test function for debugging
-    window.testVFX = function() {
-        const element = document.getElementById('header-rule-text');
-        if (element) {
-            console.log('Testing VFX on element:', element);
-            RuleIndicatorVFX.applyRandomEffect(element, '999', () => {
-                console.log('Test VFX completed');
-            });
-        } else {
-            console.log('Header rule element not found');
-        }
-    };
 
 })(window.APP = window.APP || {});
