@@ -405,29 +405,23 @@ window.APP = window.APP || {};
                         const accelerationStatus = gpuManager.getAccelerationStatus();
                         if (accelerationStatus && accelerationStatus.capabilities) {
                             const path = accelerationStatus.capabilities.selectedPath;
-                            element.textContent = `GPU: ${path.toUpperCase()}`;
-                            element.style.color = path === 'webgpu' ? '#4ade80' : 
-                                                 path === 'webgl2' ? '#fbbf24' : 
-                                                 path === 'webgl1' ? '#fb923c' : '#ef4444';
+                            element.textContent = path.toUpperCase();
+                            element.style.color = ''; // Use CSS color
                         } else {
-                            element.textContent = 'GPU: Detecting...';
-                            element.style.color = '#999';
+                            element.textContent = 'Detecting...';
+                            element.style.color = ''; // Use CSS color
                         }
                     } catch (error) {
-                        element.textContent = 'GPU: CPU';
-                        element.style.color = '#ef4444';
+                        element.textContent = 'CPU';
+                        element.style.color = ''; // Use CSS color
                     }
                 } else {
-                    element.textContent = 'GPU: Detecting...';
-                    element.style.color = '#999';
+                    element.textContent = 'Detecting...';
+                    element.style.color = ''; // Use CSS color
                 }
             } else {
-                element.textContent = `GPU: ${status}`;
-                // Set color based on status
-                const statusLower = status.toLowerCase();
-                element.style.color = statusLower.includes('webgpu') ? '#4ade80' : 
-                                     statusLower.includes('webgl2') ? '#fbbf24' : 
-                                     statusLower.includes('webgl') ? '#fb923c' : '#ef4444';
+                element.textContent = status;
+                element.style.color = ''; // Use CSS color
             }
         }
     }

@@ -244,6 +244,35 @@ header {
     transform: none;
 }
 
+/* GPU Indicator */
+.gpu-indicator {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-md);
+    z-index: 10;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    backdrop-filter: blur(10px);
+    transition: all var(--transition-fast);
+    opacity: 0.8;
+}
+
+.gpu-indicator:hover {
+    opacity: 1;
+    border-color: var(--accent-gold);
+    transform: translateY(-1px);
+}
+
+#gpu-status-text {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--accent-gold);
+    font-weight: 500;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+}
+
 /* Rule Indicator */
 .rule-indicator {
     position: absolute;
@@ -861,6 +890,16 @@ header {
     /* Add top spacing to header content to avoid language switcher overlap */
     .header-content {
         margin-top: 3rem; /* Space for language switcher + some padding */
+    }
+
+    .gpu-indicator {
+        top: var(--spacing-xs);
+        left: var(--spacing-sm);
+        padding: 4px 8px;
+    }
+    
+    #gpu-status-text {
+        font-size: 0.6rem;
     }
 
     .rule-indicator {
