@@ -84,7 +84,8 @@ window.APP = window.APP || {};
             if (this.parentElement) {
                 // Use parent element dimensions (for header)
                 const parent = this.canvas.parentElement;
-                this.canvas.width = parent.clientWidth;
+                // Use window width for alignment with background, but parent height
+                this.canvas.width = window.innerWidth;
                 this.canvas.height = parent.clientHeight;
             } else {
                 // Use window dimensions (for background)  
@@ -118,6 +119,11 @@ window.APP = window.APP || {};
         initAnimation() {
             this.cols = Math.floor(this.canvas.width / this.cellSize);
             this.rows = Math.floor(this.canvas.height / this.cellSize);
+            
+            // Calculate centering offsets
+            this.offsetX = Math.floor((this.canvas.width - (this.cols * this.cellSize)) / 2);
+            this.offsetY = Math.floor((this.canvas.height - (this.rows * this.cellSize)) / 2);
+            
             this.grid = new Array(this.cols).fill(0);
             this.grid[Math.floor(this.cols / 2)] = 1; // Start with center cell
             this.currentRow = 0;
@@ -216,7 +222,12 @@ window.APP = window.APP || {};
                         const blue = Math.floor(55 * intensity * ageFactor);
 
                         this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
+                        this.ctx.fillRect(
+                            col * this.cellSize + this.offsetX, 
+                            row * this.cellSize + this.offsetY, 
+                            this.cellSize - 0.5, 
+                            this.cellSize - 0.5
+                        );
                     }
                 }
             }
@@ -347,7 +358,12 @@ window.APP = window.APP || {};
                         const blue = Math.floor(55 * intensity * ageFactor);
 
                         this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
+                        this.ctx.fillRect(
+                            col * this.cellSize + this.offsetX, 
+                            row * this.cellSize + this.offsetY, 
+                            this.cellSize - 0.5, 
+                            this.cellSize - 0.5
+                        );
                     }
                 }
             }
