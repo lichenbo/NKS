@@ -309,8 +309,8 @@ window.APP = window.APP || {};
             headerRuleName = this.headerRuleKeys[this.headerRuleIndex]; // Update global variable
             console.log(`Header: Switching to Rule ${headerRuleName}`);
 
-            // Update header rule indicator
-            updateHeaderRuleIndicator();
+            // Update header rule indicator with VFX
+            updateHeaderRuleIndicatorWithVFX();
 
             // Reset animation for new rule
             this.initAnimation();
@@ -409,6 +409,19 @@ window.APP = window.APP || {};
 
     function updateHeaderRuleIndicator() {
         RuleIndicators.update('header', headerRuleName);
+    }
+
+    function updateHeaderRuleIndicatorWithVFX() {
+        const element = document.getElementById('header-rule-text');
+        if (element && window.APP && window.APP.RuleIndicatorVFX) {
+            // Apply random VFX effect
+            window.APP.RuleIndicatorVFX.applyRandomEffect(element, headerRuleName, () => {
+                console.log(`VFX complete for Rule ${headerRuleName}`);
+            });
+        } else {
+            // Fallback to regular update if VFX not available
+            updateHeaderRuleIndicator();
+        }
     }
 
     function updateGPUStatusIndicator(status = null) {
@@ -543,6 +556,7 @@ window.APP = window.APP || {};
         updateRuleIndicators,
         updateBackgroundRuleIndicator,
         updateHeaderRuleIndicator,
+        updateHeaderRuleIndicatorWithVFX,
         updateGPUStatusIndicator,
         // GPU control functions
         setGPUAcceleration,

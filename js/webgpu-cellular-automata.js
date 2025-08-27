@@ -809,20 +809,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         renderRows() {
-            // Debug: Always log positioning info for comparison
-            console.log('BACKGROUND CA positioning:', {
-                canvasWidth: this.canvas.width,
-                canvasHeight: this.canvas.height,
-                cols: this.cols,
-                rows: this.rows,
-                cellSize: this.cellSize,
-                offsetX: this.offsetX,
-                offsetY: this.offsetY,
-                calculatedWidth: this.cols * this.cellSize,
-                calculatedHeight: this.rows * this.cellSize,
-                currentRow: this.currentRow
-            });
-            
             // Render all stored rows with golden gradient effect
             for (let row = 0; row < this.drawnRows.length; row++) {
                 for (let col = 0; col < this.cols; col++) {
@@ -846,9 +832,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
                         this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
                         this.ctx.fillRect(
-                            col * this.cellSize + this.offsetX, 
-                            row * this.cellSize + this.offsetY, 
-                            this.cellSize - 0.5, 
+                            col * this.cellSize + this.offsetX,
+                            row * this.cellSize + this.offsetY,
+                            this.cellSize - 0.5,
                             this.cellSize - 0.5
                         );
                     }
@@ -1089,20 +1075,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         renderRows() {
-            // Debug: Always log positioning info for comparison
-            console.log('HEADER CA positioning:', {
-                canvasWidth: this.canvas.width,
-                canvasHeight: this.canvas.height,
-                cols: this.cols,
-                rows: this.rows,
-                cellSize: this.cellSize,
-                offsetX: this.offsetX,
-                offsetY: this.offsetY,
-                calculatedWidth: this.cols * this.cellSize,
-                calculatedHeight: this.rows * this.cellSize,
-                currentRow: this.currentRow
-            });
-            
             // Render all stored rows with breathing golden effect
             for (let row = 0; row < this.drawnRows.length; row++) {
                 for (let col = 0; col < this.cols; col++) {
@@ -1126,9 +1098,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
                         this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
                         this.ctx.fillRect(
-                            col * this.cellSize + this.offsetX, 
-                            row * this.cellSize + this.offsetY, 
-                            this.cellSize - 0.5, 
+                            col * this.cellSize + this.offsetX,
+                            row * this.cellSize + this.offsetY,
+                            this.cellSize - 0.5,
                             this.cellSize - 0.5
                         );
                     }
