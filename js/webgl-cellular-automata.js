@@ -724,6 +724,19 @@ window.APP = window.APP || {};
 
             console.log(`Header: Switching to Rule ${this.currentRuleNumber} (WebGL: ${this.useWebGL})`);
 
+            // Update UI with VFX
+            if (typeof window !== 'undefined') {
+                if ('headerRuleName' in window) {
+                    window.headerRuleName = this.currentRuleNumber.toString();
+                }
+                // Use VFX system if available, otherwise fallback to regular update
+                if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
+                    window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
+                } else if (window.RuleIndicators) {
+                    window.RuleIndicators.update('header', this.currentRuleNumber);
+                }
+            }
+
             // Reset animation for new rule
             this.initAnimation();
             this.drawnRows.length = 0;

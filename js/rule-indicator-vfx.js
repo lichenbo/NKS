@@ -4,12 +4,16 @@
     const VFX_DURATION = 800; // Duration for all effects
     const SCRAMBLE_CHARS = ['█', '▓', '░', '▒', '◆', '◇', '●', '○', '◊', '※'];
     const PARTICLE_COUNT = 12;
+    
+    // Prevent overlapping VFX
+    let vfxInProgress = false;
 
     // VFX Effects
     const effects = {
         // 1. Number Scrambling Animation
         numberScramble: function(element, finalRule, callback) {
             const originalText = element.textContent;
+            const finalText = originalText.replace(/\d+/, finalRule);
             let scrambleCount = 0;
             const maxScrambles = 30;
             
@@ -21,7 +25,7 @@
                 scrambleCount++;
                 if (scrambleCount >= maxScrambles) {
                     clearInterval(scrambleInterval);
-                    element.textContent = originalText.replace(/\d+/, finalRule);
+                    element.textContent = finalText;
                     element.style.color = '';
                     callback();
                 }
@@ -31,6 +35,7 @@
         // 2. Glitch/Static Effect
         glitchStatic: function(element, finalRule, callback) {
             const originalText = element.textContent;
+            const finalText = originalText.replace(/\d+/, finalRule);
             element.classList.add('vfx-glitch');
             
             let glitchCount = 0;
@@ -54,7 +59,7 @@
                 if (glitchCount >= maxGlitches) {
                     clearInterval(glitchInterval);
                     element.classList.remove('vfx-glitch');
-                    element.textContent = originalText.replace(/\d+/, finalRule);
+                    element.textContent = finalText;
                     element.style.textShadow = '';
                     callback();
                 }
@@ -65,8 +70,15 @@
         typewriterScramble: function(element, finalRule, callback) {
             const originalText = element.textContent;
             const ruleStr = finalRule.toString();
-            const textBeforeRule = originalText.substring(0, originalText.lastIndexOf(originalText.match(/\d+/)[0]));
-            const textAfterRule = originalText.substring(originalText.lastIndexOf(originalText.match(/\d+/)[0]) + originalText.match(/\d+/)[0].length);
+            const ruleMatch = originalText.match(/\d+/);
+            if (!ruleMatch) {
+                element.textContent = originalText.replace(/\d+/, finalRule);
+                callback();
+                return;
+            }
+            
+            const textBeforeRule = originalText.substring(0, originalText.lastIndexOf(ruleMatch[0]));
+            const textAfterRule = originalText.substring(originalText.lastIndexOf(ruleMatch[0]) + ruleMatch[0].length);
             
             let revealIndex = 0;
             const scramblePhase = VFX_DURATION * 0.4;
@@ -104,6 +116,7 @@
         // 4. Particle Burst Effect
         particleBurst: function(element, finalRule, callback) {
             const originalText = element.textContent;
+            const finalText = originalText.replace(/\d+/, finalRule);
             const rect = element.getBoundingClientRect();
             const container = document.body;
             
@@ -153,7 +166,7 @@
                     requestAnimationFrame(animateParticles);
                 } else {
                     particles.forEach(p => p.remove());
-                    element.textContent = originalText.replace(/\d+/, finalRule);
+                    element.textContent = finalText;
                     callback();
                 }
             };
@@ -164,6 +177,7 @@
         // 5. Rotation/Flip Animation
         rotationFlip: function(element, finalRule, callback) {
             const originalText = element.textContent;
+            const finalText = originalText.replace(/\d+/, finalRule);
             element.classList.add('vfx-flip');
             
             // First half of rotation - hide content
@@ -175,7 +189,7 @@
             
             // Second half - reveal new rule
             setTimeout(() => {
-                element.textContent = originalText.replace(/\d+/, finalRule);
+                element.textContent = finalText;
                 element.style.opacity = '1';
                 element.style.filter = 'blur(0)';
             }, VFX_DURATION * 0.75);
@@ -192,6 +206,20 @@
     const RuleIndicatorVFX = {
         // Apply random effect
         applyRandomEffect: function(element, newRule, callback = () => {}) {
+            if (vfxInProgress) {
+                console.log('VFX already in progress, skipping');
+                callback();
+                return;
+            }
+            
+            console.log('VFX applyRandomEffect called:', {
+                element: element,
+                elementId: element.id,
+                newRule: newRule,
+                currentText: element.textContent
+            });
+            
+            vfxInProgress = true;
             const effectNames = Object.keys(effects);
             const randomEffect = effectNames[Math.floor(Math.random() * effectNames.length)];
             
@@ -202,6 +230,8 @@
             
             effects[randomEffect](element, newRule, () => {
                 element.classList.remove('vfx-active');
+                vfxInProgress = false;
+                console.log(`VFX effect ${randomEffect} completed`);
                 callback();
             });
         },
@@ -231,5 +261,18 @@
 
     // Also expose globally for backward compatibility
     window.RuleIndicatorVFX = RuleIndicatorVFX;
+
+    // Test function for debugging
+    window.testVFX = function() {
+        const element = document.getElementById('header-rule-text');
+        if (element) {
+            console.log('Testing VFX on element:', element);
+            RuleIndicatorVFX.applyRandomEffect(element, '999', () => {
+                console.log('Test VFX completed');
+            });
+        } else {
+            console.log('Header rule element not found');
+        }
+    };
 
 })(window.APP = window.APP || {});

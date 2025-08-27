@@ -889,6 +889,20 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.fadeDirection = 1; // 1 for fade in, -1 for fade out
             this.globalAlpha = 0.3;
 
+            // Update global rule name for indicator
+            if (typeof window !== 'undefined') {
+                if ('headerRuleName' in window) {
+                    window.headerRuleName = this.currentRuleNumber.toString();
+                }
+                console.log(`WebGPU HeaderCA Constructor: Setting initial rule to ${this.currentRuleNumber}`);
+                
+                // Update rule indicator with initial rule
+                if (window.RuleIndicators) {
+                    window.RuleIndicators.update('header', this.currentRuleNumber);
+                    console.log(`WebGPU HeaderCA Constructor: Called RuleIndicators.update with rule ${this.currentRuleNumber}`);
+                }
+            }
+
             // Wait for WebGPU initialization before starting
             this.initializationPromise.then(() => {
                 if (this.useWebGPU) {
@@ -937,7 +951,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 if ('headerRuleName' in window) {
                     window.headerRuleName = this.currentRuleNumber.toString();
                 }
-                if (window.RuleIndicators) {
+                // Use VFX system if available, otherwise fallback to regular update
+                if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
+                    window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
+                } else if (window.RuleIndicators) {
                     window.RuleIndicators.update('header', this.currentRuleNumber);
                 }
             }

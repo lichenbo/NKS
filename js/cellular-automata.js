@@ -284,9 +284,11 @@ window.APP = window.APP || {};
             
             // Update global rule name for indicator
             headerRuleName = this.headerRuleKeys[this.headerRuleIndex];
+            console.log(`HeaderCA Constructor: Setting initial rule to ${headerRuleName}`);
             
             // Initialize header rule indicator
             updateHeaderRuleIndicator();
+            console.log(`HeaderCA Constructor: Called updateHeaderRuleIndicator with rule ${headerRuleName}`);
             
             // Start animation
             this.startAnimation();
@@ -306,11 +308,12 @@ window.APP = window.APP || {};
 
             this.headerRuleIndex = newRuleIndex;
             this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
-            headerRuleName = this.headerRuleKeys[this.headerRuleIndex]; // Update global variable
-            console.log(`Header: Switching to Rule ${headerRuleName}`);
+            const newRuleName = this.headerRuleKeys[this.headerRuleIndex];
+            headerRuleName = newRuleName; // Update global variable
+            console.log(`Header: Switching to Rule ${newRuleName}`);
 
-            // Update header rule indicator with VFX
-            updateHeaderRuleIndicatorWithVFX();
+            // Update header rule indicator with VFX - pass rule directly
+            updateHeaderRuleIndicatorWithVFX(newRuleName);
 
             // Reset animation for new rule
             this.initAnimation();
@@ -393,12 +396,27 @@ window.APP = window.APP || {};
         update: function(type, ruleNumber) {
             const elementId = type === 'background' ? 'bg-rule-text' : 'header-rule-text';
             const element = document.getElementById(elementId);
+            
+            console.log(`RuleIndicators.update called:`, {
+                type: type,
+                ruleNumber: ruleNumber,
+                elementId: elementId,
+                elementExists: !!element,
+                hasTranslations: !!window.translations,
+                currentLanguage: window.currentLanguage,
+                elementText: element ? element.textContent : 'N/A'
+            });
+            
             if (element && window.translations && window.currentLanguage) {
                 const currentLanguage = window.currentLanguage;
                 const typeKey = type === 'background' ? 'rule-bg' : 'rule-header';
                 const typeText = window.translations[currentLanguage][typeKey] || 'Rule';
                 const ruleText = window.translations[currentLanguage]['rule'] || 'Rule';
-                element.textContent = `${typeText}: ${ruleText} ${ruleNumber}`;
+                const finalText = `${typeText}: ${ruleText} ${ruleNumber}`;
+                element.textContent = finalText;
+                console.log(`RuleIndicators.update: Set text to "${finalText}"`);
+            } else {
+                console.log(`RuleIndicators.update: Conditions not met for update`);
             }
         }
     };
@@ -411,14 +429,27 @@ window.APP = window.APP || {};
         RuleIndicators.update('header', headerRuleName);
     }
 
-    function updateHeaderRuleIndicatorWithVFX() {
+    function updateHeaderRuleIndicatorWithVFX(ruleName) {
         const element = document.getElementById('header-rule-text');
+        const ruleToUse = ruleName || headerRuleName; // Use parameter or fallback to global
+        
+        console.log('VFX Debug:', {
+            element: !!element,
+            APP: !!window.APP,
+            VFX: !!(window.APP && window.APP.RuleIndicatorVFX),
+            parameterRule: ruleName,
+            globalRule: headerRuleName,
+            usingRule: ruleToUse,
+            currentText: element ? element.textContent : 'N/A'
+        });
+        
         if (element && window.APP && window.APP.RuleIndicatorVFX) {
-            // Apply random VFX effect
-            window.APP.RuleIndicatorVFX.applyRandomEffect(element, headerRuleName, () => {
-                console.log(`VFX complete for Rule ${headerRuleName}`);
+            // Apply random VFX effect with the correct rule
+            window.APP.RuleIndicatorVFX.applyRandomEffect(element, ruleToUse, () => {
+                console.log(`VFX complete for Rule ${ruleToUse}`);
             });
         } else {
+            console.log('VFX fallback - using regular update');
             // Fallback to regular update if VFX not available
             updateHeaderRuleIndicator();
         }
