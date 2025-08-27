@@ -199,6 +199,119 @@
                 element.classList.remove('vfx-flip');
                 callback();
             }, VFX_DURATION);
+        },
+
+        // 6. Odometer Roll (per-digit vertical roll 0-9)
+        odometerRoll: function(element, finalRule, callback) {
+            const originalText = element.textContent;
+            const match = originalText.match(/\d+/);
+            if (!match) {
+                element.textContent = originalText.replace(/\d+/, finalRule);
+                callback();
+                return;
+            }
+
+            const ruleStr = String(finalRule);
+            const before = originalText.slice(0, match.index);
+            const after = originalText.slice(match.index + match[0].length);
+
+            // Build odometer DOM
+            const wrapper = document.createElement('span');
+            wrapper.className = 'vfx-odometer';
+            for (let i = 0; i < ruleStr.length; i++) {
+                const digit = parseInt(ruleStr[i], 10);
+                const digitWrap = document.createElement('span');
+                digitWrap.className = 'vfx-odometer-digit';
+
+                const column = document.createElement('span');
+                column.className = 'vfx-odometer-column';
+                // Fill column with 0-9 once (could randomize start for flair)
+                for (let n = 0; n <= 9; n++) {
+                    const cell = document.createElement('span');
+                    cell.className = 'vfx-odometer-cell';
+                    cell.textContent = String(n);
+                    column.appendChild(cell);
+                }
+
+                digitWrap.appendChild(column);
+                wrapper.appendChild(digitWrap);
+
+                // Staggered start for a nicer cascade
+                setTimeout(() => {
+                    // Use translateY to target digit (cells are 1em high via CSS)
+                    column.style.transform = `translateY(${-digit}em)`;
+                }, i * 50);
+            }
+
+            // Render
+            element.innerHTML = '';
+            element.append(document.createTextNode(before));
+            element.appendChild(wrapper);
+            element.append(document.createTextNode(after));
+
+            // Finish after duration, restore plain text
+            setTimeout(() => {
+                const finalText = `${before}${ruleStr}${after}`;
+                element.textContent = finalText;
+                callback();
+            }, VFX_DURATION + 60);
+        },
+
+        // 7. Wipe Reveal (mask sweeps across; swap mid-way)
+        wipeReveal: function(element, finalRule, callback) {
+            const originalText = element.textContent;
+            const finalText = originalText.replace(/\d+/, finalRule);
+            element.classList.add('vfx-wipe');
+
+            // Swap text at mid animation
+            const mid = Math.max(0, Math.floor(VFX_DURATION * 0.5));
+            const end = VFX_DURATION;
+
+            const midTimer = setTimeout(() => {
+                element.textContent = finalText;
+            }, mid);
+
+            const endTimer = setTimeout(() => {
+                element.classList.remove('vfx-wipe');
+                clearTimeout(midTimer);
+                callback();
+            }, end);
+        },
+
+        // 8. Counter Tween (numeric ease from current to target)
+        counterTween: function(element, finalRule, callback) {
+            const originalText = element.textContent;
+            const match = originalText.match(/\d+/);
+            const target = parseInt(finalRule, 10);
+            if (!match || Number.isNaN(target)) {
+                element.textContent = originalText.replace(/\d+/, finalRule);
+                callback();
+                return;
+            }
+
+            const start = parseInt(match[0], 10);
+            const before = originalText.slice(0, match.index);
+            const after = originalText.slice(match.index + match[0].length);
+
+            element.classList.add('vfx-counter');
+
+            const startTime = performance.now();
+            const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+            const tick = (now) => {
+                const elapsed = now - startTime;
+                const p = Math.min(1, elapsed / VFX_DURATION);
+                const eased = easeOut(p);
+                const value = Math.round(start + (target - start) * eased);
+                element.textContent = `${before}${value}${after}`;
+                if (p < 1) {
+                    requestAnimationFrame(tick);
+                } else {
+                    element.classList.remove('vfx-counter');
+                    callback();
+                }
+            };
+            requestAnimationFrame(tick);
         }
     };
 

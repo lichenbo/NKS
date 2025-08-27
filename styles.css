@@ -443,6 +443,64 @@ header {
     }
 }
 
+/* 5. Odometer Roll (per-digit columns) */
+.vfx-odometer {
+    display: inline-flex;
+    gap: 0.02em;
+    vertical-align: baseline;
+}
+.vfx-odometer-digit {
+    display: inline-block;
+    overflow: hidden;
+    height: 1em; /* 1 line height */
+    line-height: 1em;
+}
+.vfx-odometer-column {
+    display: inline-flex;
+    flex-direction: column;
+    transform: translateY(0);
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+.vfx-odometer-cell {
+    display: block;
+    height: 1em;
+    line-height: 1em;
+}
+
+/* 6. Wipe Reveal */
+.vfx-wipe {
+    position: relative;
+    overflow: hidden;
+}
+.vfx-wipe::after {
+    content: '';
+    position: absolute;
+    left: -10%;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.25) 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
+    filter: blur(0.5px);
+    animation: vfx-wipe-sweep 0.8s ease-in-out forwards;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+@keyframes vfx-wipe-sweep {
+    0% { width: 0%; transform: translateX(0%); opacity: 0.6; }
+    50% { width: 120%; transform: translateX(40%); opacity: 0.9; }
+    100% { width: 0%; transform: translateX(120%); opacity: 0; }
+}
+
+/* 7. Counter Tween subtle pulse */
+.vfx-counter {
+    animation: vfx-counter-pulse 0.08s ease-in-out infinite alternate;
+}
+@keyframes vfx-counter-pulse {
+    0% { text-shadow: 0 0 6px rgba(212,175,55,0.2); }
+    100% { text-shadow: 0 0 10px rgba(212,175,55,0.45); }
+}
+
 /* ================================
    MAIN LAYOUT - Modern CSS Grid
    ================================ */
