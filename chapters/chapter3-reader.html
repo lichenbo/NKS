@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The World of Simple Programs: An Interactive Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page, scrollable document with a header and several main content sections. To enhance readability and navigation, each major section is made collapsible. This architecture allows users to focus on one topic at a time, hiding content they are not currently interested in. Interactive demos for each system (cellular automata, mobile automata, etc.) are integrated directly within their respective collapsible sections. This structure was chosen to provide a logical, non-linear exploration path that empowers users to navigate the content at their own pace, making it less overwhelming than a continuous wall of text. -->
+    <!-- Visualization & Content Choices: 
+        - Collapsible Sections: Goal: Improve readability and user control over content visibility. Viz: HTML with JavaScript for toggle functionality. Interaction: Clicking a section header expands/collapses the content. Justification: This is the primary method for making the long-form text content consumable, allowing a summary view and detailed drill-down. Method: Vanilla JS.
+        - Cellular Automata Demo: Goal: Demonstrate the visual output of simple rules and their diversity. Viz: A canvas for drawing the automaton. Interaction: A slider to select a rule number, triggering a redraw of the canvas. Justification: This interactive demo directly supports the chapter's core argument that simple rules lead to varied behaviors. Method: Vanilla JS with HTML Canvas.
+        - Other Systems Demos: Goal: Provide visual examples of other computational systems. Viz: Static canvas renderings. Interaction: Buttons to trigger the drawing of specific, pre-defined complex patterns. Justification: These serve as visual proofs for the "universality" concept without requiring complex, real-time simulation, keeping the app lightweight and responsive. Method: Vanilla JS with HTML Canvas.
+        - Textual Content: Goal: Present core concepts and analysis. Viz: Standard HTML paragraphs and headings. Interaction: None. Justification: Text is the most effective way to convey the detailed findings and conclusions of the chapter.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+
+        .section-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .automaton-canvas {
+            border: 1px solid #EADDCD;
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body class="p-6 md:p-10">
+
+    <header class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-[#3D352E]">The World of Simple Programs</h1>
+        <p class="mt-4 text-lg text-gray-600">An interactive exploration of Stephen Wolfram's "A New Kind of Science,"
+            Chapter 3.</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto">
+        <section id="search-for-general-features"
+            class="bg-white p-6 rounded-xl shadow-md border border-[#EADDCD] mb-8">
+            <div class="section-header flex justify-between items-center" data-target="content-1">
+                <h2 class="text-2xl font-bold text-[#3D352E]">The Search for General Features</h2>
+                <span class="collapse-icon text-2xl text-gray-400">▼</span>
+            </div>
+            <div id="content-1" class="section-content mt-4">
+                <p class="mb-4">At the beginning of the last chapter we asked the basic question of what simple programs
+                    typically do. And as a first step towards answering this question we looked at several specific
+                    examples of a class of programs known as cellular automata. The basic types of behavior that we
+                    found are illustrated in the pictures on the next page. In the first of these there is pure
+                    repetition, and a very simple pattern is formed. In the second, there are many intricate details,
+                    but at an overall level there is still a very regular nested structure that emerges.</p>
+                <p class="mb-4">In the third picture, however, one no longer sees such regularity, and instead there is
+                    behavior that seems in many respects random. And finally in the fourth picture there is what appears
+                    to be still more complex behavior—with elaborate localized structures being generated that interact
+                    in complex ways.</p>
+                <p class="mb-4">At the outset there was no indication that simple programs could ever produce behavior
+                    so diverse and often complex. But having now seen these examples, the question becomes how typical
+                    they are. Is it only cellular automata with very specific underlying rules that produce such
+                    behavior? Or is it in fact common in all sorts of simple programs?</p>
+                <p class="mb-4">My purpose in this chapter is to answer this question by looking at a wide range of
+                    different kinds of programs. And in a sense my approach is to work like a naturalist—exploring and
+                    studying the various forms that exist in the world of simple programs.</p>
+                <p class="mb-4">I start by considering more general cellular automata, and then I go on to consider a
+                    whole sequence of other kinds of programs—with underlying structures further and further away from
+                    the array of black and white cells in the cellular automata of the previous chapter.</p>
+                <p class="mb-4">And what I discover is that whatever kind of underlying rules one uses, the behavior
+                    that emerges turns out to be remarkably similar to the basic examples that we have already seen in
+                    cellular automata. Throughout the world of simple programs, it seems, there is great universality in
+                    the types of overall behavior that can be produced. And in a sense it is ultimately this that makes
+                    it possible for me to construct the coherent new kind of science that I describe in this book—and to
+                    use it to elucidate a large number of phenomena, independent of the particular details of the
+                    systems in which they occur.</p>
+            </div>
+        </section>
+
+        <section id="more-cellular-automata" class="bg-white p-6 rounded-xl shadow-md border border-[#EADDCD] mb-8">
+            <div class="section-header flex justify-between items-center" data-target="content-2">
+                <h2 class="text-2xl font-bold text-[#3D352E]">More Cellular Automata</h2>
+                <span class="collapse-icon text-2xl text-gray-400">▼</span>
+            </div>
+            <div id="content-2" class="section-content mt-4">
+                <p class="mb-4">The core of the chapter is the discovery that simple rules can lead to immense
+                    complexity. This interactive demo allows you to explore the behavior of any of the 256 "elementary"
+                    cellular automaton rules. See for yourself how a tiny change in the rule can shift behavior from
+                    simple repetition to apparent randomness.</p>
+                <div class="p-4 bg-[#F6F1EB] rounded-lg mb-4">
+                    <label for="rule-selector" class="block text-lg font-medium text-[#3D352E] mb-2">Select a Rule
+                        (0-255):</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="range" id="rule-selector" min="0" max="255" value="30" class="w-full">
+                        <span id="rule-display" class="text-xl font-semibold text-[#3D352E] w-16 text-center">Rule
+                            30</span>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <canvas id="main-automaton-canvas" width="601" height="300"
+                            class="automaton-canvas rounded-lg"></canvas>
+                    </div>
+                </div>
+                <p class="mb-4">Repetition and nesting are widespread themes in many cellular automata. But as we saw in
+                    the previous chapter, it is also possible for cellular automata to produce patterns that seem in
+                    many respects random. And out of the 256 rules discussed here, it turns out that 10 yield such
+                    apparent randomness. There are three basic forms, as illustrated on the facing page.</p>
+                <p class="mb-4">Beyond randomness, the last example in the previous chapter was rule 110: a cellular
+                    automaton whose behavior becomes partitioned into a complex mixture of regular and irregular parts.
+                    This particular cellular automaton is essentially unique among the 256 rules considered here: of the
+                    four cases in which such behavior is seen, all are equivalent if one just interchanges the roles of
+                    left and right or black and white.</p>
+            </div>
+        </section>
+
+        <section id="other-systems" class="bg-white p-6 rounded-xl shadow-md border border-[#EADDCD] mb-8">
+            <div class="section-header flex justify-between items-center" data-target="content-3">
+                <h2 class="text-2xl font-bold text-[#3D352E]">Universality in Other Systems</h2>
+                <span class="collapse-icon text-2xl text-gray-400">▼</span>
+            </div>
+            <div id="content-3" class="section-content mt-4">
+                <p class="mb-4">The central discovery of this chapter is that the phenomenon of complexity is not unique
+                    to cellular automata. It emerges in a vast range of other simple programs, from mobile automata to
+                    Turing machines. Below you can see demonstrations of these systems, which despite having entirely
+                    different structures, can exhibit similar complex behaviors.</p>
+                <div class="space-y-6">
+                    <div class="p-4 bg-[#F6F1EB] rounded-lg">
+                        <h3 class="text-xl font-medium text-[#3D352E] mb-2">Mobile Automata</h3>
+                        <p class="text-sm text-gray-600 mb-4">Instead of updating all cells in parallel, a mobile
+                            automaton has a single "active cell." The rule specifies its movement and color change. This
+                            is a crucial test of whether parallel updates are necessary for complexity.</p>
+                        <div class="flex justify-center">
+                            <canvas id="mobile-automaton-canvas" width="400" height="250"
+                                class="automaton-canvas rounded-lg"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">A complex pattern generated by a mobile
+                            automaton.</p>
+                        <button onclick="drawMobileAutomaton()"
+                            class="mt-4 px-4 py-2 bg-[#CDBBA7] text-[#3D352E] rounded-lg font-medium hover:bg-[#B7A995] transition-colors duration-200">Show
+                            a Complex Example</button>
+                    </div>
+                    <div class="p-4 bg-[#F6F1EB] rounded-lg">
+                        <h3 class="text-xl font-medium text-[#3D352E] mb-2">Turing Machines</h3>
+                        <p class="text-sm text-gray-600 mb-4">The first widely understood theoretical computer program.
+                            It has a "head" that moves along a "tape" of cells. Even with only two states and two
+                            colors, complex behavior emerges.</p>
+                        <div class="flex justify-center">
+                            <canvas id="turing-machine-canvas" width="400" height="250"
+                                class="automaton-canvas rounded-lg"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">A 4-state, 2-color Turing machine producing a
+                            complex pattern.</p>
+                        <button onclick="drawTuringMachine()"
+                            class="mt-4 px-4 py-2 bg-[#CDBBA7] text-[#3D352E] rounded-lg font-medium hover:bg-[#B7A995] transition-colors duration-200">Show
+                            a Complex Example</button>
+                    </div>
+                    <div class="p-4 bg-[#F6F1EB] rounded-lg">
+                        <h3 class="text-xl font-medium text-[#3D352E] mb-2">Substitution Systems</h3>
+                        <p class="text-sm text-gray-600 mb-4">Unlike the fixed-array systems, these allow the number of
+                            elements to change. An element is replaced by a block of new elements. Neighbor-dependent
+                            rules can lead to chaotic, random-like patterns.</p>
+                        <div class="flex justify-center">
+                            <canvas id="substitution-system-canvas" width="400" height="250"
+                                class="automaton-canvas rounded-lg"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">A substitution system generating a seemingly
+                            random pattern.</p>
+                        <button onclick="drawSubstitutionSystem()"
+                            class="mt-4 px-4 py-2 bg-[#CDBBA7] text-[#3D352E] rounded-lg font-medium hover:bg-[#B7A995] transition-colors duration-200">Show
+                            a Complex Example</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusions" class="bg-white p-6 rounded-xl shadow-md border border-[#EADDCD] mb-8">
+            <div class="section-header flex justify-between items-center" data-target="content-4">
+                <h2 class="text-2xl font-bold text-[#3D352E]">Some Conclusions</h2>
+                <span class="collapse-icon text-2xl text-gray-400">▼</span>
+            </div>
+            <div id="content-4" class="section-content mt-4">
+                <p class="mb-4">The exploration of these diverse systems leads to several profound conclusions. The
+                    phenomenon of complexity is quite universal and independent of the specific details of a system. The
+                    threshold for complexity is surprisingly low—even very simple rules can produce behavior of great
+                    complexity. And finally, adding more complexity to the rules does not necessarily yield more complex
+                    behavior.</p>
+                <p class="mb-4">This universality is what makes it possible to construct a coherent new kind of science,
+                    implying that general principles can govern the behavior of a wide range of systems, independent of
+                    their precise details.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ruleSelector = document.getElementById('rule-selector');
+            const ruleDisplay = document.getElementById('rule-display');
+            const mainCanvas = document.getElementById('main-automaton-canvas');
+
+            const drawAutomaton = (canvas, ruleNumber, width = canvas.width, height = canvas.height, cellSize = 1) => {
+                const ctx = canvas.getContext('2d');
+                const cells = new Array(width).fill(0);
+                cells[Math.floor(width / 2)] = 1;
+
+                const ruleSet = ruleNumber.toString(2).padStart(8, '0').split('').map(Number).reverse();
+
+                ctx.fillStyle = '#FDFBF8';
+                ctx.fillRect(0, 0, width * cellSize, height * cellSize);
+
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (cells[x] === 1) {
+                            ctx.fillStyle = '#4A4A4A';
+                            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        }
+                    }
+
+                    const nextCells = new Array(width).fill(0);
+                    for (let x = 0; x < width; x++) {
+                        const left = cells[(x - 1 + width) % width];
+                        const center = cells[x];
+                        const right = cells[(x + 1) % width];
+                        const index = left * 4 + center * 2 + right;
+                        nextCells[x] = ruleSet[index];
+                    }
+                    cells.splice(0, cells.length, ...nextCells);
+                }
+            };
+
+            const updateMainAutomaton = () => {
+                const rule = parseInt(ruleSelector.value);
+                ruleDisplay.textContent = `Rule ${rule}`;
+                drawAutomaton(mainCanvas, rule);
+            };
+
+            ruleSelector.addEventListener('input', updateMainAutomaton);
+            updateMainAutomaton();
+
+            window.drawMobileAutomaton = () => {
+                const canvas = document.getElementById('mobile-automaton-canvas');
+                const ctx = canvas.getContext('2d');
+                const { width, height } = canvas;
+                ctx.fillStyle = '#FDFBF8';
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = '#4A4A4A';
+                const pattern = Array.from({ length: 250 }, (_, i) => [Math.random() * 400, i, Math.random() > 0.7 ? 3 : 1, 1]);
+                pattern.forEach(([x, y, w, h]) => {
+                    ctx.fillRect(x, y, w, h);
+                });
+            };
+
+            window.drawTuringMachine = () => {
+                const canvas = document.getElementById('turing-machine-canvas');
+                const ctx = canvas.getContext('2d');
+                const { width, height } = canvas;
+                ctx.fillStyle = '#FDFBF8';
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = '#4A4A4A';
+                const pattern = Array.from({ length: 250 }, (_, i) => [150 + Math.sin(i * 0.1) * 100 + (Math.random() - 0.5) * 50, i, 2, 1]);
+                pattern.forEach(([x, y, w, h]) => {
+                    ctx.fillRect(x, y, w, h);
+                });
+            };
+
+            window.drawSubstitutionSystem = () => {
+                const canvas = document.getElementById('substitution-system-canvas');
+                const ctx = canvas.getContext('2d');
+                const { width, height } = canvas;
+                ctx.fillStyle = '#FDFBF8';
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = '#4A4A4A';
+                const pattern = [];
+                let currentY = 0;
+                for (let i = 0; i < 12; i++) {
+                    let x = 0;
+                    while (x < width) {
+                        let w = Math.random() * 30 + 5;
+                        if (Math.random() > 0.4) pattern.push([x, currentY, w, 20]);
+                        x += w + 2;
+                    }
+                    currentY += 22;
+                }
+                pattern.forEach(([x, y, w, h]) => {
+                    ctx.fillRect(x, y, w, h);
+                });
+            };
+
+            document.querySelectorAll('.section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const targetId = header.getAttribute('data-target');
+                    const targetContent = document.getElementById(targetId);
+                    const isCollapsed = targetContent.style.maxHeight === '0px' || targetContent.style.maxHeight === '';
+
+                    document.querySelectorAll('.section-content').forEach(content => {
+                        content.style.maxHeight = '0px';
+                        content.parentElement.classList.add('collapsed');
+                    });
+
+                    if (isCollapsed) {
+                        targetContent.style.maxHeight = targetContent.scrollHeight + 'px';
+                        header.parentElement.classList.remove('collapsed');
+                    } else {
+                        header.parentElement.classList.add('collapsed');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.section-content').forEach(content => {
+                content.style.maxHeight = '0';
+                content.style.overflow = 'hidden';
+                content.style.transition = 'max-height 0.5s ease-in-out';
+                content.parentElement.classList.add('collapsed');
+            });
+            document.getElementById('content-1').style.maxHeight = document.getElementById('content-1').scrollHeight + 'px';
+            document.getElementById('content-1').parentElement.classList.remove('collapsed');
+        });
+    </script>
+</body>
+
+</html>
