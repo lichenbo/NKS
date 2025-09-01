@@ -47,8 +47,13 @@ window.APP = window.APP || {};
             this.useWebGL = false;
             this.initializationError = null;
             
-            // Performance monitoring
-            this.performanceMonitor = new WebGLPerformanceMonitor(this);
+            // Performance monitoring using shared utility
+            // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
+            // Disable automatic fallbacks since slow FPS is intentional
+            this.performanceMonitor = new CAPerformanceMonitor({
+                fallbackThreshold: 0.1, // Extremely low threshold - only fallback on complete failure
+                onFallback: () => this.fallbackToCPU()
+            });
             
             // Initialize WebGL acceleration
             this.initializeWebGL();
@@ -452,10 +457,15 @@ window.APP = window.APP || {};
         }
 
         /**
-         * Override initAnimation to setup WebGL textures when available
+         * Override initAnimation to setup WebGL textures and update state manager
          */
         initAnimation() {
             super.initAnimation();
+            
+            // Update state manager with new dimensions
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+            }
             
             // Recreate textures for new dimensions
             if (this.useWebGL && this.gl) {
@@ -466,84 +476,7 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * Performance monitoring for WebGL cellular automata
-     * Tracks FPS, GPU utilization, and automatically triggers CPU fallback if needed
-     */
-    class WebGLPerformanceMonitor {
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.frameCount = 0;
-            this.lastTime = performance.now();
-            this.fps = 60;
-            this.averageFPS = 60;
-            this.renderTime = 0;
-            this.cpuFallbackThreshold = 25; // FPS threshold for fallback
-            this.measurements = [];
-            this.maxMeasurements = 60; // Keep 60 frame samples
-            
-            this.isMonitoring = false;
-        }
-
-        startMonitoring() {
-            this.isMonitoring = true;
-            this.lastTime = performance.now();
-        }
-
-        stopMonitoring() {
-            this.isMonitoring = false;
-        }
-
-        measureFrame(renderTime = 0) {
-            if (!this.isMonitoring) return;
-
-            const now = performance.now();
-            const frameTime = now - this.lastTime;
-            this.lastTime = now;
-
-            // Calculate current FPS
-            this.fps = 1000 / frameTime;
-            this.renderTime = renderTime;
-
-            // Store measurement
-            this.measurements.push(this.fps);
-            if (this.measurements.length > this.maxMeasurements) {
-                this.measurements.shift();
-            }
-
-            // Calculate average FPS
-            this.averageFPS = this.measurements.reduce((a, b) => a + b, 0) / this.measurements.length;
-
-            // Check for performance issues
-            this.frameCount++;
-            if (this.frameCount % 30 === 0) { // Check every 30 frames
-                if (this.averageFPS < this.cpuFallbackThreshold) {
-                    this.triggerCPUFallback();
-                }
-            }
-        }
-
-        triggerCPUFallback() {
-            if (this.canvas.useWebGL) {
-                console.warn(`WebGL performance insufficient (${this.averageFPS.toFixed(1)} FPS), switching to CPU`);
-                this.canvas.fallbackToCPU();
-            }
-        }
-
-        getPerformanceStats() {
-            return {
-                currentFPS: this.fps,
-                averageFPS: this.averageFPS,
-                renderTime: this.renderTime,
-                usingWebGL: this.canvas.useWebGL
-            };
-        }
-
-        cleanup() {
-            this.stopMonitoring();
-            this.measurements = [];
-        }
-    }
+    // Performance monitoring is now handled by shared CAPerformanceMonitor utility
 
     /**
      * WebGL Background Cellular Automata - Rule 30 with WebGL acceleration
@@ -553,18 +486,17 @@ window.APP = window.APP || {};
             super('cellular-automata-bg', 3, { animationSpeed: 200 });
             if (!this.canvas) return;
 
-            // Background uses only Rule 30
+            // Use shared utilities
             this.ruleNumber = 30;
-            this.rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
-            this.drawnRows = [];
+            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
+            this.stateManager = new AnimationStateManager(this.cols, this.rows);
 
             this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
 
         applyRule(left, center, right) {
-            const pattern = left * 4 + center * 2 + right;
-            return this.rule30[pattern];
+            return CellularAutomataRules.applyRule(left, center, right, this.rule);
         }
 
         async animate() {
@@ -589,82 +521,75 @@ window.APP = window.APP || {};
 
         async animateWithWebGL() {
             // Only clear if starting over
-            if (this.currentRow === 0) {
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
                 
                 // Upload initial grid to WebGL texture
-                this.uploadGridToTexture(this.grid);
+                this.uploadGridToTexture(this.stateManager.grid);
             }
 
             // Store current row for rendering
-            this.drawnRows[this.currentRow] = [...this.grid];
+            this.stateManager.storeCurrentGeneration();
 
-            // Render all stored rows
-            this.renderRows();
+            // Use shared renderer
+            CellularAutomataRenderer.renderBackgroundRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                this.offsetX,
+                this.offsetY
+            );
 
             // Calculate next generation using WebGL
-            if (this.currentRow < this.rows - 1) {
+            if (!this.stateManager.isAnimationComplete()) {
                 const nextGrid = await this.computeNextGenerationWebGL(this.ruleNumber);
-                this.grid = nextGrid;
-                this.currentRow++;
+                this.stateManager.grid = Array.from(nextGrid);
+                this.stateManager.currentRow++;
+                
+                // Keep compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             }
         }
 
         animateWithCPU() {
-            // Fallback to original CPU implementation
-            // Only clear if starting over
-            if (this.currentRow === 0) {
+            // Use shared state manager for CPU fallback
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
             }
 
-            // Store current row
-            this.drawnRows[this.currentRow] = [...this.grid];
+            // Store and render using shared utilities
+            this.stateManager.storeCurrentGeneration();
+            CellularAutomataRenderer.renderBackgroundRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                this.offsetX,
+                this.offsetY
+            );
 
-            // Render all stored rows
-            this.renderRows();
-
-            // Calculate next generation on CPU
-            if (this.currentRow < this.rows - 1) {
-                const newGrid = new Array(this.cols).fill(0);
-                for (let i = 0; i < this.cols; i++) {
-                    const left = this.grid[i - 1] || 0;
-                    const center = this.grid[i];
-                    const right = this.grid[i + 1] || 0;
-                    newGrid[i] = this.applyRule(left, center, right);
-                }
-                this.grid = newGrid;
-                this.currentRow++;
+            // Calculate next generation using shared CPU implementation
+            if (!this.stateManager.isAnimationComplete()) {
+                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
+                this.stateManager.advanceGeneration(nextGrid);
+                
+                // Keep compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             }
         }
 
-        renderRows() {
-            // Render all stored rows with golden gradient effect
-            for (let row = 0; row < this.drawnRows.length; row++) {
-                for (let col = 0; col < this.cols; col++) {
-                    if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
-                        // Create gradient effect based on position and age
-                        const distance = Math.sqrt(
-                            Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
-                        );
-                        const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
-                        const intensity = Math.max(0.2, 1 - distance / maxDistance);
-
-                        // Age effect - older rows fade
-                        const age = this.currentRow - row;
-                        const ageFactor = Math.max(0.1, 1 - age / (this.rows * 0.3));
-
-                        // Very subtle golden pattern
-                        const alpha = intensity * ageFactor * 0.08;
-                        const red = Math.floor(212 * intensity * ageFactor);
-                        const green = Math.floor(175 * intensity * ageFactor);
-                        const blue = Math.floor(55 * intensity * ageFactor);
-
-                        this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
-                    }
-                }
+        // Override initAnimation to update state manager
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
             }
         }
     }
@@ -681,55 +606,30 @@ window.APP = window.APP || {};
             });
             if (!this.canvas) return;
 
-            // Multiple cellular automata rules
-            this.headerRules = {
-                30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
-                90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal 
-                110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex
-                54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric
-                150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
-                126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
-            };
-
-            this.headerRuleKeys = Object.keys(this.headerRules);
-            this.headerRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
-            this.currentRuleNumber = parseInt(this.headerRuleKeys[this.headerRuleIndex]);
-            this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
-
-            this.drawnRows = [];
-
-            // Breathing effect variables
-            this.fadeDirection = 1; // 1 for fade in, -1 for fade out
-            this.globalAlpha = 0.3;
+            // Use shared utilities
+            this.currentRuleNumber = CellularAutomataRules.getRandomRule();
+            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
+            this.stateManager = new AnimationStateManager(this.cols, this.rows);
+            this.breathingEffect = new BreathingEffect();
 
             this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
 
         applyRule(left, center, right) {
-            const pattern = left * 4 + center * 2 + right;
-            return this.headerCurrentRule[pattern];
+            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
         }
 
         cycleToNextRule() {
-            // Choose a random rule that's different from current one
-            let newRuleIndex;
-            do {
-                newRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
-            } while (newRuleIndex === this.headerRuleIndex && this.headerRuleKeys.length > 1);
-
-            this.headerRuleIndex = newRuleIndex;
-            this.currentRuleNumber = parseInt(this.headerRuleKeys[this.headerRuleIndex]);
-            this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
-
-            console.log(`Header: Switching to Rule ${this.currentRuleNumber} (WebGL: ${this.useWebGL})`);
+            // Use shared utility to get different random rule
+            this.currentRuleNumber = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
+            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
 
             // Update UI with VFX
             if (typeof window !== 'undefined') {
                 if ('headerRuleName' in window) {
                     window.headerRuleName = this.currentRuleNumber.toString();
                 }
-                // Use VFX system if available, otherwise fallback to regular update
                 if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
                     window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
                 } else if (window.RuleIndicators) {
@@ -737,22 +637,17 @@ window.APP = window.APP || {};
                 }
             }
 
-            // Reset animation for new rule
+            // Reset animation state using shared utilities
             this.initAnimation();
-            this.drawnRows.length = 0;
+            this.stateManager.reset();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
 
         async animate() {
             const startTime = performance.now();
 
-            // Update global fade (breathing effect)
-            this.globalAlpha += this.fadeDirection * 0.01;
-            if (this.globalAlpha >= 0.6) {
-                this.fadeDirection = -1;
-            } else if (this.globalAlpha <= 0.2) {
-                this.fadeDirection = 1;
-            }
+            // Update breathing effect using shared utility
+            const currentAlpha = this.breathingEffect.update();
 
             // Use WebGL acceleration if available
             if (this.useWebGL && this.gl) {
@@ -773,25 +668,39 @@ window.APP = window.APP || {};
 
         async animateWithWebGL() {
             // Only clear if starting over
-            if (this.currentRow === 0) {
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
                 
                 // Upload initial grid to WebGL texture
-                this.uploadGridToTexture(this.grid);
+                this.uploadGridToTexture(this.stateManager.grid);
             }
 
             // Store current row for rendering
-            this.drawnRows[this.currentRow] = [...this.grid];
+            this.stateManager.storeCurrentGeneration();
 
-            // Render all stored rows
-            this.renderRows();
+            // Use shared renderer with breathing effect
+            const currentAlpha = this.breathingEffect.getCurrentAlpha();
+            CellularAutomataRenderer.renderHeaderRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                currentAlpha,
+                this.offsetX,
+                this.offsetY
+            );
 
             // Calculate next generation using WebGL
-            if (this.currentRow < this.rows - 1) {
+            if (!this.stateManager.isAnimationComplete()) {
                 const nextGrid = await this.computeNextGenerationWebGL(this.currentRuleNumber);
-                this.grid = nextGrid;
-                this.currentRow++;
+                this.stateManager.grid = Array.from(nextGrid);
+                this.stateManager.currentRow++;
+                
+                // Keep compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             } else {
                 // Cycle to next rule and restart after delay
                 setTimeout(() => {
@@ -801,30 +710,34 @@ window.APP = window.APP || {};
         }
 
         animateWithCPU() {
-            // Fallback to original CPU implementation
-            // Only clear if starting over
-            if (this.currentRow === 0) {
+            // Use shared state manager for CPU fallback
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
             }
 
-            // Store current row
-            this.drawnRows[this.currentRow] = [...this.grid];
+            // Store and render using shared utilities
+            this.stateManager.storeCurrentGeneration();
+            const currentAlpha = this.breathingEffect.getCurrentAlpha();
+            CellularAutomataRenderer.renderHeaderRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                currentAlpha,
+                this.offsetX,
+                this.offsetY
+            );
 
-            // Render all stored rows
-            this.renderRows();
-
-            // Calculate next generation on CPU
-            if (this.currentRow < this.rows - 1) {
-                const newGrid = new Array(this.cols).fill(0);
-                for (let i = 0; i < this.cols; i++) {
-                    const left = this.grid[i - 1] || 0;
-                    const center = this.grid[i];
-                    const right = this.grid[i + 1] || 0;
-                    newGrid[i] = this.applyRule(left, center, right);
-                }
-                this.grid = newGrid;
-                this.currentRow++;
+            // Calculate next generation using shared CPU implementation
+            if (!this.stateManager.isAnimationComplete()) {
+                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
+                this.stateManager.advanceGeneration(nextGrid);
+                
+                // Keep compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             } else {
                 // Cycle to next rule and restart after delay
                 setTimeout(() => {
@@ -833,32 +746,11 @@ window.APP = window.APP || {};
             }
         }
 
-        renderRows() {
-            // Render all stored rows with breathing golden effect
-            for (let row = 0; row < this.drawnRows.length; row++) {
-                for (let col = 0; col < this.cols; col++) {
-                    if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
-                        // Create gradient effect based on position and age
-                        const distance = Math.sqrt(
-                            Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
-                        );
-                        const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
-                        const intensity = Math.max(0.3, 1 - distance / maxDistance);
-
-                        // Age effect - older rows fade
-                        const age = this.currentRow - row;
-                        const ageFactor = Math.max(0.2, 1 - age / (this.rows * 0.4));
-
-                        // Golden pattern with breathing effect
-                        const alpha = intensity * ageFactor * this.globalAlpha;
-                        const red = Math.floor(212 * intensity * ageFactor);
-                        const green = Math.floor(175 * intensity * ageFactor);
-                        const blue = Math.floor(55 * intensity * ageFactor);
-
-                        this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(col * this.cellSize, row * this.cellSize, this.cellSize - 0.5, this.cellSize - 0.5);
-                    }
-                }
+        // Override initAnimation to update state manager
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
             }
         }
     }
@@ -875,7 +767,6 @@ window.APP = window.APP || {};
     // Expose to APP namespace
     APP.WebGLCellularAutomata = {
         WebGLCellularAutomataCanvas,
-        WebGLPerformanceMonitor,
         WebGLBackgroundCellularAutomata,
         WebGLHeaderCellularAutomata,
         initWebGLCellularAutomataBackground,

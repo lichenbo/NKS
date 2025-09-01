@@ -18,7 +18,7 @@
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     // Global variables for cellular automata
@@ -51,7 +51,7 @@ window.APP = window.APP || {};
         constructor(canvasId, cellSize, options = {}) {
             this.canvas = document.getElementById(canvasId);
             if (!this.canvas) return null;
-            
+
             this.ctx = this.canvas.getContext('2d');
             this.cellSize = cellSize;
             this.cols = 0;
@@ -59,15 +59,16 @@ window.APP = window.APP || {};
             this.grid = [];
             this.currentRow = 0;
             this.animationInterval = null;
-            
+
             // Options
             this.animationSpeed = options.animationSpeed || 200;
             this.resizeDebounce = options.resizeDebounce || 250;
             this.parentElement = options.parentElement || null;
-            
+            this.skipInitialAnimation = options.skipInitialAnimation || false;
+
             this.init();
         }
-        
+
         /**
          * Initialize canvas setup and event listeners
          * Time Complexity: O(1)
@@ -77,9 +78,13 @@ window.APP = window.APP || {};
         init() {
             this.setupCanvas();
             this.setupResizeListener();
-            this.initAnimation();
+            
+            // Allow subclasses to skip initial animation (e.g., for WebGL timing)
+            if (!this.skipInitialAnimation) {
+                this.initAnimation();
+            }
         }
-        
+
         setupCanvas() {
             if (this.parentElement) {
                 // Use parent element dimensions (for header)
@@ -92,15 +97,15 @@ window.APP = window.APP || {};
                 this.canvas.width = window.innerWidth;
                 this.canvas.height = window.innerHeight;
             }
-            
+
             // Set CSS dimensions to match canvas dimensions for 1:1 pixel ratio
             this.canvas.style.width = this.canvas.width + 'px';
             this.canvas.style.height = this.canvas.height + 'px';
-            
+
             // Ensure no image smoothing for crisp pixels
             this.ctx.imageSmoothingEnabled = false;
         }
-        
+
         setupResizeListener() {
             let resizeTimeout;
             const handleResize = () => {
@@ -108,46 +113,51 @@ window.APP = window.APP || {};
                 resizeTimeout = setTimeout(() => {
                     this.stopAnimation();
                     this.setupCanvas();
-                    this.initAnimation();
+                    this.updateCanvasDimensions();
+                    this.startAnimation();
                 }, this.resizeDebounce);
             };
-            
+
             window.addEventListener('resize', handleResize);
             this.handleResize = handleResize; // Store reference for cleanup
         }
-        
-        initAnimation() {
+
+        updateCanvasDimensions() {
             this.cols = Math.floor(this.canvas.width / this.cellSize);
             this.rows = Math.floor(this.canvas.height / this.cellSize);
-            
+
             // Calculate centering offsets
             this.offsetX = Math.floor((this.canvas.width - (this.cols * this.cellSize)) / 2);
             this.offsetY = Math.floor((this.canvas.height - (this.rows * this.cellSize)) / 2);
-            
+        }
+
+        initAnimation() {
+            this.updateCanvasDimensions();
+
             this.grid = new Array(this.cols).fill(0);
             this.grid[Math.floor(this.cols / 2)] = 1; // Start with center cell
             this.currentRow = 0;
         }
-        
+
         startAnimation() {
             if (this.animationInterval) {
                 clearInterval(this.animationInterval);
             }
             this.animationInterval = setInterval(() => this.animate(), this.animationSpeed);
         }
-        
+
         stopAnimation() {
             if (this.animationInterval) {
                 clearInterval(this.animationInterval);
                 this.animationInterval = null;
             }
         }
-        
+
         // Override this method in subclasses
         animate() {
             console.warn('animate() method should be overridden in subclass');
         }
-        
+
         // Override this method in subclasses  
         applyRule(left, center, right) {
             // Parameters are used by subclasses - suppress unused warning
@@ -155,7 +165,7 @@ window.APP = window.APP || {};
             console.warn('applyRule() method should be overridden in subclass');
             return 0;
         }
-        
+
         cleanup() {
             this.stopAnimation();
             if (this.handleResize) {
@@ -167,221 +177,162 @@ window.APP = window.APP || {};
     /**
      * Background Cellular Automata - Static Rule 30 implementation
      * Provides continuous Rule 30 evolution for background visual effect
-     * Uses golden color scheme with slow animation for subtle movement
+     * Uses shared utilities for rendering and state management
      */
     class BackgroundCellularAutomata extends CellularAutomataCanvas {
         constructor() {
             super('cellular-automata-bg', 3, { animationSpeed: 200 });
             if (!this.canvas) return;
-            
-            // Background uses only Rule 30 (static)
-            this.rule30 = [0, 1, 1, 1, 1, 0, 0, 0];
-            this.drawnRows = [];
-            
+
+            // Use shared utilities
+            this.ruleNumber = 30;
+            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
+            this.stateManager = new AnimationStateManager(this.cols, this.rows);
+
             // Initialize background rule indicator
             updateBackgroundRuleIndicator();
-            
+
             // Start animation
             this.startAnimation();
         }
-        
+
         applyRule(left, center, right) {
-            const pattern = left * 4 + center * 2 + right;
-            return this.rule30[pattern];
+            return CellularAutomataRules.applyRule(left, center, right, this.rule);
         }
-        
+
         animate() {
             // Only clear if starting over
-            if (this.currentRow === 0) {
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
             }
 
-            // Store current row
-            this.drawnRows[this.currentRow] = [...this.grid];
+            // Store current row for rendering
+            this.stateManager.storeCurrentGeneration();
 
-            // Draw all stored rows with golden gradient effect
-            for (let row = 0; row < this.drawnRows.length; row++) {
-                for (let col = 0; col < this.cols; col++) {
-                    if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
-                        // Create gradient effect based on position and age
-                        const distance = Math.sqrt(
-                            Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
-                        );
-                        const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
-                        const intensity = Math.max(0.2, 1 - distance / maxDistance);
+            // Use shared renderer with background settings
+            CellularAutomataRenderer.renderBackgroundRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                this.offsetX,
+                this.offsetY
+            );
 
-                        // Age effect - older rows fade
-                        const age = this.currentRow - row;
-                        const ageFactor = Math.max(0.1, 1 - age / (this.rows * 0.3));
-
-                        // Very subtle golden pattern
-                        const alpha = intensity * ageFactor * 0.08;
-                        const red = Math.floor(212 * intensity * ageFactor);
-                        const green = Math.floor(175 * intensity * ageFactor);
-                        const blue = Math.floor(55 * intensity * ageFactor);
-
-                        this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(
-                            col * this.cellSize + this.offsetX, 
-                            row * this.cellSize + this.offsetY, 
-                            this.cellSize - 0.5, 
-                            this.cellSize - 0.5
-                        );
-                    }
-                }
-            }
-
-            // Calculate next generation
-            if (this.currentRow < this.rows - 1) {
-                const newGrid = new Array(this.cols).fill(0);
-                for (let i = 0; i < this.cols; i++) {
-                    const left = this.grid[i - 1] || 0;
-                    const center = this.grid[i];
-                    const right = this.grid[i + 1] || 0;
-                    newGrid[i] = this.applyRule(left, center, right);
-                }
-                this.grid = newGrid;
-                this.currentRow++;
+            // Calculate next generation using shared utilities
+            if (!this.stateManager.isAnimationComplete()) {
+                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
+                this.stateManager.advanceGeneration(nextGrid);
+                
+                // Keep grid in sync for compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             }
             // Background animation stops when complete - pattern stays static
+        }
+
+        // Override updateCanvasDimensions to update state manager
+        updateCanvasDimensions() {
+            super.updateCanvasDimensions();
+            if (this.stateManager) {
+                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
+            }
+        }
+
+        // Override initAnimation to update state manager
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+            }
         }
     }
 
     /**
      * Header Cellular Automata - Cycling through multiple rules
      * Implements multiple Elementary CA rules with automatic cycling
-     * Provides dynamic visual variety in header with breathing animation
+     * Uses shared utilities for rule management, rendering, and breathing animation
      */
     class HeaderCellularAutomata extends CellularAutomataCanvas {
         constructor() {
-            super('header-cellular-automata', 3, { 
-                animationSpeed: 200, 
+            super('header-cellular-automata', 3, {
+                animationSpeed: 200,
                 parentElement: true,
-                resizeDebounce: 250 
+                resizeDebounce: 250
             });
             if (!this.canvas) return;
-            
-            // Multiple cellular automata rules
-            this.headerRules = {
-                30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic
-                90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal 
-                110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex
-                54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric
-                150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR
-                126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense
-            };
-            
-            this.headerRuleKeys = Object.keys(this.headerRules);
-            this.headerRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
-            this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
-            
-            this.drawnRows = [];
-            
-            // Breathing effect variables
-            this.fadeDirection = 1; // 1 for fade in, -1 for fade out
-            this.globalAlpha = 0.3;
-            
+
+            // Use shared utilities
+            this.currentRuleNumber = CellularAutomataRules.getRandomRule();
+            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
+            this.stateManager = new AnimationStateManager(this.cols, this.rows);
+            this.breathingEffect = new BreathingEffect();
+
             // Update global rule name for indicator
-            headerRuleName = this.headerRuleKeys[this.headerRuleIndex];
-            console.log(`HeaderCA Constructor: Setting initial rule to ${headerRuleName}`);
-            
+            headerRuleName = this.currentRuleNumber.toString();
+
             // Initialize header rule indicator
             updateHeaderRuleIndicator();
-            console.log(`HeaderCA Constructor: Called updateHeaderRuleIndicator with rule ${headerRuleName}`);
-            
+
             // Start animation
             this.startAnimation();
         }
-        
-        applyRule(left, center, right) {
-            const pattern = left * 4 + center * 2 + right;
-            return this.headerCurrentRule[pattern];
-        }
-        
-        cycleToNextRule() {
-            // Choose a random rule that's different from current one
-            let newRuleIndex;
-            do {
-                newRuleIndex = Math.floor(Math.random() * this.headerRuleKeys.length);
-            } while (newRuleIndex === this.headerRuleIndex && this.headerRuleKeys.length > 1);
 
-            this.headerRuleIndex = newRuleIndex;
-            this.headerCurrentRule = this.headerRules[this.headerRuleKeys[this.headerRuleIndex]];
-            const newRuleName = this.headerRuleKeys[this.headerRuleIndex];
+        applyRule(left, center, right) {
+            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
+        }
+
+        cycleToNextRule() {
+            // Get a different random rule
+            this.currentRuleNumber = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
+            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
+            const newRuleName = this.currentRuleNumber.toString();
             headerRuleName = newRuleName; // Update global variable
-            console.log(`Header: Switching to Rule ${newRuleName}`);
 
             // Update header rule indicator with VFX - pass rule directly
             updateHeaderRuleIndicatorWithVFX(newRuleName);
 
-            // Reset animation for new rule
+            // Reset animation state for new rule
             this.initAnimation();
-            this.drawnRows.length = 0;
+            this.stateManager.reset();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
-        
+
         animate() {
-            // Update global fade (breathing effect)
-            this.globalAlpha += this.fadeDirection * 0.01;
-            if (this.globalAlpha >= 0.6) {
-                this.fadeDirection = -1;
-            } else if (this.globalAlpha <= 0.2) {
-                this.fadeDirection = 1;
-            }
+            // Update breathing effect
+            const currentAlpha = this.breathingEffect.update();
 
             // Only clear if starting over
-            if (this.currentRow === 0) {
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.drawnRows.length = 0;
+                this.stateManager.drawnRows.length = 0;
             }
 
-            // Store current row
-            this.drawnRows[this.currentRow] = [...this.grid];
+            // Store current row for rendering
+            this.stateManager.storeCurrentGeneration();
 
-            // Draw all stored rows with breathing golden effect
-            for (let row = 0; row < this.drawnRows.length; row++) {
-                for (let col = 0; col < this.cols; col++) {
-                    if (this.drawnRows[row] && this.drawnRows[row][col] === 1) {
-                        // Create gradient effect based on position and age
-                        const distance = Math.sqrt(
-                            Math.pow(col - this.cols / 2, 2) + Math.pow(row - this.currentRow / 2, 2)
-                        );
-                        const maxDistance = Math.sqrt(this.cols * this.cols / 4 + this.rows * this.rows / 4);
-                        const intensity = Math.max(0.3, 1 - distance / maxDistance);
+            // Use shared renderer with header settings and breathing effect
+            CellularAutomataRenderer.renderHeaderRows(
+                this.ctx,
+                this.stateManager.drawnRows,
+                this.cols,
+                this.stateManager.currentRow,
+                this.cellSize,
+                currentAlpha,
+                this.offsetX,
+                this.offsetY
+            );
 
-                        // Age effect - older rows fade
-                        const age = this.currentRow - row;
-                        const ageFactor = Math.max(0.2, 1 - age / (this.rows * 0.4));
-
-                        // Golden pattern with breathing effect
-                        const alpha = intensity * ageFactor * this.globalAlpha;
-                        const red = Math.floor(212 * intensity * ageFactor);
-                        const green = Math.floor(175 * intensity * ageFactor);
-                        const blue = Math.floor(55 * intensity * ageFactor);
-
-                        this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        this.ctx.fillRect(
-                            col * this.cellSize + this.offsetX, 
-                            row * this.cellSize + this.offsetY, 
-                            this.cellSize - 0.5, 
-                            this.cellSize - 0.5
-                        );
-                    }
-                }
-            }
-
-            // Calculate next generation
-            if (this.currentRow < this.rows - 1) {
-                const newGrid = new Array(this.cols).fill(0);
-                for (let i = 0; i < this.cols; i++) {
-                    const left = this.grid[i - 1] || 0;
-                    const center = this.grid[i];
-                    const right = this.grid[i + 1] || 0;
-                    newGrid[i] = this.applyRule(left, center, right);
-                }
-                this.grid = newGrid;
-                this.currentRow++;
+            // Calculate next generation using shared utilities
+            if (!this.stateManager.isAnimationComplete()) {
+                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
+                this.stateManager.advanceGeneration(nextGrid);
+                
+                // Keep grid in sync for compatibility
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
             } else {
                 // Cycle to next rule and restart after delay
                 setTimeout(() => {
@@ -389,14 +340,30 @@ window.APP = window.APP || {};
                 }, 1800);
             }
         }
+
+        // Override updateCanvasDimensions to update state manager
+        updateCanvasDimensions() {
+            super.updateCanvasDimensions();
+            if (this.stateManager) {
+                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
+            }
+        }
+
+        // Override initAnimation to update state manager
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+            }
+        }
     }
 
     // Rule indicator update functions (consolidated)
     const RuleIndicators = {
-        update: function(type, ruleNumber) {
+        update: function (type, ruleNumber) {
             const elementId = type === 'background' ? 'bg-rule-text' : 'header-rule-text';
             const element = document.getElementById(elementId);
-            
+
             console.log(`RuleIndicators.update called:`, {
                 type: type,
                 ruleNumber: ruleNumber,
@@ -406,7 +373,7 @@ window.APP = window.APP || {};
                 currentLanguage: window.currentLanguage,
                 elementText: element ? element.textContent : 'N/A'
             });
-            
+
             if (element && window.translations && window.currentLanguage) {
                 const currentLanguage = window.currentLanguage;
                 const typeKey = type === 'background' ? 'rule-bg' : 'rule-header';
@@ -432,7 +399,7 @@ window.APP = window.APP || {};
     function updateHeaderRuleIndicatorWithVFX(ruleName) {
         const element = document.getElementById('header-rule-text');
         const ruleToUse = ruleName || headerRuleName; // Use parameter or fallback to global
-        
+
         console.log('VFX Debug:', {
             element: !!element,
             APP: !!window.APP,
@@ -442,7 +409,7 @@ window.APP = window.APP || {};
             usingRule: ruleToUse,
             currentText: element ? element.textContent : 'N/A'
         });
-        
+
         if (element && window.APP && window.APP.RuleIndicatorVFX) {
             // Apply random VFX effect with the correct rule
             window.APP.RuleIndicatorVFX.applyRandomEffect(element, ruleToUse, () => {
@@ -497,20 +464,19 @@ window.APP = window.APP || {};
 
     // GPU Manager for acceleration
     let gpuManager = null;
-    let useGPUAcceleration = true; // Default to GPU when available
 
     // Initialization functions
     async function initCellularAutomataBackground() {
-        if (useGPUAcceleration && window.APP && window.APP.GPUCellularAutomata) {
+        if (window.APP && window.APP.GPUCellularAutomata) {
             try {
-                // Try GPU acceleration first
+                // Initialize GPU manager if not already done
                 if (!gpuManager) {
                     gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
                     await gpuManager.initialize();
                 }
-                
+
                 const gpuBackground = await gpuManager.createBackgroundCellularAutomata();
-                console.log('Background: Using GPU acceleration');
+                console.log(`Background: Using ${gpuManager.capabilities.selectedPath.toUpperCase()} acceleration`);
                 updateGPUStatusIndicator();
                 return gpuBackground;
             } catch (error) {
@@ -518,7 +484,7 @@ window.APP = window.APP || {};
                 // Fall through to CPU implementation
             }
         }
-        
+
         // CPU fallback
         console.log('Background: Using CPU implementation');
         updateGPUStatusIndicator('CPU');
@@ -526,16 +492,16 @@ window.APP = window.APP || {};
     }
 
     async function initHeaderCellularAutomata() {
-        if (useGPUAcceleration && window.APP && window.APP.GPUCellularAutomata) {
+        if (window.APP && window.APP.GPUCellularAutomata) {
             try {
-                // Try GPU acceleration first
+                // Initialize GPU manager if not already done
                 if (!gpuManager) {
                     gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
                     await gpuManager.initialize();
                 }
-                
+
                 const gpuHeader = await gpuManager.createHeaderCellularAutomata();
-                console.log('Header: Using GPU acceleration');
+                console.log(`Header: Using ${gpuManager.capabilities.selectedPath.toUpperCase()} acceleration`);
                 updateGPUStatusIndicator();
                 return gpuHeader;
             } catch (error) {
@@ -543,7 +509,7 @@ window.APP = window.APP || {};
                 // Fall through to CPU implementation
             }
         }
-        
+
         // CPU fallback
         console.log('Header: Using CPU implementation');
         updateGPUStatusIndicator('CPU');
@@ -551,13 +517,21 @@ window.APP = window.APP || {};
     }
 
     // GPU acceleration control functions
-    function setGPUAcceleration(enabled) {
-        useGPUAcceleration = enabled;
-        console.log(`GPU acceleration ${enabled ? 'enabled' : 'disabled'}`);
+    function setGPUAcceleration(path = 'auto') {
+        if (gpuManager) {
+            // Normalize legacy boolean values
+            if (path === false) path = 'cpu';
+            if (path === true) path = 'auto';
+            if (path === 'webgl') path = 'webgl2';
+            
+            gpuManager.setAccelerationPath(path);
+        } else {
+            console.log(`GPU acceleration will be set to ${path === false || path === 'cpu' ? 'CPU' : path.toUpperCase()} on next initialization`);
+        }
     }
 
     function isGPUAccelerationEnabled() {
-        return useGPUAcceleration;
+        return gpuManager ? gpuManager.capabilities.selectedPath !== 'cpu' : true;
     }
 
     function getGPUManager() {
@@ -604,15 +578,16 @@ window.APP = window.APP || {};
     window.RuleIndicators = RuleIndicators; // Expose for WebGPU module access
 
     // Development helper functions - expose to global scope for console access
-    window.toggleGPUAcceleration = function() {
-        const newState = !useGPUAcceleration;
-        setGPUAcceleration(newState);
-        console.log(`GPU acceleration toggled: ${newState ? 'ON' : 'OFF'}`);
+    window.toggleGPUAcceleration = function () {
+        const currentlyEnabled = isGPUAccelerationEnabled();
+        const newPath = currentlyEnabled ? 'cpu' : 'auto';
+        setGPUAcceleration(newPath);
+        console.log(`GPU acceleration toggled: ${currentlyEnabled ? 'OFF' : 'ON'}`);
         console.log('Reload the page to see the effect.');
-        return newState;
+        return !currentlyEnabled;
     };
 
-    window.checkGPUStatus = async function() {
+    window.checkGPUStatus = async function () {
         try {
             const capabilities = await getGPUCapabilities();
             if (capabilities) {

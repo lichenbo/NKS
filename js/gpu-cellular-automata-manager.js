@@ -18,7 +18,7 @@
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     /**
@@ -33,7 +33,7 @@ window.APP = window.APP || {};
                 webgl1: false,
                 cpu: true
             };
-            
+
             this.selectedPath = 'cpu';
             this.detectionResults = {};
             this.performanceBenchmark = null;
@@ -45,22 +45,22 @@ window.APP = window.APP || {};
          */
         async detectCapabilities() {
             console.log('Starting GPU capability detection...');
-            
+
             // Test WebGPU support
             await this.testWebGPUSupport();
-            
+
             // Test WebGL 2.0 support
             this.testWebGL2Support();
-            
+
             // Test WebGL 1.0 support (fallback)
             this.testWebGL1Support();
-            
+
             // Determine optimal path
             this.selectOptimalPath();
-            
+
             // Log results
             this.logDetectionResults();
-            
+
             return {
                 capabilities: this.capabilities,
                 selectedPath: this.selectedPath,
@@ -80,7 +80,7 @@ window.APP = window.APP || {};
 
             try {
                 const adapter = await navigator.gpu.requestAdapter();
-                
+
                 if (!adapter) {
                     this.detectionResults.webgpu = { available: false, reason: 'No suitable adapter' };
                     return false;
@@ -100,7 +100,7 @@ window.APP = window.APP || {};
                 `;
 
                 const shaderModule = device.createShaderModule({ code: testShader });
-                
+
                 this.capabilities.webgpu = true;
                 this.detectionResults.webgpu = {
                     available: true,
@@ -113,10 +113,10 @@ window.APP = window.APP || {};
                 return true;
 
             } catch (error) {
-                this.detectionResults.webgpu = { 
-                    available: false, 
+                this.detectionResults.webgpu = {
+                    available: false,
                     reason: 'Initialization failed',
-                    error: error.message 
+                    error: error.message
                 };
                 return false;
             }
@@ -131,20 +131,20 @@ window.APP = window.APP || {};
                 const canvas = document.createElement('canvas');
                 canvas.width = 1;
                 canvas.height = 1;
-                
+
                 let gl = canvas.getContext('webgl2', {
                     alpha: false,
                     antialias: false,
                     depth: false,
                     stencil: false
                 });
-                
+
                 // Try fallback if initial context creation fails
                 if (!gl) {
-                    gl = canvas.getContext('webgl2') || 
-                         canvas.getContext('experimental-webgl2');
+                    gl = canvas.getContext('webgl2') ||
+                        canvas.getContext('experimental-webgl2');
                 }
-                
+
                 if (!gl) {
                     this.detectionResults.webgl2 = { available: false, reason: 'WebGL 2.0 context not available' };
                     return false;
@@ -160,8 +160,8 @@ window.APP = window.APP || {};
                 gl.compileShader(vertexShader);
 
                 if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                    this.detectionResults.webgl2 = { 
-                        available: false, 
+                    this.detectionResults.webgl2 = {
+                        available: false,
                         reason: 'Shader compilation failed',
                         error: gl.getShaderInfoLog(vertexShader)
                     };
@@ -184,10 +184,10 @@ window.APP = window.APP || {};
                 return true;
 
             } catch (error) {
-                this.detectionResults.webgl2 = { 
-                    available: false, 
+                this.detectionResults.webgl2 = {
+                    available: false,
                     reason: 'WebGL 2.0 test failed',
-                    error: error.message 
+                    error: error.message
                 };
                 return false;
             }
@@ -201,7 +201,7 @@ window.APP = window.APP || {};
             try {
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                
+
                 if (gl) {
                     this.capabilities.webgl1 = true;
                     this.detectionResults.webgl1 = {
@@ -218,10 +218,10 @@ window.APP = window.APP || {};
                 return this.capabilities.webgl1;
 
             } catch (error) {
-                this.detectionResults.webgl1 = { 
-                    available: false, 
+                this.detectionResults.webgl1 = {
+                    available: false,
                     reason: 'WebGL 1.0 test failed',
-                    error: error.message 
+                    error: error.message
                 };
                 return false;
             }
@@ -232,19 +232,24 @@ window.APP = window.APP || {};
          */
         selectOptimalPath() {
             // Check if WebGPU actually worked (no initialization errors)
-            const webgpuWorking = this.capabilities.webgpu && 
-                this.detectionResults.webgpu && 
-                this.detectionResults.webgpu.available && 
+            const webgpuWorking = this.capabilities.webgpu &&
+                this.detectionResults.webgpu &&
+                this.detectionResults.webgpu.available &&
                 !this.detectionResults.webgpu.error;
-                
+
+            // Prefer WebGPU as default when available
             if (webgpuWorking) {
                 this.selectedPath = 'webgpu';
+                console.log('🚀 Using WebGPU acceleration (default)');
             } else if (this.capabilities.webgl2) {
                 this.selectedPath = 'webgl2';
+                console.log('⚡ Using WebGL2 acceleration (WebGPU not available)');
             } else if (this.capabilities.webgl1) {
                 this.selectedPath = 'webgl1';
+                console.log('⚡ Using WebGL1 acceleration (fallback)');
             } else {
                 this.selectedPath = 'cpu';
+                console.log('🔧 Using CPU acceleration (no GPU available)');
             }
         }
 
@@ -254,21 +259,21 @@ window.APP = window.APP || {};
         logDetectionResults() {
             console.group('GPU Capability Detection Results');
             console.log(`Selected path: ${this.selectedPath.toUpperCase()}`);
-            
+
             Object.entries(this.capabilities).forEach(([api, available]) => {
                 const status = available ? '✅' : '❌';
                 const details = this.detectionResults[api];
                 console.log(`${status} ${api.toUpperCase()}: ${available ? 'Available' : 'Not available'}`);
-                
+
                 if (details && details.reason) {
                     console.log(`   Reason: ${details.reason}`);
                 }
-                
+
                 if (details && details.error) {
                     console.log(`   Error: ${details.error}`);
                 }
             });
-            
+
             console.groupEnd();
         }
 
@@ -352,7 +357,7 @@ window.APP = window.APP || {};
 
             this.isRunning = false;
             this.logBenchmarkResults();
-            
+
             return this.results;
         }
 
@@ -541,25 +546,25 @@ window.APP = window.APP || {};
          */
         logBenchmarkResults() {
             console.group('GPU Performance Benchmark Results');
-            
+
             Object.entries(this.results).forEach(([gridSize, results]) => {
                 console.group(`Grid Size: ${gridSize}x1`);
-                
+
                 Object.entries(results).forEach(([implementation, result]) => {
                     if (result.error) {
                         console.log(`❌ ${implementation}: ${result.error}`);
                     } else {
-                        const speedup = implementation !== 'cpu' && results.cpu ? 
-                            (result.iterationsPerSecond / results.cpu.iterationsPerSecond).toFixed(1) : 
+                        const speedup = implementation !== 'cpu' && results.cpu ?
+                            (result.iterationsPerSecond / results.cpu.iterationsPerSecond).toFixed(1) :
                             '1.0';
-                        
+
                         console.log(`✅ ${implementation}: ${result.iterationsPerSecond.toFixed(1)} iter/sec (${speedup}x speedup)`);
                     }
                 });
-                
+
                 console.groupEnd();
             });
-            
+
             console.groupEnd();
         }
     }
@@ -629,14 +634,14 @@ window.APP = window.APP || {};
                             return new APP.WebGPUCellularAutomata.WebGPUBackgroundCellularAutomata(canvasId);
                         }
                         break;
-                        
+
                     case 'webgl2':
                         if (APP.WebGLCellularAutomata) {
                             console.log('Creating WebGL background cellular automata');
                             return new APP.WebGLCellularAutomata.WebGLBackgroundCellularAutomata();
                         }
                         break;
-                        
+
                     default:
                         console.log('Creating CPU background cellular automata');
                         return new APP.CellularAutomata.BackgroundCellularAutomata();
@@ -669,14 +674,14 @@ window.APP = window.APP || {};
                             return new APP.WebGPUCellularAutomata.WebGPUHeaderCellularAutomata(canvasId);
                         }
                         break;
-                        
+
                     case 'webgl2':
                         if (APP.WebGLCellularAutomata) {
                             console.log('Creating WebGL header cellular automata');
                             return new APP.WebGLCellularAutomata.WebGLHeaderCellularAutomata();
                         }
                         break;
-                        
+
                     default:
                         console.log('Creating CPU header cellular automata');
                         return new APP.CellularAutomata.HeaderCellularAutomata();
@@ -708,6 +713,26 @@ window.APP = window.APP || {};
                 browserInfo: this.detector.getBrowserInfo()
             };
         }
+
+        /**
+         * Override the selected GPU path
+         * @param {string} path - 'cpu', 'webgl2', 'webgpu', or 'auto' for auto-detection
+         */
+        setAccelerationPath(path) {
+            if (!this.capabilities) {
+                console.warn('GPU manager not initialized yet');
+                return;
+            }
+
+            if (path === 'auto') {
+                this.detector.selectOptimalPath();
+                this.capabilities.selectedPath = this.detector.selectedPath;
+            } else {
+                this.capabilities.selectedPath = path;
+            }
+            
+            console.log(`GPU acceleration path set to: ${this.capabilities.selectedPath.toUpperCase()}`);
+        }
     }
 
     // Create global manager instance
@@ -726,7 +751,7 @@ window.APP = window.APP || {};
     async function initOptimalCellularAutomata() {
         const backgroundCA = await initGPUCellularAutomataBackground();
         const headerCA = await initGPUHeaderCellularAutomata();
-        
+
         return {
             background: backgroundCA,
             header: headerCA,
