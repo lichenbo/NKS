@@ -1,781 +1,206 @@
-// gpu/webgl-cellular-automata.js
+// js/webgl-cellular-automata.js
 
 /**
- * WebGL Cellular Automata Implementation for NKS Project
- * High-performance GPU-accelerated cellular automata using WebGL 2.0 fragment shaders
- * 
- * Features:
- * - Fragment shader-based cellular automata evolution using ping-pong textures
- * - Support for multiple Elementary CA rules (30, 90, 110, 54, 150, 126)
- * - Automatic fallback to CPU for unsupported browsers
- * - Performance monitoring and adaptive quality
- * - Memory-efficient texture management
- * 
- * Browser Support: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+ (93% coverage)
- * Performance: 5-20x improvement over CPU for large grids
- * 
- * Usage: Extends existing CellularAutomataCanvas with WebGL acceleration
+ * @file WebGL 2.0 runner for Cellular Automata.
+ * This file provides a WebGL-based computation backend for the AutomataEngine.
+ * It uses fragment shaders and ping-pong textures to compute cellular automata
+ * generations on the GPU.
  */
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     /**
-     * WebGL-accelerated Cellular Automata Canvas
-     * Extends base CellularAutomataCanvas with WebGL 2.0 fragment shader acceleration
-     * Uses texture ping-pong for efficient GPU-based cellular automata computation
+     * A runner that computes cellular automata generations using WebGL 2.0.
+     * It is designed to be used by the AutomataAnimator and conforms to the
+     * runner interface.
      */
-    class WebGLCellularAutomataCanvas extends APP.CellularAutomata.CellularAutomataCanvas {
-        constructor(canvasId, cellSize, options = {}) {
-            super(canvasId, cellSize, options);
-            
-            // WebGL specific properties
+    class WebGLRunner {
+        constructor(options = {}) {
+            this.cols = options.cols || 0;
+            this.rows = options.rows || 1; // 1D automata
             this.gl = null;
             this.shaderProgram = null;
-            this.vertexBuffer = null;
-            this.frameBuffers = [];
             this.textures = [];
+            this.frameBuffers = [];
             this.currentTextureIndex = 0;
-            
-            // Shader locations
-            this.uniformLocations = {};
-            this.attributeLocations = {};
-            
-            // GPU state
-            this.useWebGL = false;
-            this.initializationError = null;
-            
-            // Performance monitoring using shared utility
-            // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
-            // Disable automatic fallbacks since slow FPS is intentional
-            this.performanceMonitor = new CAPerformanceMonitor({
-                fallbackThreshold: 0.1, // Extremely low threshold - only fallback on complete failure
-                onFallback: () => this.fallbackToCPU()
-            });
-            
-            // Initialize WebGL acceleration
-            this.initializeWebGL();
+
+            this.init();
         }
 
-        /**
-         * Initialize WebGL 2.0 context and setup GPU resources
-         * @returns {boolean} True if WebGL is available and initialized
-         */
-        initializeWebGL() {
-            // Get WebGL 2.0 context
-            this.gl = this.canvas.getContext('webgl2', {
-                alpha: false,
-                antialias: false,
-                depth: false,
-                stencil: false,
-                preserveDrawingBuffer: false
-            });
-
+        init() {
+            const canvas = document.createElement('canvas');
+            this.gl = canvas.getContext('webgl2', { antialias: false, depth: false, stencil: false });
             if (!this.gl) {
-                // Try fallback options
-                this.gl = this.canvas.getContext('webgl2') || 
-                          this.canvas.getContext('experimental-webgl2');
-                
-                if (!this.gl) {
-                    console.log('WebGL 2.0 not supported in this browser');
-                    console.log('Canvas:', this.canvas);
-                    console.log('Canvas ID:', this.canvas?.id);
-                    return false;
-                }
+                throw new Error('WebGL 2.0 not supported.');
             }
-
-            try {
-                // Setup shaders and WebGL state
-                this.setupShaders();
-                this.setupGeometry();
-                this.setupTextures();
-                this.setupFramebuffers();
-                
-                // Handle context loss
-                this.canvas.addEventListener('webglcontextlost', (event) => {
-                    event.preventDefault();
-                    console.warn('WebGL context lost');
-                    this.useWebGL = false;
-                    this.fallbackToCPU();
-                });
-
-                this.canvas.addEventListener('webglcontextrestored', () => {
-                    console.log('WebGL context restored, reinitializing');
-                    this.initializeWebGL();
-                });
-
-                this.useWebGL = true;
-                console.log('WebGL cellular automata acceleration enabled');
-                return true;
-
-            } catch (error) {
-                console.error('WebGL initialization failed:', error);
-                this.initializationError = error;
-                return false;
-            }
+            this.setupShaders();
+            this.setupGeometry();
+            this.setupResources();
         }
 
-        /**
-         * Setup vertex and fragment shaders for cellular automata computation
-         */
+        setupResources() {
+            this.cleanupTexturesAndFramebuffers();
+            this.setupTextures();
+            this.setupFramebuffers();
+        }
+
+        updateRule(ruleNumber) {
+            // WebGL runner gets rule passed in computeNextGeneration
+            // No state to update here, but method must exist for interface
+        }
+
         setupShaders() {
-            const vertexShaderSource = `#version 300 es
+            const vs = `#version 300 es
                 precision highp float;
-                
                 in vec2 a_position;
-                in vec2 a_texCoord;
-                
                 out vec2 v_texCoord;
-                
                 void main() {
                     gl_Position = vec4(a_position, 0.0, 1.0);
-                    v_texCoord = a_texCoord;
-                }
-            `;
+                    v_texCoord = a_position * 0.5 + 0.5;
+                }`;
 
-            const fragmentShaderSource = `#version 300 es
+            const fs = `#version 300 es
                 precision highp float;
-                
                 uniform sampler2D u_currentGeneration;
                 uniform vec2 u_textureSize;
                 uniform float u_rule[8];
-                
                 in vec2 v_texCoord;
                 out vec4 fragColor;
-                
+
                 void main() {
                     vec2 onePixel = 1.0 / u_textureSize;
-                    
-                    // Sample left, center, right neighbors (with wraparound)
-                    float left = texture(u_currentGeneration, 
-                        vec2(mod(v_texCoord.x - onePixel.x, 1.0), v_texCoord.y)).r;
+                    float left = texture(u_currentGeneration, v_texCoord - vec2(onePixel.x, 0.0)).r;
                     float center = texture(u_currentGeneration, v_texCoord).r;
-                    float right = texture(u_currentGeneration, 
-                        vec2(mod(v_texCoord.x + onePixel.x, 1.0), v_texCoord.y)).r;
-                    
-                    // Convert to binary values
-                    int leftBit = left > 0.5 ? 1 : 0;
-                    int centerBit = center > 0.5 ? 1 : 0;
-                    int rightBit = right > 0.5 ? 1 : 0;
-                    
-                    // Calculate rule index (0-7)
-                    int ruleIndex = leftBit * 4 + centerBit * 2 + rightBit;
-                    
-                    // Apply cellular automata rule
+                    float right = texture(u_currentGeneration, v_texCoord + vec2(onePixel.x, 0.0)).r;
+
+                    int ruleIndex = int(left * 4.0 + center * 2.0 + right);
                     float result = u_rule[ruleIndex];
-                    
-                    fragColor = vec4(result, result, result, 1.0);
-                }
-            `;
+                    fragColor = vec4(result, 0.0, 0.0, 1.0);
+                }`;
 
-            // Compile shaders
-            const vertexShader = this.compileShader(vertexShaderSource, this.gl.VERTEX_SHADER);
-            const fragmentShader = this.compileShader(fragmentShaderSource, this.gl.FRAGMENT_SHADER);
-
-            // Create and link program
-            this.shaderProgram = this.gl.createProgram();
-            this.gl.attachShader(this.shaderProgram, vertexShader);
-            this.gl.attachShader(this.shaderProgram, fragmentShader);
-            this.gl.linkProgram(this.shaderProgram);
-
-            if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
-                throw new Error('Shader program linking failed: ' + this.gl.getProgramInfoLog(this.shaderProgram));
-            }
-
-            // Get uniform and attribute locations
+            this.shaderProgram = this.createProgram(vs, fs);
             this.uniformLocations = {
                 currentGeneration: this.gl.getUniformLocation(this.shaderProgram, 'u_currentGeneration'),
                 textureSize: this.gl.getUniformLocation(this.shaderProgram, 'u_textureSize'),
-                rule: this.gl.getUniformLocation(this.shaderProgram, 'u_rule')
+                rule: this.gl.getUniformLocation(this.shaderProgram, 'u_rule'),
             };
-
-            this.attributeLocations = {
-                position: this.gl.getAttribLocation(this.shaderProgram, 'a_position'),
-                texCoord: this.gl.getAttribLocation(this.shaderProgram, 'a_texCoord')
-            };
-
-            // Clean up individual shaders
-            this.gl.deleteShader(vertexShader);
-            this.gl.deleteShader(fragmentShader);
         }
 
-        /**
-         * Compile a single shader
-         * @param {string} source - Shader source code
-         * @param {number} type - Shader type (VERTEX_SHADER or FRAGMENT_SHADER)
-         * @returns {WebGLShader} Compiled shader
-         */
+        setupGeometry() {
+            const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+            const buffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
+
+            const vao = this.gl.createVertexArray();
+            this.gl.bindVertexArray(vao);
+            const posLocation = this.gl.getAttribLocation(this.shaderProgram, 'a_position');
+            this.gl.enableVertexAttribArray(posLocation);
+            this.gl.vertexAttribPointer(posLocation, 2, this.gl.FLOAT, false, 0, 0);
+            this.vao = vao;
+        }
+
+        setupTextures() {
+            for (let i = 0; i < 2; i++) {
+                const texture = this.gl.createTexture();
+                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.R8, this.cols, 1, 0, this.gl.RED, this.gl.UNSIGNED_BYTE, null);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                this.textures.push(texture);
+            }
+        }
+
+        setupFramebuffers() {
+            for (let i = 0; i < 2; i++) {
+                const fbo = this.gl.createFramebuffer();
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fbo);
+                this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures[i], 0);
+                this.frameBuffers.push(fbo);
+            }
+        }
+
+        async computeNextGeneration(grid, ruleNumber) {
+            if (grid.length !== this.cols) {
+                this.cols = grid.length;
+                this.setupResources();
+            }
+
+            const ruleArray = new Float32Array(
+                APP.CellularAutomataShared.CellularAutomataRules.getRule(ruleNumber)
+            );
+
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffers[1 - this.currentTextureIndex]);
+            this.gl.viewport(0, 0, this.cols, 1);
+            this.gl.useProgram(this.shaderProgram);
+
+            this.uploadGridToTexture(grid);
+
+            this.gl.activeTexture(this.gl.TEXTURE0);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[this.currentTextureIndex]);
+            this.gl.uniform1i(this.uniformLocations.currentGeneration, 0);
+            this.gl.uniform2f(this.uniformLocations.textureSize, this.cols, 1);
+            this.gl.uniform1fv(this.uniformLocations.rule, ruleArray);
+
+            this.gl.bindVertexArray(this.vao);
+            this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+
+            const results = new Uint8Array(this.cols);
+            this.gl.readPixels(0, 0, this.cols, 1, this.gl.RED, this.gl.UNSIGNED_BYTE, results);
+
+            this.currentTextureIndex = 1 - this.currentTextureIndex;
+
+            return Array.from(results);
+        }
+
+        uploadGridToTexture(grid) {
+            const textureData = new Uint8Array(grid);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[this.currentTextureIndex]);
+            this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, this.cols, 1, this.gl.RED, this.gl.UNSIGNED_BYTE, textureData);
+        }
+
+        createProgram(vsSource, fsSource) {
+            const program = this.gl.createProgram();
+            const vs = this.compileShader(vsSource, this.gl.VERTEX_SHADER);
+            const fs = this.compileShader(fsSource, this.gl.FRAGMENT_SHADER);
+            this.gl.attachShader(program, vs);
+            this.gl.attachShader(program, fs);
+            this.gl.linkProgram(program);
+            if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+                throw new Error(this.gl.getProgramInfoLog(program));
+            }
+            return program;
+        }
+
         compileShader(source, type) {
             const shader = this.gl.createShader(type);
             this.gl.shaderSource(shader, source);
             this.gl.compileShader(shader);
-
             if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-                const error = this.gl.getShaderInfoLog(shader);
-                this.gl.deleteShader(shader);
-                throw new Error('Shader compilation failed: ' + error);
+                throw new Error(this.gl.getShaderInfoLog(shader));
             }
-
             return shader;
         }
 
-        /**
-         * Setup geometry for full-screen quad rendering
-         */
-        setupGeometry() {
-            // Create full-screen quad vertices
-            const vertices = new Float32Array([
-                // Position  // TexCoord
-                -1, -1,      0, 0,
-                 1, -1,      1, 0,
-                -1,  1,      0, 1,
-                -1,  1,      0, 1,
-                 1, -1,      1, 0,
-                 1,  1,      1, 1
-            ]);
-
-            // Create and bind vertex buffer
-            this.vertexBuffer = this.gl.createBuffer();
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, vertices, this.gl.STATIC_DRAW);
-
-            // Create VAO for vertex array state
-            this.vao = this.gl.createVertexArray();
-            this.gl.bindVertexArray(this.vao);
-
-            // Setup position attribute
-            this.gl.enableVertexAttribArray(this.attributeLocations.position);
-            this.gl.vertexAttribPointer(this.attributeLocations.position, 2, this.gl.FLOAT, false, 16, 0);
-
-            // Setup texture coordinate attribute
-            this.gl.enableVertexAttribArray(this.attributeLocations.texCoord);
-            this.gl.vertexAttribPointer(this.attributeLocations.texCoord, 2, this.gl.FLOAT, false, 16, 8);
-
-            this.gl.bindVertexArray(null);
-        }
-
-        /**
-         * Setup textures for ping-pong rendering
-         */
-        setupTextures() {
+        cleanupTexturesAndFramebuffers() {
+            this.textures.forEach(t => this.gl.deleteTexture(t));
+            this.frameBuffers.forEach(f => this.gl.deleteFramebuffer(f));
             this.textures = [];
-            
-            for (let i = 0; i < 2; i++) {
-                const texture = this.gl.createTexture();
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-                
-                // Setup texture parameters for pixel-perfect cellular automata
-                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT);
-                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-                
-                // Initialize with empty texture (will be populated later)
-                this.gl.texImage2D(
-                    this.gl.TEXTURE_2D, 0, this.gl.R8, 
-                    this.cols, this.rows, 0,
-                    this.gl.RED, this.gl.UNSIGNED_BYTE, null
-                );
-                
-                this.textures.push(texture);
-            }
-            
-            this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-        }
-
-        /**
-         * Setup framebuffers for render-to-texture
-         */
-        setupFramebuffers() {
             this.frameBuffers = [];
-            
-            for (let i = 0; i < 2; i++) {
-                const framebuffer = this.gl.createFramebuffer();
-                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-                this.gl.framebufferTexture2D(
-                    this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0,
-                    this.gl.TEXTURE_2D, this.textures[i], 0
-                );
-                
-                // Check framebuffer completeness
-                const status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
-                if (status !== this.gl.FRAMEBUFFER_COMPLETE) {
-                    throw new Error('Framebuffer not complete: ' + status);
-                }
-                
-                this.frameBuffers.push(framebuffer);
-            }
-            
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
 
-        /**
-         * Convert rule number to WebGL uniform array
-         * @param {number} ruleNumber - Elementary CA rule number (0-255)
-         * @returns {Float32Array} Rule lookup table for WebGL
-         */
-        convertRuleToWebGLFormat(ruleNumber) {
-            const rule = new Float32Array(8);
-            for (let i = 0; i < 8; i++) {
-                rule[i] = (ruleNumber >> i) & 1;
-            }
-            return rule;
-        }
-
-        /**
-         * Upload cellular automata grid data to GPU texture
-         * @param {Array} gridData - Current generation grid data
-         */
-        uploadGridToTexture(gridData) {
-            if (!this.useWebGL || !this.gl) return;
-
-            const textureData = new Uint8Array(gridData.map(cell => cell * 255));
-            
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[this.currentTextureIndex]);
-            this.gl.texSubImage2D(
-                this.gl.TEXTURE_2D, 0, 0, 0,
-                this.cols, 1,
-                this.gl.RED, this.gl.UNSIGNED_BYTE, textureData
-            );
-        }
-
-        /**
-         * Execute fragment shader to calculate next generation
-         * @param {number} ruleNumber - Elementary CA rule number
-         * @returns {Promise<Uint8Array>} Next generation grid data
-         */
-        async computeNextGenerationWebGL(ruleNumber) {
-            if (!this.useWebGL || !this.gl) {
-                throw new Error('WebGL not available');
-            }
-
-            const inputTextureIndex = this.currentTextureIndex;
-            const outputTextureIndex = 1 - this.currentTextureIndex;
-
-            // Bind output framebuffer
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffers[outputTextureIndex]);
-            this.gl.viewport(0, 0, this.cols, 1);
-
-            // Use shader program
-            this.gl.useProgram(this.shaderProgram);
-
-            // Bind input texture
-            this.gl.activeTexture(this.gl.TEXTURE0);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[inputTextureIndex]);
-            this.gl.uniform1i(this.uniformLocations.currentGeneration, 0);
-
-            // Set uniforms
-            this.gl.uniform2f(this.uniformLocations.textureSize, this.cols, 1);
-            
-            const rule = this.convertRuleToWebGLFormat(ruleNumber);
-            this.gl.uniform1fv(this.uniformLocations.rule, rule);
-
-            // Bind VAO and draw
-            this.gl.bindVertexArray(this.vao);
-            this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
-
-            // Read back results
-            const resultData = new Uint8Array(this.cols);
-            this.gl.readPixels(0, 0, this.cols, 1, this.gl.RED, this.gl.UNSIGNED_BYTE, resultData);
-
-            // Swap textures for next iteration
-            this.currentTextureIndex = outputTextureIndex;
-
-            // Cleanup
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-            this.gl.bindVertexArray(null);
-
-            // Convert back to 0/1 values
-            return resultData.map(value => value > 127 ? 1 : 0);
-        }
-
-        /**
-         * Fallback to CPU implementation when WebGL fails
-         */
-        fallbackToCPU() {
-            console.log('Falling back to CPU cellular automata implementation');
-            this.useWebGL = false;
-            
-            // Clean up WebGL resources
-            this.cleanupWebGL();
-            
-            // Resume normal CPU animation
-            if (!this.animationInterval) {
-                this.startAnimation();
-            }
-        }
-
-        /**
-         * Clean up WebGL resources
-         */
-        cleanupWebGL() {
-            if (!this.gl) return;
-
-            if (this.textures) {
-                this.textures.forEach(texture => {
-                    if (texture) this.gl.deleteTexture(texture);
-                });
-                this.textures = [];
-            }
-
-            if (this.frameBuffers) {
-                this.frameBuffers.forEach(framebuffer => {
-                    if (framebuffer) this.gl.deleteFramebuffer(framebuffer);
-                });
-                this.frameBuffers = [];
-            }
-
-            if (this.vertexBuffer) {
-                this.gl.deleteBuffer(this.vertexBuffer);
-                this.vertexBuffer = null;
-            }
-
-            if (this.vao) {
-                this.gl.deleteVertexArray(this.vao);
-                this.vao = null;
-            }
-
-            if (this.shaderProgram) {
-                this.gl.deleteProgram(this.shaderProgram);
-                this.shaderProgram = null;
-            }
-
-            this.gl = null;
-        }
-
-        /**
-         * Override cleanup to include WebGL resource cleanup
-         */
         cleanup() {
-            super.cleanup();
-            this.cleanupWebGL();
-            if (this.performanceMonitor) {
-                this.performanceMonitor.cleanup();
-            }
-        }
-
-        /**
-         * Override initAnimation to setup WebGL textures and update state manager
-         */
-        initAnimation() {
-            super.initAnimation();
-            
-            // Update state manager with new dimensions
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
-            
-            // Recreate textures for new dimensions
-            if (this.useWebGL && this.gl) {
-                this.cleanupWebGL();
-                this.setupTextures();
-                this.setupFramebuffers();
-            }
+            this.cleanupTexturesAndFramebuffers();
+            this.gl.deleteProgram(this.shaderProgram);
+            this.gl.deleteVertexArray(this.vao);
         }
     }
 
-    // Performance monitoring is now handled by shared CAPerformanceMonitor utility
-
-    /**
-     * WebGL Background Cellular Automata - Rule 30 with WebGL acceleration
-     */
-    class WebGLBackgroundCellularAutomata extends WebGLCellularAutomataCanvas {
-        constructor() {
-            super('cellular-automata-bg', 3, { animationSpeed: 200 });
-            if (!this.canvas) return;
-
-            // Use shared utilities
-            this.ruleNumber = 30;
-            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
-            this.stateManager = new AnimationStateManager(this.cols, this.rows);
-
-            this.performanceMonitor.startMonitoring();
-            this.startAnimation();
-        }
-
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.rule);
-        }
-
-        async animate() {
-            const startTime = performance.now();
-
-            // Use WebGL acceleration if available
-            if (this.useWebGL && this.gl) {
-                try {
-                    await this.animateWithWebGL();
-                } catch (error) {
-                    console.warn('WebGL animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
-            } else {
-                this.animateWithCPU();
-            }
-
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
-        }
-
-        async animateWithWebGL() {
-            // Only clear if starting over
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-                
-                // Upload initial grid to WebGL texture
-                this.uploadGridToTexture(this.stateManager.grid);
-            }
-
-            // Store current row for rendering
-            this.stateManager.storeCurrentGeneration();
-
-            // Use shared renderer
-            CellularAutomataRenderer.renderBackgroundRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using WebGL
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = await this.computeNextGenerationWebGL(this.ruleNumber);
-                this.stateManager.grid = Array.from(nextGrid);
-                this.stateManager.currentRow++;
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            }
-        }
-
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            CellularAutomataRenderer.renderBackgroundRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            }
-        }
-
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
-        }
-    }
-
-    /**
-     * WebGL Header Cellular Automata - Multiple rules with WebGL acceleration
-     */
-    class WebGLHeaderCellularAutomata extends WebGLCellularAutomataCanvas {
-        constructor() {
-            super('header-cellular-automata', 2, {
-                animationSpeed: 150,
-                parentElement: true,
-                resizeDebounce: 250
-            });
-            if (!this.canvas) return;
-
-            // Use shared utilities
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule();
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-            this.stateManager = new AnimationStateManager(this.cols, this.rows);
-            this.breathingEffect = new BreathingEffect();
-
-            this.performanceMonitor.startMonitoring();
-            this.startAnimation();
-        }
-
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
-        }
-
-        cycleToNextRule() {
-            // Use shared utility to get different random rule
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-
-            // Update UI with VFX
-            if (typeof window !== 'undefined') {
-                if ('headerRuleName' in window) {
-                    window.headerRuleName = this.currentRuleNumber.toString();
-                }
-                if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
-                    window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
-                } else if (window.RuleIndicators) {
-                    window.RuleIndicators.update('header', this.currentRuleNumber);
-                }
-            }
-
-            // Reset animation state using shared utilities
-            this.initAnimation();
-            this.stateManager.reset();
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-
-        async animate() {
-            const startTime = performance.now();
-
-            // Update breathing effect using shared utility
-            const currentAlpha = this.breathingEffect.update();
-
-            // Use WebGL acceleration if available
-            if (this.useWebGL && this.gl) {
-                try {
-                    await this.animateWithWebGL();
-                } catch (error) {
-                    console.warn('WebGL animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
-            } else {
-                this.animateWithCPU();
-            }
-
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
-        }
-
-        async animateWithWebGL() {
-            // Only clear if starting over
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-                
-                // Upload initial grid to WebGL texture
-                this.uploadGridToTexture(this.stateManager.grid);
-            }
-
-            // Store current row for rendering
-            this.stateManager.storeCurrentGeneration();
-
-            // Use shared renderer with breathing effect
-            const currentAlpha = this.breathingEffect.getCurrentAlpha();
-            CellularAutomataRenderer.renderHeaderRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                currentAlpha,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using WebGL
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = await this.computeNextGenerationWebGL(this.currentRuleNumber);
-                this.stateManager.grid = Array.from(nextGrid);
-                this.stateManager.currentRow++;
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            } else {
-                // Cycle to next rule and restart after delay
-                setTimeout(() => {
-                    this.cycleToNextRule();
-                }, 1800);
-            }
-        }
-
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            const currentAlpha = this.breathingEffect.getCurrentAlpha();
-            CellularAutomataRenderer.renderHeaderRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                currentAlpha,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            } else {
-                // Cycle to next rule and restart after delay
-                setTimeout(() => {
-                    this.cycleToNextRule();
-                }, 1800);
-            }
-        }
-
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
-        }
-    }
-
-    // Initialization functions for WebGL-accelerated cellular automata
-    function initWebGLCellularAutomataBackground() {
-        return new WebGLBackgroundCellularAutomata();
-    }
-
-    function initWebGLHeaderCellularAutomata() {
-        return new WebGLHeaderCellularAutomata();
-    }
-
-    // Expose to APP namespace
-    APP.WebGLCellularAutomata = {
-        WebGLCellularAutomataCanvas,
-        WebGLBackgroundCellularAutomata,
-        WebGLHeaderCellularAutomata,
-        initWebGLCellularAutomataBackground,
-        initWebGLHeaderCellularAutomata
-    };
-
-    // Backward compatibility - expose to global scope
-    window.WebGLCellularAutomataCanvas = WebGLCellularAutomataCanvas;
-    window.initWebGLCellularAutomataBackground = initWebGLCellularAutomataBackground;
-    window.initWebGLHeaderCellularAutomata = initWebGLHeaderCellularAutomata;
+    APP.WebGLRunner = WebGLRunner;
 
 })(window.APP);
