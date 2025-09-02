@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 2: The Crucial Experiment - Interactive Demos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .demo-section {
+            margin: 4rem 0;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .demo-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .demo-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        .demo-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            color: #ffd700;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn.active {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        canvas {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .info-panel {
+            background: rgba(255, 215, 0, 0.05);
+            border-left: 4px solid #ffd700;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .rule-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .rule-cell {
+            aspect-ratio: 1;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .rule-pattern {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 0.25rem;
+        }
+
+        .rule-bit {
+            width: 8px;
+            height: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .rule-bit.on {
+            background: #ffd700;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-title {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .slider {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chapter 2: The Crucial Experiment</h1>
+            <p>Experience the groundbreaking discoveries that revealed how simple computational rules can generate infinite complexity. These interactive demonstrations let you explore the four fundamental behaviors of cellular automata and witness the emergence of randomness from deterministic systems.</p>
+        </div>
+
+        <!-- Demo 1: Rule 30 Interactive Explorer -->
+        <div class="demo-section">
+            <h2 class="demo-title">⭐ Rule 30: The Random Generator</h2>
+            <div class="demo-description">
+                <p><strong>The Discovery:</strong> Rule 30 was Wolfram's crucial breakthrough - a simple deterministic rule that produces seemingly random patterns. Starting with just a single black cell, this rule generates a complex, unpredictable pattern that has been used for random number generation in Mathematica.</p>
+                <p><strong>Key Insight:</strong> Watch how the center column produces a pseudo-random sequence, challenging our intuition that simple rules can only produce simple results.</p>
+            </div>
+            <div class="demo-container">
+                <div class="controls">
+                    <button class="btn" id="rule30-play">Play</button>
+                    <button class="btn" id="rule30-step">Step</button>
+                    <button class="btn" id="rule30-reset">Reset</button>
+                    <div class="slider-container">
+                        <label>Speed:</label>
+                        <input type="range" class="slider" id="rule30-speed" min="1" max="10" value="5">
+                        <span id="rule30-speed-display">5</span>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="rule30-canvas" width="800" height="400"></canvas>
+                </div>
+                <div class="info-panel">
+                    <strong>Rule 30:</strong> 111→0, 110→0, 101→0, 100→1, 011→1, 010→1, 001→1, 000→0
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-value" id="rule30-generation">0</span>
+                        <span>Generation</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="rule30-randomness">0%</span>
+                        <span>Randomness</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo 2: Four Behavior Types Classifier -->
+        <div class="demo-section">
+            <h2 class="demo-title">🔍 The Four Classes of Behavior</h2>
+            <div class="demo-description">
+                <p><strong>Wolfram's Classification:</strong> Through systematic exploration, Wolfram discovered that all cellular automata fall into four fundamental classes of behavior:</p>
+                <ul style="margin-left: 2rem; margin-bottom: 1rem;">
+                    <li><strong>Class 1:</strong> Evolution leads to uniform state (all cells same color)</li>
+                    <li><strong>Class 2:</strong> Evolution leads to simple periodic patterns</li>
+                    <li><strong>Class 3:</strong> Evolution leads to chaotic, seemingly random patterns</li>
+                    <li><strong>Class 4:</strong> Evolution leads to complex structures and interactions</li>
+                </ul>
+                <p>Use the rule selector to explore different rules and see their automatic classification.</p>
+            </div>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="slider-container">
+                        <label>Rule:</label>
+                        <input type="range" class="slider" id="classifier-rule" min="0" max="255" value="30">
+                        <span id="classifier-rule-display">30</span>
+                    </div>
+                    <button class="btn" id="classifier-play">Play</button>
+                    <button class="btn" id="classifier-reset">Reset</button>
+                    <button class="btn" id="famous-rule-30">Rule 30</button>
+                    <button class="btn" id="famous-rule-90">Rule 90</button>
+                    <button class="btn" id="famous-rule-110">Rule 110</button>
+                    <button class="btn" id="famous-rule-150">Rule 150</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="classifier-canvas" width="600" height="300"></canvas>
+                </div>
+                <div class="rule-grid" id="rule-visualization"></div>
+                <div class="info-panel">
+                    <div id="rule-class-info">
+                        <strong>Current Rule:</strong> <span id="current-rule-info">Rule 30 - Class 3 (Chaotic)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo 3: Rule 110 Structure Analyzer -->
+        <div class="demo-section">
+            <h2 class="demo-title">🔬 Rule 110: Complex Interactions</h2>
+            <div class="demo-description">
+                <p><strong>The Most Complex Rule:</strong> Rule 110 represents Class 4 behavior - the most fascinating type. It produces a rich mixture of regular and irregular features, with various moving structures that interact in complex ways.</p>
+                <p><strong>Computational Universality:</strong> Rule 110 has been proven to be Turing complete, meaning it can perform any computation that any computer can perform. Watch for gliders, still lifes, and their intricate interactions.</p>
+            </div>
+            <div class="demo-container">
+                <div class="controls">
+                    <button class="btn" id="rule110-play">Play</button>
+                    <button class="btn" id="rule110-step">Step</button>
+                    <button class="btn" id="rule110-reset">Reset</button>
+                    <button class="btn" id="rule110-highlight" data-active="false">Highlight Structures</button>
+                    <div class="slider-container">
+                        <label>Speed:</label>
+                        <input type="range" class="slider" id="rule110-speed" min="1" max="8" value="3">
+                        <span id="rule110-speed-display">3</span>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="rule110-canvas" width="800" height="400"></canvas>
+                </div>
+                <div class="info-panel">
+                    <strong>Rule 110:</strong> 111→0, 110→1, 101→1, 100→0, 011→1, 010→1, 001→1, 000→0
+                    <br><strong>Watch for:</strong> Moving gliders, oscillating structures, and particle collisions
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-value" id="rule110-generation">0</span>
+                        <span>Generation</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="rule110-structures">0</span>
+                        <span>Active Structures</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo 4: Simple Rules → Complex Results -->
+        <div class="demo-section">
+            <h2 class="demo-title">⚡ Simplicity vs Complexity</h2>
+            <div class="demo-description">
+                <p><strong>The Fundamental Paradox:</strong> How can rules so simple that they fit on a single line produce behavior so complex that it appears random? This demonstration shows the stark contrast between the simplicity of the rule and the complexity of its output.</p>
+                <p><strong>Measuring Complexity:</strong> Watch the complexity meter as patterns evolve. Simple rules consistently produce patterns that would be nearly impossible to describe concisely.</p>
+            </div>
+            <div class="demo-container">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">The Rule (Simple)</h3>
+                        <div id="rule-table-display" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                            <div class="rule-grid" id="simple-rule-display"></div>
+                        </div>
+                        <div class="controls">
+                            <button class="btn" id="complexity-play">Play</button>
+                            <button class="btn" id="complexity-reset">Reset</button>
+                            <div class="slider-container">
+                                <label>Rule:</label>
+                                <input type="range" class="slider" id="complexity-rule" min="0" max="255" value="30">
+                                <span id="complexity-rule-display">30</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">The Result (Complex)</h3>
+                        <div class="canvas-container">
+                            <canvas id="complexity-canvas" width="350" height="300"></canvas>
+                        </div>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat-value" id="complexity-meter">0%</span>
+                                <span>Pattern Complexity</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo 5: Historical Context Simulator -->
+        <div class="demo-section">
+            <h2 class="demo-title">📜 Why Wasn't This Discovered Before?</h2>
+            <div class="demo-description">
+                <p><strong>Historical Perspective:</strong> These phenomena seem so fundamental - why weren't they discovered centuries ago? This simulation shows the computational limitations that prevented earlier discovery of these patterns.</p>
+                <p><strong>The Computer Revolution:</strong> Only with modern computing power could we explore enough steps to see the full complexity emerge. Try calculating just 10 steps by hand - imagine doing 1000!</p>
+            </div>
+            <div class="demo-container">
+                <div class="controls">
+                    <button class="btn" id="historical-hand">Hand Calculation (10 steps)</button>
+                    <button class="btn" id="historical-early">Early Computer (100 steps)</button>
+                    <button class="btn" id="historical-modern">Modern Computer (1000+ steps)</button>
+                    <button class="btn" id="historical-reset">Reset</button>
+                    <button class="btn" id="prediction-game">Prediction Game</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <h4 style="color: #ffd700;">Hand Calculation Era</h4>
+                        <canvas id="historical-hand-canvas" width="250" height="200"></canvas>
+                        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.8rem;">
+                            ~10 steps feasible
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: #ffd700;">Early Computer Era</h4>
+                        <canvas id="historical-early-canvas" width="250" height="200"></canvas>
+                        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.8rem;">
+                            ~100 steps possible
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: #ffd700;">Modern Era</h4>
+                        <canvas id="historical-modern-canvas" width="250" height="200"></canvas>
+                        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.8rem;">
+                            1000+ steps reveal complexity
+                        </div>
+                    </div>
+                </div>
+                <div class="info-panel" id="prediction-panel" style="display: none;">
+                    <p><strong>Prediction Challenge:</strong> Looking at the pattern above, what do you think the next row will look like? Click to reveal and see how often human intuition fails!</p>
+                    <button class="btn" id="reveal-prediction">Reveal Next Row</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chapter2-demos.js"></script>
+</body>
+</html>

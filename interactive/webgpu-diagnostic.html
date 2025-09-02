@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #007AFF;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .diagnostic-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .status.available {
+            background: #34C759;
+            color: white;
+        }
+
+        .status.unavailable {
+            background: #FF3B30;
+            color: white;
+        }
+
+        .status.unknown {
+            background: #FF9500;
+            color: white;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .log-section {
+            background: #000;
+            color: #00FF00;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+
+        .test-button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .test-button:hover {
+            background: #0056CC;
+        }
+
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #FF3B30;
+        }
+
+        .success {
+            color: #34C759;
+        }
+
+        .warning {
+            color: #FF9500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 WebGPU Diagnostic Tool</h1>
+        
+        <div class="diagnostic-section">
+            <h2>📱 Device Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span>User Agent:</span>
+                    <span id="user-agent">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <span>Platform:</span>
+                    <span id="platform">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <span>iOS Version:</span>
+                    <span id="ios-version">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <span>Safari Version:</span>
+                    <span id="safari-version">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <span>Secure Context:</span>
+                    <span id="secure-context" class="status unknown">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h2>🖥️ GPU API Availability</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span>navigator.gpu:</span>
+                    <span id="navigator-gpu" class="status unknown">Testing...</span>
+                </div>
+                <div class="info-item">
+                    <span>WebGL 1.0:</span>
+                    <span id="webgl1" class="status unknown">Testing...</span>
+                </div>
+                <div class="info-item">
+                    <span>WebGL 2.0:</span>
+                    <span id="webgl2" class="status unknown">Testing...</span>
+                </div>
+                <div class="info-item">
+                    <span>WebGPU Adapter:</span>
+                    <span id="webgpu-adapter" class="status unknown">Testing...</span>
+                </div>
+                <div class="info-item">
+                    <span>WebGPU Device:</span>
+                    <span id="webgpu-device" class="status unknown">Testing...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h2>⚡ WebGPU Feature Test</h2>
+            <button class="test-button" id="run-webgpu-test">Run Full WebGPU Test</button>
+            <div class="log-section" id="test-log">Click "Run Full WebGPU Test" to begin diagnostic...</div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h2>💡 Troubleshooting Tips</h2>
+            <div id="troubleshooting-tips"></div>
+        </div>
+    </div>
+
+    <script>
+        class WebGPUDiagnostic {
+            constructor() {
+                this.log = document.getElementById('test-log');
+                this.results = {};
+                this.init();
+            }
+
+            init() {
+                this.detectDevice();
+                this.testBasicAPIs();
+                this.setupTestButton();
+            }
+
+            logMessage(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+                this.log.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+                this.log.scrollTop = this.log.scrollHeight;
+            }
+
+            detectDevice() {
+                // User Agent
+                document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+                
+                // Platform
+                document.getElementById('platform').textContent = navigator.platform;
+                
+                // iOS Version Detection
+                const iosMatch = navigator.userAgent.match(/OS (\d+)_(\d+)_?(\d+)?/);
+                if (iosMatch) {
+                    const version = `${iosMatch[1]}.${iosMatch[2]}${iosMatch[3] ? '.' + iosMatch[3] : ''}`;
+                    document.getElementById('ios-version').textContent = version;
+                } else {
+                    document.getElementById('ios-version').textContent = 'Not iOS or undetectable';
+                }
+                
+                // Safari Version Detection
+                const safariMatch = navigator.userAgent.match(/Version\/(\d+\.\d+)/);
+                if (safariMatch) {
+                    document.getElementById('safari-version').textContent = safariMatch[1];
+                } else {
+                    document.getElementById('safari-version').textContent = 'Not Safari or undetectable';
+                }
+                
+                // Secure Context
+                const secureElement = document.getElementById('secure-context');
+                if (window.isSecureContext) {
+                    secureElement.textContent = 'Yes';
+                    secureElement.className = 'status available';
+                } else {
+                    secureElement.textContent = 'No (HTTPS required for WebGPU)';
+                    secureElement.className = 'status unavailable';
+                }
+            }
+
+            testBasicAPIs() {
+                // Test navigator.gpu
+                const navigatorGPUElement = document.getElementById('navigator-gpu');
+                if ('gpu' in navigator) {
+                    navigatorGPUElement.textContent = 'Available';
+                    navigatorGPUElement.className = 'status available';
+                    this.results.navigatorGPU = true;
+                } else {
+                    navigatorGPUElement.textContent = 'Not Found';
+                    navigatorGPUElement.className = 'status unavailable';
+                    this.results.navigatorGPU = false;
+                }
+
+                // Test WebGL 1.0
+                const webgl1Element = document.getElementById('webgl1');
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl');
+                    if (gl) {
+                        webgl1Element.textContent = 'Available';
+                        webgl1Element.className = 'status available';
+                        this.results.webgl1 = true;
+                    } else {
+                        throw new Error('Context creation failed');
+                    }
+                } catch (e) {
+                    webgl1Element.textContent = 'Unavailable';
+                    webgl1Element.className = 'status unavailable';
+                    this.results.webgl1 = false;
+                }
+
+                // Test WebGL 2.0
+                const webgl2Element = document.getElementById('webgl2');
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl2');
+                    if (gl) {
+                        webgl2Element.textContent = 'Available';
+                        webgl2Element.className = 'status available';
+                        this.results.webgl2 = true;
+                    } else {
+                        throw new Error('Context creation failed');
+                    }
+                } catch (e) {
+                    webgl2Element.textContent = 'Unavailable';
+                    webgl2Element.className = 'status unavailable';
+                    this.results.webgl2 = false;
+                }
+
+                this.generateTroubleshootingTips();
+            }
+
+            async testWebGPUAdapter() {
+                const adapterElement = document.getElementById('webgpu-adapter');
+                const deviceElement = document.getElementById('webgpu-device');
+
+                if (!this.results.navigatorGPU) {
+                    adapterElement.textContent = 'navigator.gpu not available';
+                    adapterElement.className = 'status unavailable';
+                    deviceElement.textContent = 'Skipped';
+                    deviceElement.className = 'status unavailable';
+                    return false;
+                }
+
+                try {
+                    this.logMessage('Requesting WebGPU adapter...');
+                    const adapter = await navigator.gpu.requestAdapter();
+                    
+                    if (!adapter) {
+                        this.logMessage('No suitable WebGPU adapter found', 'error');
+                        adapterElement.textContent = 'No suitable adapter';
+                        adapterElement.className = 'status unavailable';
+                        deviceElement.textContent = 'Skipped';
+                        deviceElement.className = 'status unavailable';
+                        return false;
+                    }
+
+                    this.logMessage('WebGPU adapter obtained successfully!', 'success');
+                    adapterElement.textContent = 'Available';
+                    adapterElement.className = 'status available';
+
+                    // Log adapter info
+                    const info = await adapter.requestAdapterInfo();
+                    if (info) {
+                        this.logMessage(`Adapter: ${info.vendor || 'Unknown'} ${info.device || 'Device'}`);
+                        this.logMessage(`Architecture: ${info.architecture || 'Unknown'}`);
+                    }
+
+                    // Test device creation
+                    try {
+                        this.logMessage('Requesting WebGPU device...');
+                        const device = await adapter.requestDevice();
+                        
+                        this.logMessage('WebGPU device created successfully!', 'success');
+                        deviceElement.textContent = 'Available';
+                        deviceElement.className = 'status available';
+                        
+                        // Test compute shader
+                        try {
+                            this.logMessage('Testing compute shader compilation...');
+                            const shaderModule = device.createShaderModule({
+                                code: `
+                                    @compute @workgroup_size(1)
+                                    fn main() {
+                                        // Basic test shader
+                                    }
+                                `
+                            });
+                            this.logMessage('Compute shader compiled successfully!', 'success');
+                            this.results.webgpu = true;
+                            return true;
+                        } catch (shaderError) {
+                            this.logMessage(`Compute shader test failed: ${shaderError.message}`, 'error');
+                        }
+                        
+                    } catch (deviceError) {
+                        this.logMessage(`Device creation failed: ${deviceError.message}`, 'error');
+                        deviceElement.textContent = 'Creation failed';
+                        deviceElement.className = 'status unavailable';
+                    }
+
+                } catch (error) {
+                    this.logMessage(`WebGPU adapter test failed: ${error.message}`, 'error');
+                    adapterElement.textContent = 'Request failed';
+                    adapterElement.className = 'status unavailable';
+                    deviceElement.textContent = 'Skipped';
+                    deviceElement.className = 'status unavailable';
+                }
+
+                this.results.webgpu = false;
+                return false;
+            }
+
+            setupTestButton() {
+                const button = document.getElementById('run-webgpu-test');
+                button.addEventListener('click', async () => {
+                    button.disabled = true;
+                    button.textContent = 'Testing...';
+                    this.log.textContent = '';
+                    
+                    this.logMessage('Starting comprehensive WebGPU diagnostic...');
+                    this.logMessage(`Browser: ${navigator.userAgent}`);
+                    this.logMessage(`Secure Context: ${window.isSecureContext}`);
+                    
+                    await this.testWebGPUAdapter();
+                    
+                    this.logMessage('Diagnostic complete!');
+                    button.disabled = false;
+                    button.textContent = 'Run Full WebGPU Test';
+                    
+                    this.generateTroubleshootingTips();
+                });
+            }
+
+            generateTroubleshootingTips() {
+                const tipsContainer = document.getElementById('troubleshooting-tips');
+                let tips = [];
+
+                if (!window.isSecureContext) {
+                    tips.push('<div class="error">⚠️ <strong>Secure Context Required:</strong> WebGPU requires HTTPS. Test on localhost or with SSL.</div>');
+                }
+
+                if (!this.results.navigatorGPU) {
+                    tips.push(`
+                        <div class="warning">
+                            <strong>📱 Enable WebGPU on iOS:</strong>
+                            <ol>
+                                <li>Open <strong>Settings → Safari → Advanced → Feature Flags</strong></li>
+                                <li>Find <strong>"WebGPU"</strong> and enable it</li>
+                                <li>Restart Safari</li>
+                                <li>Refresh this page</li>
+                            </ol>
+                        </div>
+                    `);
+                    
+                    tips.push('<div class="info">💡 <strong>iOS Version:</strong> WebGPU requires iOS 17.4+ (enabled by default in iOS 18+)</div>');
+                }
+
+                if (this.results.webgl2 && !this.results.navigatorGPU) {
+                    tips.push('<div class="success">✅ <strong>WebGL2 Available:</strong> Your system supports hardware-accelerated graphics. WebGPU should be available once enabled.</div>');
+                }
+
+                if (!this.results.webgl1 && !this.results.webgl2) {
+                    tips.push('<div class="error">⚠️ <strong>No Hardware Acceleration:</strong> Neither WebGL nor WebGPU are available. Check your device/browser support.</div>');
+                }
+
+                tips.push(`
+                    <div class="info">
+                        <strong>🔗 Useful Links:</strong>
+                        <ul>
+                            <li><a href="https://caniuse.com/webgpu" style="color: #007AFF;">WebGPU Browser Support</a></li>
+                            <li><a href="https://webkit.org/blog/14879/webgpu-now-available-for-testing-in-safari-technology-preview/" style="color: #007AFF;">WebKit WebGPU Announcement</a></li>
+                        </ul>
+                    </div>
+                `);
+
+                tipsContainer.innerHTML = tips.join('');
+            }
+        }
+
+        // Initialize diagnostic tool
+        document.addEventListener('DOMContentLoaded', () => {
+            new WebGPUDiagnostic();
+        });
+    </script>
+</body>
+</html>
