@@ -464,6 +464,14 @@
                     </div>
                 </div>
 
+                <div class="control-group">
+                    <label class="control-label">规则选择器</label>
+                    <div class="control-row">
+                        <input type="range" class="slider" id="rule-slider" min="0" max="255" value="30">
+                        <span class="slider-value" id="rule-slider-value">30</span>
+                    </div>
+                </div>
+
                 <div class="section-title">预设规则</div>
                 <div class="preset-rules">
                     <div class="preset-rule active" data-rule="30">
@@ -643,6 +651,11 @@
                 document.getElementById('speed').addEventListener('input', (e) => {
                     this.setSpeed(parseInt(e.target.value));
                 });
+
+                // Rule slider
+                document.getElementById('rule-slider').addEventListener('input', (e) => {
+                    this.setRuleFromSlider(parseInt(e.target.value));
+                });
             }
 
             toggleRuleOutput(element) {
@@ -696,6 +709,26 @@
                 this.updateRuleUI();
                 this.updateRuleDisplay();
                 this.updateRuleAnalysis();
+                this.updateRuleSlider();
+            }
+
+            setRuleFromSlider(ruleNumber) {
+                this.ruleNumber = ruleNumber;
+                
+                // Convert rule number to binary array
+                this.rule = [];
+                for (let i = 0; i < 8; i++) {
+                    this.rule[i] = (ruleNumber >> i) & 1;
+                }
+                
+                // Update UI (except slider to avoid feedback loop)
+                this.updateRuleUI();
+                this.updateRuleDisplay();
+                this.updateRuleAnalysis();
+                this.updateRuleSliderValue();
+                
+                // Remove active class from preset rules since this is custom
+                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
             }
 
             updateRuleUI() {
@@ -729,6 +762,15 @@
                 
                 document.getElementById('analysis-text').textContent = 
                     analyses[this.ruleNumber] || defaultAnalysis;
+            }
+
+            updateRuleSlider() {
+                document.getElementById('rule-slider').value = this.ruleNumber;
+                this.updateRuleSliderValue();
+            }
+
+            updateRuleSliderValue() {
+                document.getElementById('rule-slider-value').textContent = this.ruleNumber;
             }
 
             generateRandomRule() {
