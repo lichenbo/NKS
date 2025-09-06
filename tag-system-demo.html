@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标记系统探索器 - 交互式序列替换实验</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            width: 100vw;
+            min-height: 100vh;
+            margin: 0;
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            color: #1a1a1a;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 120px);
+        }
+
+        .controls-panel {
+            background: rgba(40, 40, 40, 0.9);
+            padding: 2rem;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .visualization-area {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.5);
+            overflow: auto;
+        }
+
+        .section-title {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Preset Systems */
+        .preset-systems {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .preset-system {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .preset-system:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .preset-system.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+        }
+
+        .preset-name {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+
+        .preset-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* Control Groups */
+        .control-group {
+            margin: 1rem 0;
+        }
+
+        .control-label {
+            display: block;
+            color: rgba(255, 215, 0, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255, 215, 0, 0.8);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.6);
+        }
+
+        .btn.primary {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border-color: #ffd700;
+        }
+
+        .btn.primary:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Rules Display */
+        .rules-display {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .rule-item {
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .rule-symbol {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        /* String Visualization */
+        .string-display {
+            width: 100%;
+            max-width: 800px;
+            margin: 1rem 0;
+        }
+
+        .string-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-string {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            color: #ffd700;
+            font-weight: bold;
+            word-break: break-all;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .evolution-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 12px 16px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .info-label {
+            color: rgba(255, 215, 0, 0.8);
+            font-size: 0.8rem;
+        }
+
+        .info-value {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        /* History Display */
+        .history-display {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 1rem 0;
+        }
+
+        .history-title {
+            color: #ffd700;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .history-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #c0c0c0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-step {
+            color: #ffd700;
+            font-weight: 600;
+            margin-right: 10px;
+            min-width: 40px;
+            display: inline-block;
+        }
+
+        .history-action {
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            margin-left: 10px;
+        }
+
+        /* System Analysis */
+        .system-analysis {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .analysis-title {
+            color: #ffd700;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .analysis-text {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .controls-panel {
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+                padding: 1.5rem;
+            }
+
+            .visualization-area {
+                padding: 1rem;
+            }
+
+            .preset-systems {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls-panel,
+            .visualization-area {
+                padding: 1rem;
+            }
+
+            .preset-systems {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .evolution-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .current-string {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .running {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QR1KHESCTK"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-QR1KHESCTK');
+</script>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>标记系统探索器</h1>
+            <p>交互式探索序列替换系统，理解计算复杂性的基础模型</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="section-title">预设系统</div>
+                <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
+                    选择经典标记系统进行探索：
+                </p>
+
+                <div class="preset-systems">
+                    <div class="preset-system active" data-preset="wolfram925">
+                        <div class="preset-name">Wolfram 925</div>
+                        <div class="preset-description">经典规则</div>
+                    </div>
+                    <div class="preset-system" data-preset="cyclic">
+                        <div class="preset-name">循环系统</div>
+                        <div class="preset-description">3符号循环</div>
+                    </div>
+                    <div class="preset-system" data-preset="doubling">
+                        <div class="preset-name">倍增系统</div>
+                        <div class="preset-description">二进制倍增</div>
+                    </div>
+                    <div class="preset-system" data-preset="collatz">
+                        <div class="preset-name">类科拉茨</div>
+                        <div class="preset-description">Collatz-like</div>
+                    </div>
+                </div>
+
+                <div class="section-title">系统配置</div>
+
+                <div class="control-group">
+                    <label class="control-label">删除数 (m)</label>
+                    <div class="control-row">
+                        <input type="number" class="input-field" id="deletion" value="2" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">字母表</label>
+                    <div class="control-row">
+                        <input type="text" class="input-field" id="alphabet" value="ABC" placeholder="例如: ABC 或 01">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">初始字符串</label>
+                    <div class="control-row">
+                        <input type="text" class="input-field" id="initial-string" value="AAA" placeholder="例如: AAA 或 101">
+                    </div>
+                </div>
+
+                <div class="section-title">替换规则</div>
+                <div id="rules-container">
+                    <!-- Rules will be generated dynamically -->
+                </div>
+
+                <div class="section-title">当前规则</div>
+                <div id="rules-display" class="rules-display">
+                    <!-- Current rules will be displayed here -->
+                </div>
+
+                <div class="section-title">控制操作</div>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <button class="btn primary" id="init-btn">初始化</button>
+                        <button class="btn" id="step-btn">单步</button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn" id="run-btn">运行10步</button>
+                        <button class="btn" id="run-all-btn">运行至停止</button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn" id="reset-btn">重置</button>
+                    </div>
+                </div>
+
+                <div class="system-analysis" id="system-analysis">
+                    <div class="analysis-title">系统分析</div>
+                    <div class="analysis-text" id="analysis-text">
+                        Wolfram 925系统：经典标记系统，展现了简单规则产生复杂行为的典型例子。通过删除前2个符号并根据第一个符号应用替换规则。
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization-area">
+                <div class="string-display">
+                    <div class="string-container">
+                        <div class="current-string" id="current-string">准备开始...</div>
+                    </div>
+                </div>
+
+                <div class="evolution-info">
+                    <div class="info-item">
+                        <span class="info-label">当前步数</span>
+                        <span class="info-value" id="current-step">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">字符串长度</span>
+                        <span class="info-value" id="string-length">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">系统状态</span>
+                        <span class="info-value" id="system-status">就绪</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">行为类型</span>
+                        <span class="info-value" id="behavior-type">复杂</span>
+                    </div>
+                </div>
+
+                <div class="history-display">
+                    <div class="history-title">演化历史</div>
+                    <div class="history-content" id="history-content">
+                        <!-- Evolution steps will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TagSystemExplorer {
+            constructor() {
+                // Runtime state
+                this.currentString = '';
+                this.rules = {};
+                this.deletionNumber = 2;
+                this.stepCount = 0;
+                this.history = [];
+                this.isRunning = false;
+                this.animationId = null;
+                this.activePreset = 'wolfram925';
+
+                // Preset systems
+                this.presets = {
+                    wolfram925: {
+                        deletion: 2,
+                        alphabet: 'ABC',
+                        initial: 'AAA',
+                        rules: { A: 'BC', B: 'A', C: 'AAB' }
+                    },
+                    cyclic: {
+                        deletion: 1,
+                        alphabet: 'ABC',
+                        initial: 'ABC',
+                        rules: { A: 'B', B: 'C', C: 'A' }
+                    },
+                    doubling: {
+                        deletion: 1,
+                        alphabet: '01',
+                        initial: '1',
+                        rules: { '0': '00', '1': '11' }
+                    },
+                    collatz: {
+                        deletion: 1,
+                        alphabet: 'EO',
+                        initial: 'EEEOO',
+                        rules: { E: 'O', O: 'EEE' }
+                    }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadPreset('wolfram925');
+            }
+
+            setupEventListeners() {
+                // Preset system buttons
+                const presetSystems = document.querySelectorAll('.preset-system');
+                presetSystems.forEach(system => {
+                    system.addEventListener('click', (e) => {
+                        this.loadPreset(e.currentTarget.dataset.preset);
+                    });
+                });
+
+                // Control buttons
+                document.getElementById('init-btn').addEventListener('click', () => this.initializeSystem());
+                document.getElementById('step-btn').addEventListener('click', () => this.stepOnce());
+                document.getElementById('run-btn').addEventListener('click', () => this.runSteps());
+                document.getElementById('run-all-btn').addEventListener('click', () => this.runUntilHalt());
+                document.getElementById('reset-btn').addEventListener('click', () => this.reset());
+
+                // Input field listeners
+                document.getElementById('alphabet').addEventListener('input', () => this.generateRulesInputs());
+            }
+
+            loadPreset(presetName) {
+                const preset = this.presets[presetName];
+                if (!preset) return;
+
+                this.activePreset = presetName;
+                this.updatePresetActiveState(presetName);
+
+                // Update input fields
+                document.getElementById('deletion').value = preset.deletion;
+                document.getElementById('alphabet').value = preset.alphabet;
+                document.getElementById('initial-string').value = preset.initial;
+
+                // Generate rule inputs and set values
+                this.generateRulesInputs();
+                
+                setTimeout(() => {
+                    for (const [symbol, replacement] of Object.entries(preset.rules)) {
+                        const input = document.getElementById(`rule-${symbol}`);
+                        if (input) {
+                            input.value = replacement;
+                        }
+                    }
+                    this.initializeSystem();
+                    this.updateSystemAnalysis();
+                }, 100);
+            }
+
+            updatePresetActiveState(activePreset) {
+                const presetSystems = document.querySelectorAll('.preset-system');
+                presetSystems.forEach(system => {
+                    system.classList.toggle('active', system.dataset.preset === activePreset);
+                });
+            }
+
+            generateRulesInputs() {
+                const alphabet = document.getElementById('alphabet').value;
+                const container = document.getElementById('rules-container');
+                
+                container.innerHTML = '';
+                
+                for (const symbol of alphabet) {
+                    const div = document.createElement('div');
+                    div.className = 'control-group';
+                    div.innerHTML = `
+                        <label class="control-label">规则 '${symbol}'</label>
+                        <div class="control-row">
+                            <input type="text" class="input-field" id="rule-${symbol}" placeholder="替换字符串" value="">
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+
+            updateRulesDisplay() {
+                const display = document.getElementById('rules-display');
+                let html = '';
+                
+                for (const [symbol, replacement] of Object.entries(this.rules)) {
+                    html += `<div class="rule-item"><span class="rule-symbol">${symbol}</span> → ${replacement || '∅'}</div>`;
+                }
+                
+                if (html === '') {
+                    html = '<div class="rule-item">未定义规则</div>';
+                }
+                
+                html += `<div class="rule-item" style="margin-top: 10px; color: #ffd700;">删除数: ${this.deletionNumber}</div>`;
+                
+                display.innerHTML = html;
+            }
+
+            initializeSystem() {
+                this.deletionNumber = parseInt(document.getElementById('deletion').value);
+                const alphabet = document.getElementById('alphabet').value;
+                this.currentString = document.getElementById('initial-string').value;
+                
+                // Collect rules
+                this.rules = {};
+                for (const symbol of alphabet) {
+                    const ruleInput = document.getElementById(`rule-${symbol}`);
+                    if (ruleInput) {
+                        this.rules[symbol] = ruleInput.value;
+                    }
+                }
+                
+                this.stepCount = 0;
+                this.history = [];
+                
+                this.updateDisplay();
+                this.updateRulesDisplay();
+                this.addToHistory(this.currentString, '初始字符串');
+                
+                this.enableControls();
+            }
+
+            stepOnce() {
+                if (this.currentString.length < this.deletionNumber) {
+                    this.addToHistory('停止', '字符串过短');
+                    this.disableControls();
+                    this.updateSystemStatus('已停止');
+                    return false;
+                }
+
+                const firstSymbol = this.currentString[0];
+                const removedPart = this.currentString.substring(0, this.deletionNumber);
+                const remainingPart = this.currentString.substring(this.deletionNumber);
+                
+                let newString = remainingPart;
+                let replacement = '';
+                
+                if (this.rules[firstSymbol]) {
+                    replacement = this.rules[firstSymbol];
+                    newString += replacement;
+                }
+                
+                // Check for cycles
+                if (this.history.some(item => item.string === newString)) {
+                    this.addToHistory(newString, `删除 "${removedPart}", 添加 "${replacement}" (检测到循环)`);
+                    this.currentString = newString;
+                    this.stepCount++;
+                    this.updateDisplay();
+                    this.disableControls();
+                    this.updateSystemStatus('已停止 - 循环');
+                    return false;
+                }
+                
+                this.currentString = newString;
+                this.stepCount++;
+                
+                const action = replacement ? `删除 "${removedPart}", 添加 "${replacement}"` : `删除 "${removedPart}", 无规则`;
+                this.addToHistory(this.currentString, action);
+                this.updateDisplay();
+                
+                return true;
+            }
+
+            runSteps() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.updateSystemStatus('运行中');
+                document.getElementById('run-btn').classList.add('running');
+                
+                let steps = 0;
+                const maxSteps = 10;
+                
+                const step = () => {
+                    if (!this.isRunning) return;
+                    
+                    if (steps >= maxSteps || !this.stepOnce()) {
+                        this.stopExecution();
+                        return;
+                    }
+                    
+                    steps++;
+                    this.animationId = setTimeout(step, 300);
+                };
+                
+                step();
+            }
+
+            runUntilHalt() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                this.updateSystemStatus('运行中');
+                document.getElementById('run-all-btn').classList.add('running');
+                
+                const maxSteps = 1000;
+                let steps = 0;
+                
+                const step = () => {
+                    if (!this.isRunning) return;
+                    
+                    if (steps >= maxSteps) {
+                        this.addToHistory('已停止', '达到最大步数 (1000)');
+                        this.stopExecution();
+                        return;
+                    }
+                    
+                    if (!this.stepOnce()) {
+                        this.stopExecution();
+                        return;
+                    }
+                    
+                    steps++;
+                    this.animationId = setTimeout(step, 50);
+                };
+                
+                step();
+            }
+
+            stopExecution() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+                this.updateSystemStatus('已停止');
+                document.getElementById('run-btn').classList.remove('running');
+                document.getElementById('run-all-btn').classList.remove('running');
+            }
+
+            reset() {
+                this.stopExecution();
+                this.currentString = document.getElementById('initial-string').value;
+                this.stepCount = 0;
+                this.history = [];
+                
+                this.updateDisplay();
+                this.addToHistory(this.currentString, '重置到初始字符串');
+                this.updateSystemStatus('就绪');
+                
+                this.enableControls();
+            }
+
+            updateDisplay() {
+                document.getElementById('current-string').textContent = this.currentString || '空字符串';
+                document.getElementById('current-step').textContent = this.stepCount;
+                document.getElementById('string-length').textContent = this.currentString.length;
+                
+                // Update behavior type
+                this.updateBehaviorType();
+            }
+
+            updateBehaviorType() {
+                let behaviorType = '复杂';
+                
+                if (this.activePreset === 'cyclic') {
+                    behaviorType = '循环';
+                } else if (this.activePreset === 'doubling') {
+                    behaviorType = '倍增';
+                } else if (this.activePreset === 'collatz') {
+                    behaviorType = '类科拉茨';
+                } else if (this.currentString.length === 0) {
+                    behaviorType = '消亡';
+                } else if (this.history.length > 10 && this.currentString.length > 50) {
+                    behaviorType = '增长';
+                }
+                
+                document.getElementById('behavior-type').textContent = behaviorType;
+            }
+
+            updateSystemStatus(status) {
+                document.getElementById('system-status').textContent = status;
+            }
+
+            addToHistory(string, action) {
+                this.history.push({ step: this.stepCount, string, action });
+                
+                const historyContent = document.getElementById('history-content');
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `<span class="history-step">${this.stepCount}:</span> ${string}<span class="history-action">${action}</span>`;
+                historyContent.appendChild(item);
+                historyContent.scrollTop = historyContent.scrollHeight;
+            }
+
+            enableControls() {
+                document.getElementById('step-btn').disabled = false;
+                document.getElementById('run-btn').disabled = false;
+                document.getElementById('run-all-btn').disabled = false;
+            }
+
+            disableControls() {
+                document.getElementById('step-btn').disabled = true;
+                document.getElementById('run-btn').disabled = true;
+                document.getElementById('run-all-btn').disabled = true;
+            }
+
+            updateSystemAnalysis() {
+                const analyses = {
+                    wolfram925: "Wolfram 925系统：经典标记系统，展现了简单规则产生复杂行为的典型例子。通过删除前2个符号并根据第一个符号应用替换规则。",
+                    cyclic: "循环系统：简单的三符号循环，每个符号都替换为下一个符号，形成A→B→C→A的循环模式。",
+                    doubling: "倍增系统：二进制标记系统，每个符号都被替换为自身的两个副本，展现指数增长行为。",
+                    collatz: "类科拉茨系统：类似于著名的科拉茨猜想，偶数符号变为单个，奇数符号变为三个，展现复杂的数值行为。"
+                };
+
+                const text = analyses[this.activePreset] || `自定义系统：观察其产生的行为模式，分析其复杂性和规律性。`;
+                document.getElementById('analysis-text').textContent = text;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => new TagSystemExplorer());
+    </script>
+</body>
+</html>
