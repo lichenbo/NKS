@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Color Cellular Automata Demo - NKS Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #b8b8b8;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .control-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #d0d0d0;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        select, input[type="range"], button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.3));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.4));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .canvas-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #caCanvas {
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            background: #000;
+            max-width: 100%;
+        }
+
+        .rule-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .rule-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ffd700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .info-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .info-panel p {
+            color: #d0d0d0;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #b8b8b8;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .rule-cell {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>3-Color Cellular Automata Demo</h1>
+            <p>Explore Wolfram's 3-color totalistic cellular automata from "A New Kind of Science"<br>
+               These rules use three colors (White=0, Gray=1, Black=2) with totalistic neighborhood averaging</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-panel">
+                <h3>Rule Configuration</h3>
+                <div class="control-group">
+                    <label for="ruleSelect">Predefined Rules:</label>
+                    <select id="ruleSelect">
+                        <option value="777">Rule 777 - Complex Patterns</option>
+                        <option value="600">Rule 600 - Triangular Structures</option>
+                        <option value="924">Rule 924 - Nested Patterns</option>
+                        <option value="1059">Rule 1059 - Fractal-like</option>
+                        <option value="1545">Rule 1545 - Chaotic</option>
+                        <option value="1635">Rule 1635 - Periodic</option>
+                        <option value="custom">Custom Rule</option>
+                    </select>
+                </div>
+                <div class="control-group" id="customRuleGroup" style="display: none;">
+                    <label for="customRule">Custom Rule (0-2186):</label>
+                    <input type="number" id="customRule" min="0" max="2186" value="777">
+                </div>
+                <div class="control-group">
+                    <label for="speed">Animation Speed:</label>
+                    <input type="range" id="speed" min="50" max="1000" value="200">
+                    <span id="speedValue">200ms</span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>Simulation Control</h3>
+                <button id="startBtn">Start Animation</button>
+                <button id="stopBtn">Stop Animation</button>
+                <button id="stepBtn">Single Step</button>
+                <button id="resetBtn">Reset Grid</button>
+                <button id="randomBtn">Random Seed</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>Initial Conditions</h3>
+                <div class="control-group">
+                    <label for="seedType">Seed Pattern:</label>
+                    <select id="seedType">
+                        <option value="single">Single Black Cell</option>
+                        <option value="three">Three Random Cells</option>
+                        <option value="random">Random Pattern</option>
+                        <option value="gradient">Color Gradient</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <h3 style="color: #ffd700; margin-bottom: 15px;">Current Rule Lookup Table</h3>
+            <div class="rule-display" id="ruleDisplay"></div>
+            <canvas id="caCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="info-panel">
+            <h3>About 3-Color Cellular Automata</h3>
+            <p>
+                Stephen Wolfram explored 3-color cellular automata in "A New Kind of Science" to understand how 
+                increasing the number of possible states affects computational complexity. These systems use 
+                <strong>totalistic rules</strong>, where the new color depends only on the average of neighboring cells.
+            </p>
+            <p>
+                With 3 colors (0=White, 1=Gray, 2=Black) and nearest-neighbor interactions, there are exactly 
+                <strong>2,187 possible totalistic rules</strong>. Each rule can be represented by a lookup table 
+                showing the output for each possible neighborhood average (0, 1/3, 2/3, 1, 4/3, 5/3, 2).
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentRule">777</div>
+                    <div class="stat-label">Current Rule</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="generation">0</div>
+                    <div class="stat-label">Generation</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="whiteCount">0</div>
+                    <div class="stat-label">White Cells</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="grayCount">0</div>
+                    <div class="stat-label">Gray Cells</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="blackCount">0</div>
+                    <div class="stat-label">Black Cells</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ThreeColorCA {
+            constructor(canvasId, width = 200, height = 150) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.width = width;
+                this.height = height;
+                this.cellSize = Math.min(this.canvas.width / width, this.canvas.height / height);
+                this.grid = new Array(height).fill().map(() => new Array(width).fill(0));
+                this.rule = 777; // Default rule
+                this.ruleTable = this.generateRuleTable(this.rule);
+                this.generation = 0;
+                this.animationId = null;
+                this.isRunning = false;
+                
+                this.colors = ['#ffffff', '#808080', '#000000']; // White, Gray, Black
+                
+                this.initializeGrid();
+                this.updateRuleDisplay();
+                this.draw();
+            }
+
+            generateRuleTable(ruleNumber) {
+                // Convert rule number to ternary (base 3) with 7 digits
+                const ternary = ruleNumber.toString(3).padStart(7, '0');
+                const table = {};
+                
+                // Possible sums for 3 neighbors: 0, 1, 2, 3, 4, 5, 6
+                // Corresponding averages: 0, 1/3, 2/3, 1, 4/3, 5/3, 2
+                const sums = [0, 1, 2, 3, 4, 5, 6];
+                
+                for (let i = 0; i < 7; i++) {
+                    table[sums[i]] = parseInt(ternary[6-i]);
+                }
+                
+                return table;
+            }
+
+            updateRuleDisplay() {
+                const display = document.getElementById('ruleDisplay');
+                const sums = [0, 1, 2, 3, 4, 5, 6];
+                const averages = ['0', '1/3', '2/3', '1', '4/3', '5/3', '2'];
+                
+                display.innerHTML = '';
+                
+                for (let i = 0; i < 7; i++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'rule-cell';
+                    cellDiv.style.backgroundColor = this.colors[this.ruleTable[sums[i]]];
+                    cellDiv.style.color = this.ruleTable[sums[i]] === 0 ? '#000' : '#fff';
+                    cellDiv.innerHTML = `${averages[i]}<br>→${this.ruleTable[sums[i]]}`;
+                    cellDiv.style.fontSize = '10px';
+                    display.appendChild(cellDiv);
+                }
+                
+                document.getElementById('currentRule').textContent = this.rule;
+            }
+
+            initializeGrid(seedType = 'single') {
+                // Clear grid
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        this.grid[y][x] = 0;
+                    }
+                }
+
+                const centerX = Math.floor(this.width / 2);
+                
+                switch (seedType) {
+                    case 'single':
+                        this.grid[0][centerX] = 2; // Single black cell
+                        break;
+                    case 'three':
+                        this.grid[0][centerX - 1] = Math.floor(Math.random() * 3);
+                        this.grid[0][centerX] = Math.floor(Math.random() * 3);
+                        this.grid[0][centerX + 1] = Math.floor(Math.random() * 3);
+                        break;
+                    case 'random':
+                        for (let x = 0; x < this.width; x++) {
+                            if (Math.random() < 0.3) {
+                                this.grid[0][x] = Math.floor(Math.random() * 3);
+                            }
+                        }
+                        break;
+                    case 'gradient':
+                        for (let x = 0; x < this.width; x++) {
+                            const ratio = x / (this.width - 1);
+                            this.grid[0][x] = Math.floor(ratio * 3);
+                        }
+                        break;
+                }
+                
+                this.generation = 0;
+                this.updateStats();
+                this.draw();
+            }
+
+            step() {
+                if (this.generation >= this.height - 1) return;
+                
+                const newRow = new Array(this.width).fill(0);
+                const currentRow = this.generation;
+                
+                for (let x = 0; x < this.width; x++) {
+                    const left = this.grid[currentRow][(x - 1 + this.width) % this.width];
+                    const center = this.grid[currentRow][x];
+                    const right = this.grid[currentRow][(x + 1) % this.width];
+                    
+                    const sum = left + center + right;
+                    newRow[x] = this.ruleTable[sum] || 0;
+                }
+                
+                this.generation++;
+                for (let x = 0; x < this.width; x++) {
+                    this.grid[this.generation][x] = newRow[x];
+                }
+                
+                this.updateStats();
+                this.draw();
+            }
+
+            updateStats() {
+                let whiteCells = 0, grayCells = 0, blackCells = 0;
+                
+                for (let y = 0; y <= this.generation && y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        switch (this.grid[y][x]) {
+                            case 0: whiteCells++; break;
+                            case 1: grayCells++; break;
+                            case 2: blackCells++; break;
+                        }
+                    }
+                }
+                
+                document.getElementById('generation').textContent = this.generation;
+                document.getElementById('whiteCount').textContent = whiteCells;
+                document.getElementById('grayCount').textContent = grayCells;
+                document.getElementById('blackCount').textContent = blackCells;
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                for (let y = 0; y <= this.generation && y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        const color = this.colors[this.grid[y][x]];
+                        this.ctx.fillStyle = color;
+                        this.ctx.fillRect(
+                            x * this.cellSize, 
+                            y * this.cellSize, 
+                            this.cellSize, 
+                            this.cellSize
+                        );
+                    }
+                }
+            }
+
+            setRule(ruleNumber) {
+                this.rule = Math.max(0, Math.min(2186, ruleNumber));
+                this.ruleTable = this.generateRuleTable(this.rule);
+                this.updateRuleDisplay();
+            }
+
+            start(speed = 200) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                const animate = () => {
+                    if (!this.isRunning || this.generation >= this.height - 1) {
+                        this.isRunning = false;
+                        return;
+                    }
+                    
+                    this.step();
+                    this.animationId = setTimeout(animate, speed);
+                };
+                animate();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+            }
+        }
+
+        // Initialize the cellular automaton
+        const ca = new ThreeColorCA('caCanvas', 200, 150);
+
+        // Event listeners
+        document.getElementById('ruleSelect').addEventListener('change', (e) => {
+            const value = e.target.value;
+            const customGroup = document.getElementById('customRuleGroup');
+            
+            if (value === 'custom') {
+                customGroup.style.display = 'block';
+                const customRule = parseInt(document.getElementById('customRule').value);
+                ca.setRule(customRule);
+            } else {
+                customGroup.style.display = 'none';
+                ca.setRule(parseInt(value));
+            }
+        });
+
+        document.getElementById('customRule').addEventListener('input', (e) => {
+            ca.setRule(parseInt(e.target.value));
+        });
+
+        document.getElementById('speed').addEventListener('input', (e) => {
+            document.getElementById('speedValue').textContent = e.target.value + 'ms';
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const speed = parseInt(document.getElementById('speed').value);
+            ca.start(speed);
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            ca.stop();
+        });
+
+        document.getElementById('stepBtn').addEventListener('click', () => {
+            ca.step();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            ca.stop();
+            const seedType = document.getElementById('seedType').value;
+            ca.initializeGrid(seedType);
+        });
+
+        document.getElementById('randomBtn').addEventListener('click', () => {
+            ca.stop();
+            ca.initializeGrid('random');
+        });
+
+        document.getElementById('seedType').addEventListener('change', (e) => {
+            ca.stop();
+            ca.initializeGrid(e.target.value);
+        });
+    </script>
+</body>
+</html>
