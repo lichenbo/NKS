@@ -654,9 +654,16 @@
 
             updateRuleFromUI() {
                 const outputs = document.querySelectorAll('.rule-output');
-                this.rule = Array.from(outputs).map(output => 
-                    output.classList.contains('active') ? 1 : 0
-                );
+                // Initialize rule array with 8 elements
+                this.rule = new Array(8).fill(0);
+                
+                // Map each pattern to correct index based on binary value
+                outputs.forEach(output => {
+                    const pattern = output.getAttribute('data-pattern');
+                    const patternValue = parseInt(pattern, 2); // Convert binary string to decimal
+                    const bit = output.classList.contains('active') ? 1 : 0;
+                    this.rule[patternValue] = bit;
+                });
                 
                 // Calculate rule number
                 this.ruleNumber = this.rule.reduce((sum, bit, index) => 
@@ -693,8 +700,10 @@
 
             updateRuleUI() {
                 const outputs = document.querySelectorAll('.rule-output');
-                outputs.forEach((output, index) => {
-                    const isActive = this.rule[index] === 1;
+                outputs.forEach((output) => {
+                    const pattern = output.getAttribute('data-pattern');
+                    const patternValue = parseInt(pattern, 2); // Convert binary string to decimal
+                    const isActive = this.rule[patternValue] === 1;
                     output.classList.toggle('active', isActive);
                     output.textContent = isActive ? '1' : '0';
                 });
