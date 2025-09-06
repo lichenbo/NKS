@@ -579,367 +579,337 @@
     </div>
 
     <script>
-        class WolframRuleExplorer {
-            constructor() {
-                this.canvas = document.getElementById('cellular-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.width = 800;
-                this.maxGenerations = 300;
-                this.height = this.maxGenerations; // Height matches max generations
-                this.cellSize = 1; // Smaller cell size for larger canvas
-                this.currentGeneration = 0;
-                this.speedLevel = 5; // Speed level (1=slow, 10=fast)
-                this.speed = this.calculateDelay(5); // Actual delay in ms
-                this.isRunning = false;
-                this.animationId = null;
-                
-                // Current rule (default Rule 30)
-                this.rule = [0, 1, 1, 1, 1, 0, 0, 0];
-                this.ruleNumber = 30;
-                
-                // Grid for cellular automata
-                this.grid = [];
-                this.nextGrid = [];
-                
-                this.init();
-            }
+const RULE_BITS = 8;                // # of neighbourhood patterns (2^3)
+const RULE_MAX  = (1 << RULE_BITS) - 1;   // 255
 
-            init() {
-                this.setupCanvas();
-                this.setupEventListeners();
-                this.updateRuleDisplay();
-                this.resetGrid();
-                this.render();
-            }
+class WolframRuleExplorer {
+    constructor() {
+        /* --- cache frequently used DOM nodes --- */
+        this.canvas        = document.getElementById('cellular-canvas');
+        this.ctx           = this.canvas.getContext('2d');
+        this.ruleOutputs   = Array.from(document.querySelectorAll('.rule-output'));
+        this.presetEls     = Array.from(document.querySelectorAll('.preset-rule'));
 
-            setupCanvas() {
-                this.canvas.width = this.width * this.cellSize;
-                this.canvas.height = this.height * this.cellSize;
-                this.ctx.imageSmoothingEnabled = false;
-            }
+        /* --- runtime state --- */
+        this.width            = 800;
+        this.maxGenerations   = 300;
+        this.height           = this.maxGenerations;
+        this.cellSize         = 1;
+        this.currentGeneration= 0;
+        this.speedLevel       = 5;
+        this.speed            = this.calculateDelay(this.speedLevel);
+        this.isRunning        = false;
+        this.animationId      = null;
 
-            setupEventListeners() {
-                // Rule definition clicks
-                document.querySelectorAll('.rule-output').forEach(output => {
-                    output.addEventListener('click', (e) => {
-                        this.toggleRuleOutput(e.target);
-                    });
+        /* default rule : Rule-30 */
+        this.ruleNumber = 30;
+        this.rule       = this.toBitArray(this.ruleNumber);
+
+        /* grids */
+        this.grid      = [];
+        this.nextGrid  = [];
+
+        this.init();
+    }
+
+    /* ---------- helpers ---------- */
+
+    clamp(n, min, max) {            // simple utility
+        return Math.min(Math.max(n, min), max);
+    }
+
+    // Converts 0-255 rule number into 8-element bit array (least-significant first)
+    toBitArray(num) {
+        const arr = new Array(RULE_BITS);
+        for (let i = 0; i < RULE_BITS; i++) {
+            arr[i] = (num >> i) & 1;
+        }
+        return arr;
+    }
+
+    // Converts 8-element bit array back to rule number
+    fromBitArray(bits) {
+        return bits.reduce((acc, bit, idx) => acc | (bit << idx), 0);
+    }
+
+    calculateDelay(level) {               // 1-10 → 500-10 ms
+        return Math.max(10, 510 - level * 50);
+    }
+
+    /* ---------- initialisation ---------- */
+
+    init() {
+        this.setupCanvas();
+        this.setupEventListeners();
+        this.updateRuleUI();          // ensure grid matches Rule-30 on first paint
+        this.updateRuleDisplay();
+        this.resetGrid();
+        this.render();
+    }
+
+    setupCanvas() {
+        this.canvas.width  = this.width  * this.cellSize;
+        this.canvas.height = this.height * this.cellSize;
+        this.ctx.imageSmoothingEnabled = false;
+    }
+
+    /* ---------- UI / Events ---------- */
+
+    setupEventListeners() {
+        // toggle individual rule outputs
+        this.ruleOutputs.forEach(o => o.addEventListener('click', e => {
+            this.toggleRuleOutput(e.currentTarget);
+        }));
+
+        // preset rules
+        this.presetEls.forEach(p => p.addEventListener('click', e => {
+            this.loadPresetRule(e.currentTarget);
+        }));
+
+        // main control buttons
+        document.getElementById('start-btn').addEventListener('click', () => this.start());
+        document.getElementById('stop-btn').addEventListener('click',  () => this.stop());
+        document.getElementById('reset-btn').addEventListener('click', () => this.reset());
+        document.getElementById('random-rule-btn').addEventListener('click', () => this.generateRandomRule());
+
+        // sliders
+        document.getElementById('canvas-width')
+                .addEventListener('input', e => this.setWidth(+e.target.value));
+        document.getElementById('generations')
+                .addEventListener('input', e => this.setMaxGenerations(+e.target.value));
+        document.getElementById('speed')
+                .addEventListener('input', e => this.setSpeed(+e.target.value));
+
+        // rule slider with validation
+        document.getElementById('rule-slider')
+                .addEventListener('input', e => {
+                    const val = this.clamp(+e.target.value, 0, RULE_MAX);
+                    this.setRuleFromSlider(val);
                 });
+    }
 
-                // Preset rules
-                document.querySelectorAll('.preset-rule').forEach(preset => {
-                    preset.addEventListener('click', (e) => {
-                        this.loadPresetRule(e.currentTarget);
-                    });
-                });
+    toggleRuleOutput(el) {
+        const nowActive = !el.classList.contains('active');
+        el.classList.toggle('active', nowActive);
+        el.textContent = nowActive ? '1' : '0';
+        this.updateRuleFromUI();
+    }
 
-                // Control buttons
-                document.getElementById('start-btn').addEventListener('click', () => this.start());
-                document.getElementById('stop-btn').addEventListener('click', () => this.stop());
-                document.getElementById('reset-btn').addEventListener('click', () => this.reset());
-                document.getElementById('random-rule-btn').addEventListener('click', () => this.generateRandomRule());
+    updateRuleFromUI() {
+        // reset rule bits
+        this.rule = new Array(RULE_BITS).fill(0);
 
-                // Sliders
-                document.getElementById('canvas-width').addEventListener('input', (e) => {
-                    this.setWidth(parseInt(e.target.value));
-                });
-                
-                document.getElementById('generations').addEventListener('input', (e) => {
-                    this.setMaxGenerations(parseInt(e.target.value));
-                });
-                
-                document.getElementById('speed').addEventListener('input', (e) => {
-                    this.setSpeed(parseInt(e.target.value));
-                });
+        this.ruleOutputs.forEach(output => {
+            const patternVal = parseInt(output.dataset.pattern, 2);
+            this.rule[patternVal] = output.classList.contains('active') ? 1 : 0;
+        });
 
-                // Rule slider
-                document.getElementById('rule-slider').addEventListener('input', (e) => {
-                    this.setRuleFromSlider(parseInt(e.target.value));
-                });
-            }
+        this.ruleNumber = this.fromBitArray(this.rule);
+        this.updateRuleDisplay();
+        this.updateRuleAnalysis();
+        this.updateRuleSlider();
+    }
 
-            toggleRuleOutput(element) {
-                const isActive = element.classList.contains('active');
-                element.classList.toggle('active', !isActive);
-                element.textContent = isActive ? '0' : '1';
-                this.updateRuleFromUI();
-            }
+    /* ---------- rule setters ---------- */
 
-            updateRuleFromUI() {
-                const outputs = document.querySelectorAll('.rule-output');
-                // Initialize rule array with 8 elements
-                this.rule = new Array(8).fill(0);
-                
-                // Map each pattern to correct index based on binary value
-                outputs.forEach(output => {
-                    const pattern = output.getAttribute('data-pattern');
-                    const patternValue = parseInt(pattern, 2); // Convert binary string to decimal
-                    const bit = output.classList.contains('active') ? 1 : 0;
-                    this.rule[patternValue] = bit;
-                });
-                
-                // Calculate rule number
-                this.ruleNumber = this.rule.reduce((sum, bit, index) => 
-                    sum + bit * Math.pow(2, index), 0
-                );
-                
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-            }
+    loadPresetRule(el) {
+        this.presetEls.forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        this.setRule(+el.dataset.rule);
+    }
 
-            loadPresetRule(presetElement) {
-                // Remove active class from all presets
-                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
-                presetElement.classList.add('active');
-                
-                const ruleNum = parseInt(presetElement.dataset.rule);
-                this.setRule(ruleNum);
-            }
+    setRule(ruleNumber) {
+        this.ruleNumber = this.clamp(ruleNumber, 0, RULE_MAX);
+        this.rule       = this.toBitArray(this.ruleNumber);
 
-            setRule(ruleNumber) {
-                this.ruleNumber = ruleNumber;
-                
-                // Convert rule number to binary array
-                this.rule = [];
-                for (let i = 0; i < 8; i++) {
-                    this.rule[i] = (ruleNumber >> i) & 1;
-                }
-                
-                // Update UI
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updateRuleSlider();
-            }
+        this.updateRuleUI();
+        this.updateRuleDisplay();
+        this.updateRuleAnalysis();
+        this.updateRuleSlider();
+    }
 
-            setRuleFromSlider(ruleNumber) {
-                this.ruleNumber = ruleNumber;
-                
-                // Convert rule number to binary array
-                this.rule = [];
-                for (let i = 0; i < 8; i++) {
-                    this.rule[i] = (ruleNumber >> i) & 1;
-                }
-                
-                // Update UI (except slider to avoid feedback loop)
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updateRuleSliderValue();
-                
-                // Remove active class from preset rules since this is custom
-                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
-            }
+    setRuleFromSlider(ruleNumber) {
+        this.ruleNumber = this.clamp(ruleNumber, 0, RULE_MAX);
+        this.rule       = this.toBitArray(this.ruleNumber);
 
-            updateRuleUI() {
-                const outputs = document.querySelectorAll('.rule-output');
-                outputs.forEach((output) => {
-                    const pattern = output.getAttribute('data-pattern');
-                    const patternValue = parseInt(pattern, 2); // Convert binary string to decimal
-                    const isActive = this.rule[patternValue] === 1;
-                    output.classList.toggle('active', isActive);
-                    output.textContent = isActive ? '1' : '0';
-                });
-            }
+        this.updateRuleUI();
+        this.updateRuleDisplay();
+        this.updateRuleAnalysis();
+        this.updateRuleSliderValue();
 
-            updateRuleDisplay() {
-                document.getElementById('current-rule').textContent = this.ruleNumber;
-            }
+        // mark presets inactive (custom)
+        this.presetEls.forEach(p => p.classList.remove('active'));
+    }
 
-            updateRuleAnalysis() {
-                const analyses = {
-                    30: "规则30：产生看似随机的复杂图案，是Wolfram最重要的发现之一。尽管规则极其简单，但行为展现出真正的随机性特征。",
-                    90: "规则90：生成经典的谢尔宾斯基三角形分形图案。具有自相似的嵌套结构，展现数学之美。",
-                    110: "规则110：被证明是图灵完备的，能够进行通用计算。产生复杂的局部结构和相互作用。",
-                    150: "规则150：生成对称的分形图案，与规则90相似但更加复杂。展现出左右对称的嵌套结构。",
-                    184: "规则184：模拟交通流动力学。粒子向右移动，展现出集体行为和流体特性。",
-                    250: "规则250：产生简单的重复图案，类似棋盘。展现周期性行为。",
-                    254: "规则254：产生均匀填充的简单图案。几乎所有细胞都变为活跃状态。",
-                    126: "规则126：处于混沌边缘，产生复杂但有一定规律的图案。"
-                };
-                
-                const defaultAnalysis = `规则${this.ruleNumber}：自定义规则。观察其产生的图案特征，分析其复杂性和规律性。`;
-                
-                document.getElementById('analysis-text').textContent = 
-                    analyses[this.ruleNumber] || defaultAnalysis;
-            }
+    /* ---------- rule-related UI helpers ---------- */
 
-            updateRuleSlider() {
-                document.getElementById('rule-slider').value = this.ruleNumber;
-                this.updateRuleSliderValue();
-            }
+    updateRuleUI() {
+        this.ruleOutputs.forEach(output => {
+            const patternVal = parseInt(output.dataset.pattern, 2);
+            const active = this.rule[patternVal] === 1;
+            output.classList.toggle('active', active);
+            output.textContent = active ? '1' : '0';
+        });
+    }
 
-            updateRuleSliderValue() {
-                document.getElementById('rule-slider-value').textContent = this.ruleNumber;
-            }
+    updateRuleDisplay() {
+        document.getElementById('current-rule').textContent = this.ruleNumber;
+    }
 
-            generateRandomRule() {
-                const randomRule = Math.floor(Math.random() * 256);
-                this.setRule(randomRule);
-                
-                // Remove active class from preset rules
-                document.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
-            }
+    updateRuleSlider() {
+        document.getElementById('rule-slider').value = this.ruleNumber;
+        this.updateRuleSliderValue();
+    }
 
-            setWidth(newWidth) {
-                this.width = newWidth;
-                document.getElementById('canvas-width-value').textContent = newWidth;
-                this.setupCanvas();
-                this.resetGrid();
-            }
+    updateRuleSliderValue() {
+        document.getElementById('rule-slider-value').textContent = this.ruleNumber;
+    }
 
-            setMaxGenerations(gens) {
-                this.maxGenerations = gens;
-                this.height = gens; // Update grid height to match generations
-                document.getElementById('generations-value').textContent = gens;
-                this.setupCanvas();
-                this.resetGrid();
-            }
+    updateRuleAnalysis() {
+        const analyses = {
+            30:  "规则30：产生看似随机的复杂图案，是Wolfram最重要的发现之一。尽管规则极其简单，但行为展现出真正的随机性特征。",
+            90:  "规则90：生成经典的谢尔宾斯基三角形分形图案。具有自相似的嵌套结构，展现数学之美。",
+            110: "规则110：被证明是图灵完备的，能够进行通用计算。产生复杂的局部结构和相互作用。",
+            150: "规则150：生成对称的分形图案，与规则90相似但更加复杂。展现出左右对称的嵌套结构。",
+            184: "规则184：模拟交通流动力学。粒子向右移动，展现出集体行为和流体特性。",
+            250: "规则250：产生简单的重复图案，类似棋盘。展现周期性行为。",
+            254: "规则254：产生均匀填充的简单图案。几乎所有细胞都变为活跃状态。",
+            126: "规则126：处于混沌边缘，产生复杂但有一定规律的图案。"
+        };
 
-            calculateDelay(speedLevel) {
-                // Convert speed level (1-10) to delay in milliseconds
-                // Level 1 = 500ms (slow), Level 10 = 10ms (fast)
-                return Math.max(10, 510 - speedLevel * 50);
-            }
+        const text = analyses[this.ruleNumber] || `规则${this.ruleNumber}：自定义规则。观察其产生的图案特征，分析其复杂性和规律性。`;
+        document.getElementById('analysis-text').textContent = text;
+    }
 
-            setSpeed(speedLevel) {
-                this.speedLevel = speedLevel;
-                this.speed = this.calculateDelay(speedLevel);
-                document.getElementById('speed-value').textContent = speedLevel;
-            }
+    /* ---------- misc UI actions ---------- */
 
-            resetGrid() {
-                this.currentGeneration = 0;
-                this.grid = new Array(this.height).fill(null).map(() => new Array(this.width).fill(0));
-                this.nextGrid = new Array(this.height).fill(null).map(() => new Array(this.width).fill(0));
-                
-                // Initialize with single cell in center of first row
-                this.grid[0][Math.floor(this.width / 2)] = 1;
-                
-                this.updateInfo();
-                this.render();
-            }
+    generateRandomRule() {
+        const rand = Math.floor(Math.random() * (RULE_MAX + 1));
+        this.setRule(rand);
+        this.presetEls.forEach(p => p.classList.remove('active'));
+    }
 
-            applyRule(left, center, right) {
-                const pattern = (left << 2) | (center << 1) | right;
-                return this.rule[pattern];
-            }
+    /* ---------- user adjustable params ---------- */
 
-            evolve() {
-                if (this.currentGeneration >= this.maxGenerations - 1) {
-                    this.stop();
-                    return;
-                }
+    setWidth(w) {
+        this.width = w;
+        document.getElementById('canvas-width-value').textContent = w;
+        this.setupCanvas();
+        this.resetGrid();
+    }
 
-                const currentRow = this.currentGeneration;
-                const nextRow = currentRow + 1;
+    setMaxGenerations(g) {
+        this.maxGenerations = g;
+        this.height         = g;
+        document.getElementById('generations-value').textContent = g;
+        this.setupCanvas();
+        this.resetGrid();
+    }
 
-                // Make sure we don't exceed grid bounds
-                if (nextRow >= this.height) {
-                    this.stop();
-                    return;
-                }
+    setSpeed(level) {
+        this.speedLevel = level;
+        this.speed      = this.calculateDelay(level);
+        document.getElementById('speed-value').textContent = level;
+    }
 
-                for (let x = 0; x < this.width; x++) {
-                    const left = this.grid[currentRow][(x - 1 + this.width) % this.width];
-                    const center = this.grid[currentRow][x];
-                    const right = this.grid[currentRow][(x + 1) % this.width];
-                    
-                    this.grid[nextRow][x] = this.applyRule(left, center, right);
-                }
+    /* ---------- simulation core ---------- */
 
-                this.currentGeneration++;
-                this.updateInfo();
-                this.render();
-            }
+    resetGrid() {
+        this.currentGeneration = 0;
+        this.grid     = Array.from({length: this.height}, () => new Array(this.width).fill(0));
+        this.nextGrid = Array.from({length: this.height}, () => new Array(this.width).fill(0));
+        this.grid[0][Math.floor(this.width / 2)] = 1;
+        this.updateInfo();
+        this.render();
+    }
 
-            start() {
-                if (this.isRunning) return;
-                
-                this.isRunning = true;
-                document.getElementById('evolution-status').textContent = '运行中';
-                document.getElementById('start-btn').classList.add('generating');
-                
-                const evolveStep = () => {
-                    if (!this.isRunning) return;
-                    
-                    this.evolve();
-                    
-                    if (this.currentGeneration < this.maxGenerations - 1 && this.currentGeneration < this.height - 1) {
-                        this.animationId = setTimeout(evolveStep, this.speed);
-                    } else {
-                        this.stop();
-                    }
-                };
-                
-                evolveStep();
-            }
+    applyRule(left, centre, right) {
+        const pattern = (left << 2) | (centre << 1) | right;
+        return this.rule[pattern];
+    }
 
-            stop() {
-                this.isRunning = false;
-                if (this.animationId) {
-                    clearTimeout(this.animationId);
-                    this.animationId = null;
-                }
-                document.getElementById('evolution-status').textContent = '已停止';
-                document.getElementById('start-btn').classList.remove('generating');
-            }
+    evolve() {
+        if (this.currentGeneration >= this.maxGenerations - 1) { this.stop(); return; }
+        const y = this.currentGeneration;
+        const ny= y + 1;
 
-            reset() {
-                this.stop();
-                this.resetGrid();
-                document.getElementById('evolution-status').textContent = '就绪';
-            }
-
-            render() {
-                this.ctx.fillStyle = '#000000';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                this.ctx.fillStyle = '#ffd700';
-                
-                for (let y = 0; y < this.height; y++) {
-                    for (let x = 0; x < this.width; x++) {
-                        if (this.grid[y] && this.grid[y][x] === 1) {
-                            this.ctx.fillRect(
-                                x * this.cellSize, 
-                                y * this.cellSize, 
-                                this.cellSize, 
-                                this.cellSize
-                            );
-                        }
-                    }
-                }
-            }
-
-            updateInfo() {
-                document.getElementById('current-generation').textContent = this.currentGeneration;
-                
-                // Count active cells in current generation
-                let activeCells = 0;
-                if (this.grid[this.currentGeneration]) {
-                    activeCells = this.grid[this.currentGeneration].reduce((sum, cell) => sum + cell, 0);
-                }
-                document.getElementById('active-cells').textContent = activeCells;
-                
-                // Simple pattern classification
-                let patternType = '未知';
-                if (this.ruleNumber === 30) patternType = '随机复杂';
-                else if (this.ruleNumber === 90 || this.ruleNumber === 150) patternType = '分形';
-                else if (this.ruleNumber === 110) patternType = '复杂结构';
-                else if (this.ruleNumber === 184) patternType = '粒子';
-                else if (this.ruleNumber === 250 || this.ruleNumber === 254) patternType = '简单重复';
-                else if (activeCells === 0) patternType = '消亡';
-                else if (activeCells > this.width * 0.7) patternType = '填充';
-                else patternType = '复杂';
-                
-                document.getElementById('pattern-type').textContent = patternType;
-            }
+        for (let x = 0; x < this.width; x++) {
+            const left   = this.grid[y][(x - 1 + this.width) % this.width];
+            const centre = this.grid[y][x];
+            const right  = this.grid[y][(x + 1) % this.width];
+            this.grid[ny][x] = this.applyRule(left, centre, right);
         }
 
-        // Initialize the explorer when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new WolframRuleExplorer();
-        });
+        this.currentGeneration++;
+        this.updateInfo();
+        this.render();
+    }
+
+    start() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        document.getElementById('evolution-status').textContent = '运行中';
+        document.getElementById('start-btn').classList.add('generating');
+
+        const step = () => {
+            if (!this.isRunning) return;
+            this.evolve();
+            if (this.currentGeneration < this.maxGenerations - 1) {
+                this.animationId = setTimeout(step, this.speed);
+            } else { this.stop(); }
+        };
+        step();
+    }
+
+    stop() {
+        this.isRunning = false;
+        if (this.animationId) { clearTimeout(this.animationId); this.animationId = null; }
+        document.getElementById('evolution-status').textContent = '已停止';
+        document.getElementById('start-btn').classList.remove('generating');
+    }
+
+    reset() {
+        this.stop();
+        this.resetGrid();
+        document.getElementById('evolution-status').textContent = '就绪';
+    }
+
+    render() {
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#ffd700';
+
+        for (let y = 0; y < this.height; y++) {
+            const row = this.grid[y];
+            if (!row) continue;
+            for (let x = 0; x < this.width; x++) {
+                if (row[x] === 1) {
+                    this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+                }
+            }
+        }
+    }
+
+    updateInfo() {
+        document.getElementById('current-generation').textContent = this.currentGeneration;
+        const active = this.grid[this.currentGeneration]?.reduce((s, c) => s + c, 0) || 0;
+        document.getElementById('active-cells').textContent = active;
+
+        // very simple classification
+        let type = '复杂';
+        if (this.ruleNumber === 30) type = '随机复杂';
+        else if ([90,150].includes(this.ruleNumber)) type = '分形';
+        else if (this.ruleNumber === 110) type = '复杂结构';
+        else if (this.ruleNumber === 184) type = '粒子';
+        else if ([250,254].includes(this.ruleNumber)) type = '简单重复';
+        else if (active === 0) type = '消亡';
+        else if (active > this.width * 0.7) type = '填充';
+        document.getElementById('pattern-type').textContent = type;
+    }
+}
+
+/* ---------- bootstrap ---------- */
+document.addEventListener('DOMContentLoaded', () => new WolframRuleExplorer());
     </script>
 </body>
 </html>
