@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Automata Demo - NKS Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #b8b8b8;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .control-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #d0d0d0;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        select, input[type="range"], input[type="number"], button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.3));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.4));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .canvas-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #maCanvas {
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            background: #000;
+            max-width: 100%;
+        }
+
+        .rule-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .rule-table {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .rule-entry {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 5px;
+            min-width: 60px;
+        }
+
+        .rule-condition {
+            font-size: 12px;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .rule-action {
+            font-size: 10px;
+            color: #d0d0d0;
+            text-align: center;
+        }
+
+        .mobile-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .info-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .info-panel p {
+            color: #d0d0d0;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #b8b8b8;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .rule-table {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mobile Automata Demo</h1>
+            <p>Explore Wolfram's mobile automata from "A New Kind of Science"<br>
+               Systems with moving active cells that update neighboring cells according to specific rules</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-panel">
+                <h3>Mobile Automaton Rules</h3>
+                <div class="control-group">
+                    <label for="rulePreset">Predefined Rules:</label>
+                    <select id="rulePreset">
+                        <option value="simple">Simple Repetitive</option>
+                        <option value="oscillating">Oscillating Motion</option>
+                        <option value="sweeping">Sweeping Pattern</option>
+                        <option value="complex">Complex Behavior</option>
+                        <option value="splitting">Cell Splitting</option>
+                        <option value="custom">Custom Rule</option>
+                    </select>
+                </div>
+                <div id="customRulePanel" style="display: none;">
+                    <div class="control-group">
+                        <label for="moveLeft">Move Left (0→L, 1→Action):</label>
+                        <select id="moveLeft">
+                            <option value="0,0">Stay, Write 0</option>
+                            <option value="0,1">Stay, Write 1</option>
+                            <option value="-1,0">Left, Write 0</option>
+                            <option value="-1,1">Left, Write 1</option>
+                            <option value="1,0">Right, Write 0</option>
+                            <option value="1,1">Right, Write 1</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="moveRight">Move Right (1→L, 0→Action):</label>
+                        <select id="moveRight">
+                            <option value="0,0">Stay, Write 0</option>
+                            <option value="0,1">Stay, Write 1</option>
+                            <option value="-1,0">Left, Write 0</option>
+                            <option value="-1,1">Left, Write 1</option>
+                            <option value="1,0">Right, Write 0</option>
+                            <option value="1,1">Right, Write 1</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>Simulation Control</h3>
+                <div class="control-group">
+                    <label for="speed">Animation Speed:</label>
+                    <input type="range" id="speed" min="50" max="1000" value="300">
+                    <span id="speedValue">300ms</span>
+                </div>
+                <button id="startBtn">Start Animation</button>
+                <button id="stopBtn">Stop Animation</button>
+                <button id="stepBtn">Single Step</button>
+                <button id="resetBtn">Reset System</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>Initial Configuration</h3>
+                <div class="control-group">
+                    <label for="initialPattern">Initial Pattern:</label>
+                    <select id="initialPattern">
+                        <option value="center">Single Active Cell</option>
+                        <option value="pattern1">Pattern with 1s</option>
+                        <option value="random">Random Pattern</option>
+                        <option value="edges">Edge Activation</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="tapeSize">Tape Size:</label>
+                    <input type="range" id="tapeSize" min="50" max="200" value="100">
+                    <span id="tapeSizeValue">100</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <h3 style="color: #ffd700; margin-bottom: 15px;">Mobile Automaton Visualization</h3>
+            <div class="rule-display" id="ruleDisplay">
+                <div class="rule-table" id="ruleTable"></div>
+                <div class="mobile-indicators">
+                    <div class="indicator">
+                        <div class="indicator-dot" style="background: #ff6b6b;"></div>
+                        <span>Active Cell</span>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-dot" style="background: #ffffff;"></div>
+                        <span>State 0</span>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-dot" style="background: #4ecdc4;"></div>
+                        <span>State 1</span>
+                    </div>
+                </div>
+            </div>
+            <canvas id="maCanvas" width="1200" height="600"></canvas>
+        </div>
+
+        <div class="info-panel">
+            <h3>About Mobile Automata</h3>
+            <p>
+                Mobile automata, explored by Stephen Wolfram in "A New Kind of Science," are computational systems 
+                where one or more <strong>active cells</strong> move along a line of cells, updating them according 
+                to specific rules. Unlike cellular automata where all cells update simultaneously, mobile automata 
+                update only the active cells and their immediate neighbors.
+            </p>
+            <p>
+                The behavior can range from simple repetitive motion to complex sweeping patterns. Some rules cause 
+                the active cell to move in predictable cycles, while others create intricate back-and-forth movements 
+                that cover increasingly larger areas. Advanced variants allow cells to <strong>split</strong> or 
+                <strong>disappear</strong>, creating even richer dynamics.
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentStep">0</div>
+                    <div class="stat-label">Steps</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="activePosition">50</div>
+                    <div class="stat-label">Active Position</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="activeCells">1</div>
+                    <div class="stat-label">Active Cells</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="onesCount">0</div>
+                    <div class="stat-label">Ones Count</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="zerosCount">100</div>
+                    <div class="stat-label">Zeros Count</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MobileAutomaton {
+            constructor(canvasId, size = 100) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.size = size;
+                this.maxHistory = 150;
+                this.cellWidth = this.canvas.width / size;
+                this.cellHeight = this.canvas.height / this.maxHistory;
+                
+                // Tape and active cells
+                this.tape = new Array(size).fill(0);
+                this.activeCells = [{ position: Math.floor(size / 2), direction: 1 }];
+                this.history = [];
+                this.steps = 0;
+                
+                // Rules: [move_delta, write_value] for states 0 and 1
+                this.rules = {
+                    0: [1, 1],  // If current cell is 0: move right, write 1
+                    1: [-1, 0]  // If current cell is 1: move left, write 0
+                };
+                
+                this.isRunning = false;
+                this.animationId = null;
+                
+                this.reset();
+                this.updateRuleDisplay();
+            }
+
+            setRule(preset) {
+                switch (preset) {
+                    case 'simple':
+                        this.rules = { 0: [1, 1], 1: [-1, 0] };
+                        break;
+                    case 'oscillating':
+                        this.rules = { 0: [1, 1], 1: [-1, 1] };
+                        break;
+                    case 'sweeping':
+                        this.rules = { 0: [1, 0], 1: [-1, 1] };
+                        break;
+                    case 'complex':
+                        this.rules = { 0: [1, 1], 1: [1, 0] };
+                        break;
+                    case 'splitting':
+                        this.rules = { 0: [1, 1], 1: [-1, 0] };
+                        this.allowSplitting = true;
+                        break;
+                    default:
+                        // Keep current rules
+                        break;
+                }
+                this.updateRuleDisplay();
+            }
+
+            setCustomRule(moveLeft, moveRight) {
+                const [leftMove, leftWrite] = moveLeft.split(',').map(Number);
+                const [rightMove, rightWrite] = moveRight.split(',').map(Number);
+                
+                this.rules = {
+                    0: [leftMove, leftWrite],
+                    1: [rightMove, rightWrite]
+                };
+                this.updateRuleDisplay();
+            }
+
+            updateRuleDisplay() {
+                const ruleTable = document.getElementById('ruleTable');
+                ruleTable.innerHTML = '';
+                
+                for (let state = 0; state <= 1; state++) {
+                    const [move, write] = this.rules[state];
+                    const entry = document.createElement('div');
+                    entry.className = 'rule-entry';
+                    
+                    const condition = document.createElement('div');
+                    condition.className = 'rule-condition';
+                    condition.textContent = `Cell = ${state}`;
+                    
+                    const action = document.createElement('div');
+                    action.className = 'rule-action';
+                    const moveText = move === -1 ? 'Left' : move === 1 ? 'Right' : 'Stay';
+                    action.textContent = `${moveText}, Write ${write}`;
+                    
+                    entry.appendChild(condition);
+                    entry.appendChild(action);
+                    ruleTable.appendChild(entry);
+                }
+            }
+
+            reset(pattern = 'center') {
+                this.tape.fill(0);
+                this.activeCells = [];
+                this.history = [];
+                this.steps = 0;
+                
+                switch (pattern) {
+                    case 'center':
+                        this.activeCells = [{ position: Math.floor(this.size / 2), direction: 1 }];
+                        break;
+                    case 'pattern1':
+                        for (let i = 0; i < this.size; i += 10) {
+                            this.tape[i] = 1;
+                        }
+                        this.activeCells = [{ position: Math.floor(this.size / 2), direction: 1 }];
+                        break;
+                    case 'random':
+                        for (let i = 0; i < this.size; i++) {
+                            this.tape[i] = Math.random() < 0.2 ? 1 : 0;
+                        }
+                        this.activeCells = [{ position: Math.floor(this.size / 2), direction: 1 }];
+                        break;
+                    case 'edges':
+                        this.activeCells = [
+                            { position: 10, direction: 1 },
+                            { position: this.size - 10, direction: -1 }
+                        ];
+                        break;
+                }
+                
+                this.saveHistory();
+                this.updateStats();
+                this.draw();
+            }
+
+            step() {
+                const newActiveCells = [];
+                
+                for (const activeCell of this.activeCells) {
+                    let { position, direction } = activeCell;
+                    
+                    // Wrap position
+                    position = ((position % this.size) + this.size) % this.size;
+                    
+                    // Get current cell value
+                    const currentValue = this.tape[position];
+                    
+                    // Apply rule
+                    const [moveDelta, writeValue] = this.rules[currentValue];
+                    
+                    // Write to current position
+                    this.tape[position] = writeValue;
+                    
+                    // Calculate new position
+                    const newPosition = ((position + moveDelta) % this.size + this.size) % this.size;
+                    
+                    // Add to new active cells
+                    newActiveCells.push({
+                        position: newPosition,
+                        direction: moveDelta
+                    });
+                    
+                    // Splitting behavior (for certain rules)
+                    if (this.allowSplitting && Math.random() < 0.05 && this.activeCells.length < 5) {
+                        newActiveCells.push({
+                            position: ((position - moveDelta) % this.size + this.size) % this.size,
+                            direction: -moveDelta
+                        });
+                    }
+                }
+                
+                this.activeCells = newActiveCells;
+                this.steps++;
+                
+                this.saveHistory();
+                this.updateStats();
+                this.draw();
+            }
+
+            saveHistory() {
+                const snapshot = {
+                    tape: [...this.tape],
+                    activeCells: this.activeCells.map(cell => ({ ...cell }))
+                };
+                
+                this.history.push(snapshot);
+                
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+            }
+
+            updateStats() {
+                const onesCount = this.tape.reduce((sum, cell) => sum + cell, 0);
+                const zerosCount = this.size - onesCount;
+                
+                document.getElementById('currentStep').textContent = this.steps;
+                document.getElementById('activePosition').textContent = 
+                    this.activeCells.length > 0 ? this.activeCells[0].position : 'N/A';
+                document.getElementById('activeCells').textContent = this.activeCells.length;
+                document.getElementById('onesCount').textContent = onesCount;
+                document.getElementById('zerosCount').textContent = zerosCount;
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw history
+                for (let t = 0; t < this.history.length; t++) {
+                    const snapshot = this.history[t];
+                    const y = t * this.cellHeight;
+                    const alpha = Math.max(0.3, 1 - (this.history.length - t - 1) * 0.02);
+                    
+                    // Draw tape
+                    for (let x = 0; x < this.size; x++) {
+                        const value = snapshot.tape[x];
+                        this.ctx.fillStyle = value === 1 ? `rgba(78, 205, 196, ${alpha})` : `rgba(40, 40, 40, ${alpha})`;
+                        this.ctx.fillRect(x * this.cellWidth, y, this.cellWidth, this.cellHeight);
+                    }
+                    
+                    // Draw active cells
+                    for (const activeCell of snapshot.activeCells) {
+                        this.ctx.fillStyle = `rgba(255, 107, 107, ${alpha})`;
+                        this.ctx.fillRect(
+                            activeCell.position * this.cellWidth, 
+                            y, 
+                            this.cellWidth, 
+                            this.cellHeight
+                        );
+                        
+                        // Draw direction arrow
+                        if (this.cellWidth > 5) {
+                            this.ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                            const centerX = (activeCell.position + 0.5) * this.cellWidth;
+                            const centerY = y + this.cellHeight / 2;
+                            const arrowSize = Math.min(3, this.cellWidth / 3);
+                            
+                            if (activeCell.direction > 0) {
+                                // Right arrow
+                                this.ctx.fillRect(centerX + 1, centerY - arrowSize, arrowSize, 2 * arrowSize);
+                            } else if (activeCell.direction < 0) {
+                                // Left arrow
+                                this.ctx.fillRect(centerX - arrowSize - 1, centerY - arrowSize, arrowSize, 2 * arrowSize);
+                            }
+                        }
+                    }
+                }
+            }
+
+            start(speed = 300) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                const animate = () => {
+                    if (!this.isRunning) return;
+                    
+                    this.step();
+                    this.animationId = setTimeout(animate, speed);
+                };
+                animate();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            setSize(newSize) {
+                this.stop();
+                this.size = newSize;
+                this.cellWidth = this.canvas.width / newSize;
+                this.tape = new Array(newSize).fill(0);
+                this.reset();
+            }
+        }
+
+        // Initialize the mobile automaton
+        const ma = new MobileAutomaton('maCanvas', 100);
+
+        // Event listeners
+        document.getElementById('rulePreset').addEventListener('change', (e) => {
+            const preset = e.target.value;
+            const customPanel = document.getElementById('customRulePanel');
+            
+            if (preset === 'custom') {
+                customPanel.style.display = 'block';
+            } else {
+                customPanel.style.display = 'none';
+                ma.setRule(preset);
+                ma.allowSplitting = false;
+            }
+        });
+
+        document.getElementById('moveLeft').addEventListener('change', updateCustomRule);
+        document.getElementById('moveRight').addEventListener('change', updateCustomRule);
+
+        function updateCustomRule() {
+            const moveLeft = document.getElementById('moveLeft').value;
+            const moveRight = document.getElementById('moveRight').value;
+            ma.setCustomRule(moveLeft, moveRight);
+        }
+
+        document.getElementById('speed').addEventListener('input', (e) => {
+            document.getElementById('speedValue').textContent = e.target.value + 'ms';
+        });
+
+        document.getElementById('tapeSize').addEventListener('input', (e) => {
+            const size = parseInt(e.target.value);
+            document.getElementById('tapeSizeValue').textContent = size;
+            ma.setSize(size);
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const speed = parseInt(document.getElementById('speed').value);
+            ma.start(speed);
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            ma.stop();
+        });
+
+        document.getElementById('stepBtn').addEventListener('click', () => {
+            ma.step();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            ma.stop();
+            const pattern = document.getElementById('initialPattern').value;
+            ma.reset(pattern);
+        });
+
+        document.getElementById('initialPattern').addEventListener('change', (e) => {
+            ma.stop();
+            ma.reset(e.target.value);
+        });
+    </script>
+</body>
+</html>

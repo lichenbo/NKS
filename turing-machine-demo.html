@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turing Machine Demo - NKS Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #b8b8b8;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .control-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #d0d0d0;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        select, input[type="range"], input[type="text"], button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.3));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.4));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .canvas-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #tmCanvas {
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            background: #000;
+            max-width: 100%;
+        }
+
+        .state-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .state-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .state-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .rule-table {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .rule-table h4 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .rule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .rule-entry {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 5px;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .rule-condition {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .rule-action {
+            color: #d0d0d0;
+        }
+
+        .machine-indicators {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .custom-rule-editor {
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .custom-rule-editor textarea {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 5px;
+            color: #e0e0e0;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .info-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .info-panel p {
+            color: #d0d0d0;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #b8b8b8;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .rule-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .machine-indicators {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Turing Machine Demo</h1>
+            <p>Explore Wolfram's Turing machines from "A New Kind of Science"<br>
+               Universal computation with simple rules: head states, tape symbols, and transition rules</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-panel">
+                <h3>Turing Machine Selection</h3>
+                <div class="control-group">
+                    <label for="machinePreset">Predefined Machines:</label>
+                    <select id="machinePreset">
+                        <option value="simple2state">Simple 2-State (Page 78)</option>
+                        <option value="wolfram3024">Wolfram #3024 (Page 79)</option>
+                        <option value="wolfram982">Wolfram #982 (Page 79)</option>
+                        <option value="wolfram925">Wolfram #925 (Page 79)</option>
+                        <option value="famous23">Famous 2-State 3-Symbol</option>
+                        <option value="universal25">Universal 2-State 5-Symbol</option>
+                        <option value="busy3">Busy Beaver 3-State</option>
+                        <option value="custom">Custom Machine</option>
+                    </select>
+                </div>
+                
+                <div class="custom-rule-editor" id="customRuleEditor">
+                    <label for="customRules">Custom Rules (JSON format):</label>
+                    <textarea id="customRules" placeholder='Example:
+{
+  "1,0": [2, 1, "R"],
+  "1,1": [2, 0, "L"],
+  "2,0": [1, 1, "L"],
+  "2,1": [1, 0, "R"]
+}'></textarea>
+                    <button id="applyCustom">Apply Custom Rules</button>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>Simulation Control</h3>
+                <div class="control-group">
+                    <label for="speed">Animation Speed:</label>
+                    <input type="range" id="speed" min="50" max="2000" value="500">
+                    <span id="speedValue">500ms</span>
+                </div>
+                <button id="startBtn">Start Simulation</button>
+                <button id="stopBtn">Stop Simulation</button>
+                <button id="stepBtn">Single Step</button>
+                <button id="resetBtn">Reset Machine</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>Initial Configuration</h3>
+                <div class="control-group">
+                    <label for="initialTape">Initial Tape:</label>
+                    <input type="text" id="initialTape" value="000000000000" placeholder="e.g., 001100110">
+                </div>
+                <div class="control-group">
+                    <label for="headPosition">Head Start Position:</label>
+                    <input type="range" id="headPosition" min="0" max="50" value="6">
+                    <span id="headPosValue">6</span>
+                </div>
+                <div class="control-group">
+                    <label for="initialState">Initial State:</label>
+                    <select id="initialState">
+                        <option value="1">State 1</option>
+                        <option value="2">State 2</option>
+                        <option value="3">State 3</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <h3 style="color: #ffd700; margin-bottom: 15px;">Turing Machine Visualization</h3>
+            
+            <div class="state-display" id="stateDisplay">
+                <div class="state-indicator">
+                    <span>Current State:</span>
+                    <div class="state-dot" id="currentStateDot" style="background: #ff6b6b;"></div>
+                    <span id="currentStateText">1</span>
+                </div>
+                <div class="state-indicator">
+                    <span>Head Position:</span>
+                    <span id="headPositionText">6</span>
+                </div>
+                <div class="state-indicator">
+                    <span>Current Symbol:</span>
+                    <span id="currentSymbolText">0</span>
+                </div>
+            </div>
+
+            <div class="machine-indicators">
+                <div class="indicator">
+                    <div class="indicator-dot" style="background: #ff6b6b;"></div>
+                    <span>Tape Head</span>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-dot" style="background: #ffffff;"></div>
+                    <span>Symbol 0</span>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-dot" style="background: #4ecdc4;"></div>
+                    <span>Symbol 1</span>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-dot" style="background: #45b7d1;"></div>
+                    <span>Symbol 2</span>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-dot" style="background: #96ceb4;"></div>
+                    <span>Symbol 3</span>
+                </div>
+            </div>
+
+            <canvas id="tmCanvas" width="1200" height="500"></canvas>
+
+            <div class="rule-table" id="ruleTable">
+                <h4>Transition Rules</h4>
+                <div class="rule-grid" id="ruleGrid"></div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>About Turing Machines</h3>
+            <p>
+                Turing machines, extensively studied by Stephen Wolfram in "A New Kind of Science," are fundamental 
+                models of computation consisting of a <strong>tape</strong> of cells, a <strong>head</strong> that 
+                can read and write symbols, and a finite set of <strong>states</strong>. The machine follows 
+                <strong>transition rules</strong> that determine what symbol to write, which direction to move, 
+                and what new state to enter based on the current state and symbol.
+            </p>
+            <p>
+                Wolfram demonstrated that even very simple Turing machines can exhibit complex behavior and achieve 
+                <strong>universal computation</strong>. His famous <strong>2-state 3-symbol machine</strong> was 
+                proven universal in 2007, making it the smallest known universal Turing machine. This supports his 
+                <strong>Principle of Computational Equivalence</strong> - that complex computation is ubiquitous 
+                in simple systems.
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentSteps">0</div>
+                    <div class="stat-label">Steps</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="currentState">1</div>
+                    <div class="stat-label">State</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="headPos">6</div>
+                    <div class="stat-label">Head Position</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tapeSize">12</div>
+                    <div class="stat-label">Tape Size</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="onesOnTape">0</div>
+                    <div class="stat-label">Ones on Tape</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="nonZeroSymbols">0</div>
+                    <div class="stat-label">Non-Zero Symbols</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TuringMachine {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.tape = [];
+                this.headPosition = 0;
+                this.currentState = 1;
+                this.rules = {};
+                this.steps = 0;
+                this.isRunning = false;
+                this.animationId = null;
+                this.history = [];
+                this.maxHistory = 100;
+                
+                this.colors = {
+                    0: '#ffffff',  // White
+                    1: '#4ecdc4',  // Cyan
+                    2: '#45b7d1',  // Blue
+                    3: '#96ceb4',  // Light green
+                    4: '#ffd93d'   // Yellow
+                };
+                
+                this.stateColors = {
+                    1: '#ff6b6b',  // Red
+                    2: '#4ecdc4',  // Cyan
+                    3: '#45b7d1',  // Blue
+                    4: '#96ceb4',  // Green
+                    5: '#ffd93d'   // Yellow
+                };
+                
+                this.cellWidth = 40;
+                this.cellHeight = 30;
+                this.initializeMachine();
+            }
+
+            initializeMachine() {
+                // Default simple 2-state machine from NKS page 78
+                this.rules = {
+                    "1,0": [2, 1, "R"],  // State 1, Symbol 0 -> State 2, Write 1, Move Right
+                    "1,1": [2, 0, "L"],  // State 1, Symbol 1 -> State 2, Write 0, Move Left
+                    "2,0": [1, 1, "L"],  // State 2, Symbol 0 -> State 1, Write 1, Move Left
+                    "2,1": [1, 1, "R"]   // State 2, Symbol 1 -> State 1, Write 1, Move Right
+                };
+                
+                this.setTape("000000000000");
+                this.headPosition = 6;
+                this.currentState = 1;
+                this.steps = 0;
+                this.history = [];
+                this.updateRuleDisplay();
+                this.updateStats();
+                this.draw();
+            }
+
+            setMachine(preset) {
+                switch (preset) {
+                    case 'simple2state':
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [2, 0, "L"], 
+                            "2,0": [1, 1, "L"],
+                            "2,1": [1, 1, "R"]
+                        };
+                        break;
+                    case 'wolfram3024':
+                        // Wolfram machine #3024 from page 79
+                        this.rules = {
+                            "1,0": [3, 1, "L"],
+                            "1,1": [2, 0, "R"],
+                            "2,0": [1, 1, "R"],
+                            "2,1": [3, 1, "R"],
+                            "3,0": [2, 1, "R"],
+                            "3,1": [1, 0, "L"]
+                        };
+                        break;
+                    case 'wolfram982':
+                        // Wolfram machine #982 from page 79
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [3, 0, "R"],
+                            "2,0": [3, 1, "L"],
+                            "2,1": [2, 0, "R"],
+                            "3,0": [1, 1, "L"],
+                            "3,1": [1, 0, "L"]
+                        };
+                        break;
+                    case 'wolfram925':
+                        // Wolfram machine #925 from page 79
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [3, 0, "L"],
+                            "2,0": [3, 1, "L"],
+                            "2,1": [2, 0, "R"],
+                            "3,0": [1, 1, "L"],
+                            "3,1": [1, 0, "R"]
+                        };
+                        break;
+                    case 'famous23':
+                        // Famous 2-state 3-symbol machine (Wolfram #596440)
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [2, 2, "L"],
+                            "1,2": [1, 1, "L"],
+                            "2,0": [1, 2, "L"],
+                            "2,1": [2, 2, "R"],
+                            "2,2": [1, 0, "R"]
+                        };
+                        break;
+                    case 'universal25':
+                        // Universal 2-state 5-symbol machine
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [1, 2, "L"],
+                            "1,2": [1, 3, "L"],
+                            "1,3": [1, 4, "R"],
+                            "1,4": [2, 0, "R"],
+                            "2,0": [1, 0, "L"],
+                            "2,1": [2, 1, "R"],
+                            "2,2": [2, 2, "R"],
+                            "2,3": [2, 3, "R"],
+                            "2,4": [1, 1, "L"]
+                        };
+                        break;
+                    case 'busy3':
+                        // Busy Beaver 3-state machine
+                        this.rules = {
+                            "1,0": [2, 1, "R"],
+                            "1,1": [3, 1, "L"],
+                            "2,0": [1, 1, "L"],
+                            "2,1": [2, 1, "R"],
+                            "3,0": [2, 1, "L"],
+                            "3,1": [1, 1, "R"]
+                        };
+                        break;
+                }
+                
+                this.updateRuleDisplay();
+                this.updateStats();
+                this.draw();
+            }
+
+            setCustomRules(rulesText) {
+                try {
+                    const parsed = JSON.parse(rulesText);
+                    this.rules = parsed;
+                    this.updateRuleDisplay();
+                    this.updateStats();
+                    this.draw();
+                    return true;
+                } catch (e) {
+                    alert('Invalid JSON format for rules');
+                    return false;
+                }
+            }
+
+            setTape(tapeString) {
+                this.tape = tapeString.split('').map(char => {
+                    const num = parseInt(char);
+                    return isNaN(num) ? 0 : Math.min(4, Math.max(0, num));
+                });
+                
+                // Ensure minimum tape size
+                while (this.tape.length < 20) {
+                    this.tape.push(0);
+                }
+                
+                this.headPosition = Math.min(this.headPosition, this.tape.length - 1);
+            }
+
+            expandTape() {
+                // Expand tape if head is near edges
+                if (this.headPosition < 5) {
+                    this.tape.unshift(...new Array(10).fill(0));
+                    this.headPosition += 10;
+                }
+                if (this.headPosition >= this.tape.length - 5) {
+                    this.tape.push(...new Array(10).fill(0));
+                }
+            }
+
+            step() {
+                if (this.isHalted()) return false;
+                
+                this.expandTape();
+                
+                const currentSymbol = this.tape[this.headPosition];
+                const ruleKey = `${this.currentState},${currentSymbol}`;
+                const rule = this.rules[ruleKey];
+                
+                if (!rule) {
+                    // No rule found - machine halts
+                    return false;
+                }
+                
+                const [newState, newSymbol, direction] = rule;
+                
+                // Save current state to history
+                this.history.push({
+                    tape: [...this.tape],
+                    headPosition: this.headPosition,
+                    currentState: this.currentState,
+                    step: this.steps
+                });
+                
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+                
+                // Apply rule
+                this.tape[this.headPosition] = newSymbol;
+                this.currentState = newState;
+                
+                // Move head
+                if (direction === "R") {
+                    this.headPosition++;
+                } else if (direction === "L") {
+                    this.headPosition--;
+                }
+                
+                // Ensure head stays within bounds
+                this.headPosition = Math.max(0, Math.min(this.headPosition, this.tape.length - 1));
+                
+                this.steps++;
+                this.updateStats();
+                this.draw();
+                
+                return true;
+            }
+
+            isHalted() {
+                const currentSymbol = this.tape[this.headPosition];
+                const ruleKey = `${this.currentState},${currentSymbol}`;
+                return !this.rules[ruleKey];
+            }
+
+            updateRuleDisplay() {
+                const ruleGrid = document.getElementById('ruleGrid');
+                ruleGrid.innerHTML = '';
+                
+                Object.entries(this.rules).forEach(([key, rule]) => {
+                    const [state, symbol] = key.split(',');
+                    const [newState, newSymbol, direction] = rule;
+                    
+                    const entry = document.createElement('div');
+                    entry.className = 'rule-entry';
+                    
+                    const condition = document.createElement('div');
+                    condition.className = 'rule-condition';
+                    condition.textContent = `State ${state}, Symbol ${symbol}`;
+                    
+                    const action = document.createElement('div');
+                    action.className = 'rule-action';
+                    const dirText = direction === "R" ? "→" : direction === "L" ? "←" : "Stay";
+                    action.textContent = `→ State ${newState}, Write ${newSymbol}, ${dirText}`;
+                    
+                    entry.appendChild(condition);
+                    entry.appendChild(action);
+                    ruleGrid.appendChild(entry);
+                });
+            }
+
+            updateStats() {
+                const onesCount = this.tape.filter(cell => cell === 1).length;
+                const nonZeroCount = this.tape.filter(cell => cell !== 0).length;
+                
+                document.getElementById('currentSteps').textContent = this.steps;
+                document.getElementById('currentState').textContent = this.currentState;
+                document.getElementById('headPos').textContent = this.headPosition;
+                document.getElementById('tapeSize').textContent = this.tape.length;
+                document.getElementById('onesOnTape').textContent = onesCount;
+                document.getElementById('nonZeroSymbols').textContent = nonZeroCount;
+                
+                document.getElementById('currentStateText').textContent = this.currentState;
+                document.getElementById('headPositionText').textContent = this.headPosition;
+                document.getElementById('currentSymbolText').textContent = this.tape[this.headPosition] || 0;
+                
+                const stateDot = document.getElementById('currentStateDot');
+                stateDot.style.background = this.stateColors[this.currentState] || '#ff6b6b';
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Calculate visible range
+                const visibleCells = Math.floor(this.canvas.width / this.cellWidth);
+                const startIndex = Math.max(0, this.headPosition - Math.floor(visibleCells / 2));
+                const endIndex = Math.min(this.tape.length, startIndex + visibleCells);
+                
+                // Draw tape cells
+                for (let i = startIndex; i < endIndex; i++) {
+                    const x = (i - startIndex) * this.cellWidth;
+                    const y = this.canvas.height / 2 - this.cellHeight / 2;
+                    
+                    // Cell background
+                    const symbol = this.tape[i] || 0;
+                    this.ctx.fillStyle = this.colors[symbol] || '#ffffff';
+                    this.ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+                    
+                    // Cell border
+                    this.ctx.strokeStyle = '#333333';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(x, y, this.cellWidth, this.cellHeight);
+                    
+                    // Cell text
+                    this.ctx.fillStyle = symbol === 0 ? '#000000' : '#ffffff';
+                    this.ctx.font = 'bold 16px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(symbol.toString(), x + this.cellWidth / 2, y + this.cellHeight / 2);
+                    
+                    // Index labels
+                    this.ctx.fillStyle = '#666666';
+                    this.ctx.font = '10px monospace';
+                    this.ctx.fillText(i.toString(), x + this.cellWidth / 2, y + this.cellHeight + 12);
+                }
+                
+                // Draw head
+                if (this.headPosition >= startIndex && this.headPosition < endIndex) {
+                    const headX = (this.headPosition - startIndex) * this.cellWidth;
+                    const headY = this.canvas.height / 2 - this.cellHeight / 2 - 40;
+                    
+                    // Head triangle
+                    this.ctx.fillStyle = this.stateColors[this.currentState] || '#ff6b6b';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(headX + this.cellWidth / 2, headY + 30);
+                    this.ctx.lineTo(headX + this.cellWidth / 2 - 15, headY);
+                    this.ctx.lineTo(headX + this.cellWidth / 2 + 15, headY);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // State label
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 12px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(`S${this.currentState}`, headX + this.cellWidth / 2, headY + 15);
+                }
+                
+                // Draw history (if space allows)
+                if (this.canvas.height > 200 && this.history.length > 1) {
+                    const historyHeight = 100;
+                    const historyY = this.canvas.height - historyHeight - 10;
+                    
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    this.ctx.fillRect(0, historyY, this.canvas.width, historyHeight);
+                    
+                    const recentHistory = this.history.slice(-20);
+                    const stepHeight = historyHeight / recentHistory.length;
+                    
+                    recentHistory.forEach((snapshot, index) => {
+                        const alpha = 0.3 + (index / recentHistory.length) * 0.7;
+                        const y = historyY + index * stepHeight;
+                        
+                        for (let i = startIndex; i < endIndex && i < snapshot.tape.length; i++) {
+                            const x = (i - startIndex) * this.cellWidth;
+                            const symbol = snapshot.tape[i] || 0;
+                            
+                            if (symbol !== 0) {
+                                this.ctx.fillStyle = this.colors[symbol] + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                                this.ctx.fillRect(x, y, this.cellWidth, stepHeight);
+                            }
+                            
+                            if (i === snapshot.headPosition) {
+                                this.ctx.fillStyle = `rgba(255, 107, 107, ${alpha})`;
+                                this.ctx.fillRect(x, y, this.cellWidth, stepHeight);
+                            }
+                        }
+                    });
+                }
+            }
+
+            start(speed = 500) {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                const animate = () => {
+                    if (!this.isRunning) return;
+                    
+                    const canContinue = this.step();
+                    if (!canContinue) {
+                        this.isRunning = false;
+                        alert('Machine halted - no rule found for current state/symbol combination');
+                        return;
+                    }
+                    
+                    this.animationId = setTimeout(animate, speed);
+                };
+                animate();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.animationId) {
+                    clearTimeout(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            reset(tapeString = "000000000000", headPos = 6, initialState = 1) {
+                this.stop();
+                this.setTape(tapeString);
+                this.headPosition = headPos;
+                this.currentState = initialState;
+                this.steps = 0;
+                this.history = [];
+                this.updateStats();
+                this.draw();
+            }
+        }
+
+        // Initialize the Turing Machine
+        const tm = new TuringMachine('tmCanvas');
+
+        // Event listeners
+        document.getElementById('machinePreset').addEventListener('change', (e) => {
+            const preset = e.target.value;
+            const customEditor = document.getElementById('customRuleEditor');
+            
+            if (preset === 'custom') {
+                customEditor.style.display = 'block';
+            } else {
+                customEditor.style.display = 'none';
+                tm.setMachine(preset);
+            }
+        });
+
+        document.getElementById('applyCustom').addEventListener('click', () => {
+            const rulesText = document.getElementById('customRules').value;
+            tm.setCustomRules(rulesText);
+        });
+
+        document.getElementById('speed').addEventListener('input', (e) => {
+            document.getElementById('speedValue').textContent = e.target.value + 'ms';
+        });
+
+        document.getElementById('headPosition').addEventListener('input', (e) => {
+            document.getElementById('headPosValue').textContent = e.target.value;
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const speed = parseInt(document.getElementById('speed').value);
+            tm.start(speed);
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            tm.stop();
+        });
+
+        document.getElementById('stepBtn').addEventListener('click', () => {
+            tm.step();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            const tapeString = document.getElementById('initialTape').value || "000000000000";
+            const headPos = parseInt(document.getElementById('headPosition').value);
+            const initialState = parseInt(document.getElementById('initialState').value);
+            tm.reset(tapeString, headPos, initialState);
+        });
+
+        document.getElementById('initialTape').addEventListener('change', (e) => {
+            const tapeString = e.target.value || "000000000000";
+            const headPos = parseInt(document.getElementById('headPosition').value);
+            const initialState = parseInt(document.getElementById('initialState').value);
+            tm.reset(tapeString, headPos, initialState);
+        });
+    </script>
+</body>
+</html>
