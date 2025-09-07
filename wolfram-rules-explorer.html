@@ -644,7 +644,6 @@
                 /* --- runtime state --- */
                 this.width = 800;
                 this.maxGenerations = 300;
-                this.height = this.maxGenerations;
                 this.cellSize = 1;
                 this.currentGeneration = 0;
                 this.speedLevel = 5;
@@ -719,16 +718,14 @@
                 this.buildRuleGrid();
                 this.buildPresetRules();
                 this.setupEventListeners();
-                this.updateRuleUI();          // ensure grid matches Rule-30 on first paint
-                this.updateRuleDisplay();
+                this.reflectUI();              // ensure UI matches Rule-30 on first paint
                 this.updateSavedRulesUI();     // initialize saved rules UI
                 this.resetGrid();
-                this.render();
             }
 
             setupCanvas() {
                 this.canvas.width = this.width * this.cellSize;
-                this.canvas.height = this.height * this.cellSize;
+                this.canvas.height = this.maxGenerations * this.cellSize;
                 this.ctx.imageSmoothingEnabled = false;
             }
 
@@ -776,6 +773,7 @@
                 el.classList.toggle('active', nowActive);
                 el.textContent = nowActive ? '1' : '0';
                 this.updateRuleFromUI();
+                this.reflectUI();
             }
 
             updateRuleFromUI() {
@@ -785,7 +783,6 @@
                     this.rule[patternVal] = output.classList.contains('active') ? 1 : 0;
                 });
                 this.ruleNumber = this.fromBitArray(this.rule);
-                this.refreshRuleUI();
             }
 
             /* ---------- rule setters ---------- */
@@ -797,33 +794,23 @@
             setRule(ruleNumber) {
                 this.ruleNumber = this.clamp(ruleNumber, 0, RULE_MAX);
                 this.rule = this.toBitArray(this.ruleNumber);
-                this.refreshRuleUI();
+                this.reflectUI();
             }
 
-            refreshRuleUI() {
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
+            reflectUI() {
+                // Rule number and slider value
+                this.els.currentRule.textContent = this.ruleNumber;
                 this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
-                this.updateAllRulesActiveState(this.ruleNumber);
-            }
-
-            /* ---------- rule-related UI helpers ---------- */
-
-            updateRuleUI() {
+                
+                // Toggle grid bits to match rule
                 document.querySelectorAll('.rule-output').forEach(output => {
                     const patternVal = parseInt(output.dataset.pattern, 2);
                     const active = this.rule[patternVal] === 1;
                     output.classList.toggle('active', active);
                     output.textContent = active ? '1' : '0';
                 });
-            }
-
-            updateRuleDisplay() {
-                this.els.currentRule.textContent = this.ruleNumber;
-            }
-
-            updateRuleAnalysis() {
+                
+                // Analysis text
                 const analyses = {
                     30: "规则30：产生看似随机的复杂图案，是Wolfram最重要的发现之一。尽管规则极其简单，但行为展现出真正的随机性特征。",
                     90: "规则90：生成经典的谢尔宾斯基三角形分形图案。具有自相似的嵌套结构，展现数学之美。",
@@ -834,25 +821,25 @@
                     254: "规则254：产生均匀填充的简单图案。几乎所有细胞都变为活跃状态。",
                     126: "规则126：处于混沌边缘，产生复杂但有一定规律的图案。"
                 };
-
                 const text = analyses[this.ruleNumber] || `规则${this.ruleNumber}：自定义规则。观察其产生的图案特征，分析其复杂性和规律性。`;
                 this.els.analysisText.textContent = text;
-            }
-
-            updateAllRulesActiveState(activeRuleNumber) {
+                
+                // Update active states for all rule cards
                 [this.savedRulesContainer, this.presetHostEl].forEach(container => {
                     container.querySelectorAll('[data-rule]').forEach(el => {
-                        el.classList.toggle('active', parseInt(el.dataset.rule) === activeRuleNumber);
+                        el.classList.toggle('active', parseInt(el.dataset.rule) === this.ruleNumber);
                     });
                 });
+                
+                // Stats
+                this.updateStats();
             }
+
 
             /* ---------- misc UI actions ---------- */
 
             generateRandomRule() {
-                const rand = Math.floor(Math.random() * (RULE_MAX + 1));
-                this.setRule(rand);
-                this.presetHostEl.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
+                this.setRule(Math.floor(Math.random() * (RULE_MAX + 1)));
             }
 
             /* ---------- saved rules ---------- */
@@ -895,43 +882,32 @@
                 this.updateSavedRulesUI();
             }
 
-            loadSavedRule(ruleNumber) {
-                this.setRule(ruleNumber);
-            }
 
             updateSavedRulesUI() {
                 this.savedRulesContainer.innerHTML = '';
+                this.savedRulesContainer.classList.toggle('empty', this.savedRules.size === 0);
 
-                if (this.savedRules.size === 0) {
-                    this.savedRulesContainer.classList.add('empty');
-                    return;
+                if (this.savedRules.size > 0) {
+                    const sortedRules = Array.from(this.savedRules).sort((a, b) => a - b);
+                    this.savedRulesContainer.innerHTML = sortedRules.map(ruleNumber => 
+                        `<div class="saved-rule" data-rule="${ruleNumber}">
+                            <span class="saved-rule-label">规则 ${ruleNumber}</span>
+                            <button class="saved-rule-remove" title="移除此规则">×</button>
+                        </div>`
+                    ).join('');
+
+                    // Event delegation
+                    this.savedRulesContainer.onclick = (e) => {
+                        const rule = e.target.closest('.saved-rule');
+                        if (!rule) return;
+                        if (e.target.classList.contains('saved-rule-remove')) {
+                            e.stopPropagation();
+                            this.removeSavedRule(+rule.dataset.rule);
+                        } else {
+                            this.setRule(+rule.dataset.rule);
+                        }
+                    };
                 }
-
-                this.savedRulesContainer.classList.remove('empty');
-
-                // Sort saved rules numerically
-                const sortedRules = Array.from(this.savedRules).sort((a, b) => a - b);
-
-                this.savedRulesContainer.innerHTML = sortedRules.map(ruleNumber => 
-                    `<div class="saved-rule" data-rule="${ruleNumber}">
-                        <span class="saved-rule-label">${`规则 ${ruleNumber}`}</span>
-                        <button class="saved-rule-remove" title="移除此规则">×</button>
-                    </div>`
-                ).join('');
-
-                // Add event listeners with delegation
-                this.savedRulesContainer.onclick = (e) => {
-                    const rule = e.target.closest('.saved-rule');
-                    if (!rule) return;
-                    if (e.target.classList.contains('saved-rule-remove')) {
-                        e.stopPropagation();
-                        this.removeSavedRule(+rule.dataset.rule);
-                    } else {
-                        this.loadSavedRule(+rule.dataset.rule);
-                    }
-                };
-
-                this.updateAllRulesActiveState(this.ruleNumber);
             }
 
             /* ---------- user adjustable params ---------- */
@@ -942,7 +918,6 @@
                     this.updateSlider('canvas-width', 'canvas-width-value', value);
                 } else if (param === 'generations') {
                     this.maxGenerations = value;
-                    this.height = value;
                     this.updateSlider('generations', 'generations-value', value);
                 }
                 this.setupCanvas();
@@ -959,10 +934,10 @@
 
             resetGrid() {
                 this.currentGeneration = 0;
-                this.grid = Array.from({ length: this.height }, () => new Array(this.width).fill(0));
+                this.grid = Array.from({ length: this.maxGenerations }, () => new Array(this.width).fill(0));
                 this.grid[0][Math.floor(this.width / 2)] = 1;
-                this.updateInfo();
-                this.render();
+                this.updateStats();
+                this.paintAll();
             }
 
             applyRule(left, centre, right) {
@@ -983,8 +958,8 @@
                 }
 
                 this.currentGeneration++;
-                this.updateInfo();
-                this.render();
+                this.paintRow(this.currentGeneration);
+                this.updateStats();
             }
 
             start() {
@@ -1016,25 +991,32 @@
                 this.els.evolutionStatus.textContent = '就绪';
             }
 
-            render() {
+            paintAll() {
+                const s = this.cellSize;
                 this.ctx.fillStyle = '#000';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 this.ctx.fillStyle = '#ffd700';
-
-                for (let y = 0; y < this.height; y++) {
-                    const row = this.grid[y];
-                    if (!row) continue;
-                    for (let x = 0; x < this.width; x++) {
-                        if (row[x] === 1) {
-                            this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
-                        }
-                    }
+                for (let y = 0; y <= this.currentGeneration; y++) {
+                    for (let x = 0; x < this.width; x++) if (this.grid[y][x] === 1) this.ctx.fillRect(x * s, y * s, s, s);
                 }
             }
 
-            updateInfo() {
+            paintRow(y) {
+                const s = this.cellSize;
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, y * s, this.canvas.width, s);
+                this.ctx.fillStyle = '#ffd700';
+                for (let x = 0; x < this.width; x++) if (this.grid[y][x] === 1) this.ctx.fillRect(x * s, y * s, s, s);
+            }
+
+            countActiveInRow(y) {
+                if (y < 0 || y >= this.maxGenerations || !this.grid[y]) return 0;
+                return this.grid[y].reduce((a, c) => a + c, 0);
+            }
+
+            updateStats() {
                 this.els.currentGeneration.textContent = this.currentGeneration;
-                const active = this.grid[this.currentGeneration]?.reduce((s, c) => s + c, 0) || 0;
+                const active = this.countActiveInRow(this.currentGeneration);
                 this.els.activeCells.textContent = active;
 
                 const patterns = {30:'随机复杂', 90:'分形', 110:'复杂结构', 150:'分形', 184:'粒子', 250:'简单重复', 254:'简单重复'};
