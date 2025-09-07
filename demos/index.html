@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NKS Computational Systems Demos - A New Kind of Science</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border: 1px solid rgba(255,215,0,0.25);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .header h1 {
+            margin: 0 0 1rem;
+            color: #ffd700;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            margin: 0;
+            color: #b8b8b8;
+            font-size: 1.1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            padding: 0.5rem 1rem;
+            color: #ffd700;
+            text-decoration: none;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255,215,0,0.1);
+            border-color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .demo-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .demo-card:hover {
+            border-color: rgba(255,215,0,0.6);
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .demo-title {
+            color: #ffd700;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-description {
+            color: #c8c8c8;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .demo-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, rgba(255,215,0,0.15), rgba(255,215,0,0.25));
+            color: #f7e49a;
+            text-decoration: none;
+            border: 1px solid rgba(255,215,0,0.35);
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .demo-link:hover {
+            background: linear-gradient(45deg, rgba(255,215,0,0.25), rgba(255,215,0,0.35));
+            transform: translateY(-1px);
+        }
+
+        .category-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .category-title {
+            color: #ffd700;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255,215,0,0.3);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,215,0,0.2);
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .demo-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← Back to Main NKS Project</a>
+        
+        <div class="header">
+            <h1>NKS Computational Systems Demos</h1>
+            <p>Interactive demonstrations of computational systems from "A New Kind of Science"</p>
+        </div>
+
+        <div class="category-section">
+            <h2 class="category-title">Cellular Automata</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3 class="demo-title">Wolfram Rules Explorer (Elementary CA)</h3>
+                    <p class="demo-description">
+                        Explore the 256 elementary cellular automata rules with interactive rule table, 
+                        animation controls, and preset famous rules like Rule 30, 90, and 110.
+                    </p>
+                    <a href="wolfram-rules-explorer-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">3-Color Cellular Automata</h3>
+                    <p class="demo-description">
+                        Interactive exploration of three-color cellular automata with multiple rule sets,
+                        demonstrating complex patterns beyond binary states.
+                    </p>
+                    <a href="three-color-ca-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">3-Color CA (Standalone)</h3>
+                    <p class="demo-description">
+                        Standalone version of the three-color cellular automata demo with enhanced
+                        performance and simplified interface.
+                    </p>
+                    <a href="three-color-ca-demo-standalone.html" class="demo-link">Launch Demo</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">移动自动机探索器 (Mobile Automata)</h3>
+                    <p class="demo-description">
+                        Interactive mobile cellular automata explorer with Chinese interface,
+                        demonstrating moving patterns and dynamic behaviors.
+                    </p>
+                    <a href="mobile-automata-demo.html" class="demo-link">启动演示</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <h2 class="category-title">Computational Models</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3 class="demo-title">Turing Machine Demo</h3>
+                    <p class="demo-description">
+                        Interactive Turing machine simulator with step-by-step execution,
+                        tape visualization, and multiple program examples.
+                    </p>
+                    <a href="turing-machine-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">寄存器机器演示 (Register Machine)</h3>
+                    <p class="demo-description">
+                        Interactive register machine demonstration with Chinese interface,
+                        showing computational equivalence and program execution.
+                    </p>
+                    <a href="register-machine-demo.html" class="demo-link">启动演示</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <h2 class="category-title">Substitution Systems</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3 class="demo-title">Substitution Systems Demo</h3>
+                    <p class="demo-description">
+                        Explore string rewriting systems and substitution rules that generate
+                        complex patterns from simple initial conditions.
+                    </p>
+                    <a href="substitution-system-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">Sequential Substitution Systems</h3>
+                    <p class="demo-description">
+                        Advanced substitution system demo with sequential application rules
+                        and interactive pattern generation controls.
+                    </p>
+                    <a href="sequential-substitution-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <h2 class="category-title">Tag Systems</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3 class="demo-title">标记系统探索器 (Tag System)</h3>
+                    <p class="demo-description">
+                        Interactive tag system explorer with Chinese interface, demonstrating
+                        sequence transformations and computational processes.
+                    </p>
+                    <a href="tag-system-demo.html" class="demo-link">启动演示</a>
+                </div>
+
+                <div class="demo-card">
+                    <h3 class="demo-title">NKS-Style Tag System Demo</h3>
+                    <p class="demo-description">
+                        Tag system demonstration in the style of "A New Kind of Science"
+                        with visual evolution and step-by-step analysis.
+                    </p>
+                    <a href="tag-system-nks-demo.html" class="demo-link">Launch Demo</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>All demos are standalone HTML files demonstrating computational systems from Stephen Wolfram's "A New Kind of Science"</p>
+        </div>
+    </div>
+</body>
+</html>
