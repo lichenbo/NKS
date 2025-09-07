@@ -523,40 +523,7 @@
                     点击下方方格定义8种邻域状态的输出规则：
                 </p>
 
-                <div class="rule-grid">
-                    <div class="rule-cell">
-                        <div class="rule-pattern">111</div>
-                        <div class="rule-output" data-pattern="111">0</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">110</div>
-                        <div class="rule-output" data-pattern="110">0</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">101</div>
-                        <div class="rule-output" data-pattern="101">0</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">100</div>
-                        <div class="rule-output" data-pattern="100">1</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">011</div>
-                        <div class="rule-output" data-pattern="011">1</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">010</div>
-                        <div class="rule-output" data-pattern="010">1</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">001</div>
-                        <div class="rule-output" data-pattern="001">1</div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-pattern">000</div>
-                        <div class="rule-output" data-pattern="000">0</div>
-                    </div>
-                </div>
+                <div class="rule-grid" id="rule-grid"></div>
 
                 <div class="control-group">
                     <div class="control-row">
@@ -580,40 +547,7 @@
                 </div>
 
                 <div class="section-title">预设规则</div>
-                <div class="preset-rules">
-                    <div class="preset-rule active" data-rule="30">
-                        <div class="preset-number">规则 30</div>
-                        <div class="preset-description">随机复杂</div>
-                    </div>
-                    <div class="preset-rule" data-rule="90">
-                        <div class="preset-number">规则 90</div>
-                        <div class="preset-description">分形图案</div>
-                    </div>
-                    <div class="preset-rule" data-rule="110">
-                        <div class="preset-number">规则 110</div>
-                        <div class="preset-description">图灵完备</div>
-                    </div>
-                    <div class="preset-rule" data-rule="150">
-                        <div class="preset-number">规则 150</div>
-                        <div class="preset-description">对称分形</div>
-                    </div>
-                    <div class="preset-rule" data-rule="184">
-                        <div class="preset-number">规则 184</div>
-                        <div class="preset-description">交通流</div>
-                    </div>
-                    <div class="preset-rule" data-rule="250">
-                        <div class="preset-number">规则 250</div>
-                        <div class="preset-description">棋盘模式</div>
-                    </div>
-                    <div class="preset-rule" data-rule="254">
-                        <div class="preset-number">规则 254</div>
-                        <div class="preset-description">填充模式</div>
-                    </div>
-                    <div class="preset-rule" data-rule="126">
-                        <div class="preset-number">规则 126</div>
-                        <div class="preset-description">混沌边缘</div>
-                    </div>
-                </div>
+                <div class="preset-rules" id="preset-rules"></div>
 
 
                 <div class="section-title">控制参数</div>
@@ -695,8 +629,8 @@
                 /* --- cache frequently used DOM nodes --- */
                 this.canvas = document.getElementById('cellular-canvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.ruleOutputs = Array.from(document.querySelectorAll('.rule-output'));
-                this.presetEls = Array.from(document.querySelectorAll('.preset-rule'));
+                this.ruleGridEl = document.getElementById('rule-grid');
+                this.presetHostEl = document.getElementById('preset-rules');
 
                 /* --- runtime state --- */
                 this.width = 800;
@@ -715,12 +649,24 @@
 
                 /* grids */
                 this.grid = [];
-                this.nextGrid = [];
+                // no secondary buffer needed
 
                 /* saved rules */
                 this.savedRules = new Set();
                 this.savedRulesContainer = document.getElementById('saved-rules');
                 this.loadSavedRulesFromStorage();
+
+                /* presets */
+                this.presets = [
+                    { n: 30,  desc: '随机复杂' },
+                    { n: 90,  desc: '分形图案' },
+                    { n: 110, desc: '图灵完备' },
+                    { n: 150, desc: '对称分形' },
+                    { n: 184, desc: '交通流' },
+                    { n: 250, desc: '棋盘模式' },
+                    { n: 254, desc: '填充模式' },
+                    { n: 126, desc: '混沌边缘' }
+                ];
 
                 this.init();
             }
@@ -749,10 +695,20 @@
                 return Math.max(10, 510 - level * 50);
             }
 
+            // Generic slider + label updater to avoid duplicated helpers
+            updateSlider(inputId, labelId, value) {
+                const input = document.getElementById(inputId);
+                if (input) input.value = value;
+                const label = document.getElementById(labelId);
+                if (label) label.textContent = value;
+            }
+
             /* ---------- initialisation ---------- */
 
             init() {
                 this.setupCanvas();
+                this.buildRuleGrid();
+                this.buildPresetRules();
                 this.setupEventListeners();
                 this.updateRuleUI();          // ensure grid matches Rule-30 on first paint
                 this.updateRuleDisplay();
@@ -770,15 +726,17 @@
             /* ---------- UI / Events ---------- */
 
             setupEventListeners() {
-                // toggle individual rule outputs
-                this.ruleOutputs.forEach(o => o.addEventListener('click', e => {
-                    this.toggleRuleOutput(e.currentTarget);
-                }));
+                // toggle individual rule outputs (delegated)
+                this.ruleGridEl.addEventListener('click', (e) => {
+                    const target = e.target.closest('.rule-output');
+                    if (target) this.toggleRuleOutput(target);
+                });
 
-                // preset rules
-                this.presetEls.forEach(p => p.addEventListener('click', e => {
-                    this.loadPresetRule(e.currentTarget);
-                }));
+                // preset rules (delegated)
+                this.presetHostEl.addEventListener('click', (e) => {
+                    const card = e.target.closest('.preset-rule');
+                    if (card) this.loadPresetRule(card);
+                });
 
                 // main control buttons
                 document.getElementById('start-btn').addEventListener('click', () => this.start());
@@ -814,7 +772,7 @@
                 // reset rule bits
                 this.rule = new Array(RULE_BITS).fill(0);
 
-                this.ruleOutputs.forEach(output => {
+                document.querySelectorAll('.rule-output').forEach(output => {
                     const patternVal = parseInt(output.dataset.pattern, 2);
                     this.rule[patternVal] = output.classList.contains('active') ? 1 : 0;
                 });
@@ -822,7 +780,7 @@
                 this.ruleNumber = this.fromBitArray(this.rule);
                 this.updateRuleDisplay();
                 this.updateRuleAnalysis();
-                this.updateRuleSlider();
+                this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
                 this.updateAllRulesActiveState(this.ruleNumber);
             }
 
@@ -839,7 +797,7 @@
                 this.updateRuleUI();
                 this.updateRuleDisplay();
                 this.updateRuleAnalysis();
-                this.updateRuleSlider();
+                this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
                 this.updateAllRulesActiveState(this.ruleNumber);
             }
 
@@ -850,14 +808,14 @@
                 this.updateRuleUI();
                 this.updateRuleDisplay();
                 this.updateRuleAnalysis();
-                this.updateRuleSliderValue();
+                this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
                 this.updateAllRulesActiveState(this.ruleNumber);
             }
 
             /* ---------- rule-related UI helpers ---------- */
 
             updateRuleUI() {
-                this.ruleOutputs.forEach(output => {
+                document.querySelectorAll('.rule-output').forEach(output => {
                     const patternVal = parseInt(output.dataset.pattern, 2);
                     const active = this.rule[patternVal] === 1;
                     output.classList.toggle('active', active);
@@ -867,15 +825,6 @@
 
             updateRuleDisplay() {
                 document.getElementById('current-rule').textContent = this.ruleNumber;
-            }
-
-            updateRuleSlider() {
-                document.getElementById('rule-slider').value = this.ruleNumber;
-                this.updateRuleSliderValue();
-            }
-
-            updateRuleSliderValue() {
-                document.getElementById('rule-slider-value').textContent = this.ruleNumber;
             }
 
             updateRuleAnalysis() {
@@ -903,7 +852,7 @@
                 });
                 
                 // Update preset rules active state - same logic as saved rules
-                this.presetEls.forEach(p => {
+                this.presetHostEl.querySelectorAll('.preset-rule').forEach(p => {
                     const presetRule = parseInt(p.dataset.rule);
                     p.classList.toggle('active', presetRule === activeRuleNumber);
                 });
@@ -914,7 +863,7 @@
             generateRandomRule() {
                 const rand = Math.floor(Math.random() * (RULE_MAX + 1));
                 this.setRule(rand);
-                this.presetEls.forEach(p => p.classList.remove('active'));
+                this.presetHostEl.querySelectorAll('.preset-rule').forEach(p => p.classList.remove('active'));
             }
 
             /* ---------- saved rules ---------- */
@@ -1008,7 +957,7 @@
 
             setWidth(w) {
                 this.width = w;
-                document.getElementById('canvas-width-value').textContent = w;
+                this.updateSlider('canvas-width', 'canvas-width-value', w);
                 this.setupCanvas();
                 this.resetGrid();
             }
@@ -1016,7 +965,7 @@
             setMaxGenerations(g) {
                 this.maxGenerations = g;
                 this.height = g;
-                document.getElementById('generations-value').textContent = g;
+                this.updateSlider('generations', 'generations-value', g);
                 this.setupCanvas();
                 this.resetGrid();
             }
@@ -1024,7 +973,7 @@
             setSpeed(level) {
                 this.speedLevel = level;
                 this.speed = this.calculateDelay(level);
-                document.getElementById('speed-value').textContent = level;
+                this.updateSlider('speed', 'speed-value', level);
             }
 
             /* ---------- simulation core ---------- */
@@ -1032,7 +981,6 @@
             resetGrid() {
                 this.currentGeneration = 0;
                 this.grid = Array.from({ length: this.height }, () => new Array(this.width).fill(0));
-                this.nextGrid = Array.from({ length: this.height }, () => new Array(this.width).fill(0));
                 this.grid[0][Math.floor(this.width / 2)] = 1;
                 this.updateInfo();
                 this.render();
@@ -1125,6 +1073,31 @@
 
         /* ---------- bootstrap ---------- */
         document.addEventListener('DOMContentLoaded', () => new WolframRuleExplorer());
+
+        // Dynamic builders
+        WolframRuleExplorer.prototype.buildRuleGrid = function () {
+            const patterns = ['111','110','101','100','011','010','001','000'];
+            const frag = document.createDocumentFragment();
+            patterns.forEach(pStr => {
+                const cell = document.createElement('div'); cell.className = 'rule-cell';
+                const pat = document.createElement('div'); pat.className = 'rule-pattern'; pat.textContent = pStr;
+                const out = document.createElement('div'); out.className = 'rule-output'; out.dataset.pattern = pStr; out.textContent = '0';
+                cell.appendChild(pat); cell.appendChild(out); frag.appendChild(cell);
+            });
+            this.ruleGridEl.appendChild(frag);
+        };
+
+        WolframRuleExplorer.prototype.buildPresetRules = function () {
+            const frag = document.createDocumentFragment();
+            this.presets.forEach(pr => {
+                const card = document.createElement('div'); card.className = 'preset-rule'; card.dataset.rule = pr.n;
+                if (pr.n === this.ruleNumber) card.classList.add('active');
+                const num = document.createElement('div'); num.className = 'preset-number'; num.textContent = `规则 ${pr.n}`;
+                const desc = document.createElement('div'); desc.className = 'preset-description'; desc.textContent = pr.desc;
+                card.appendChild(num); card.appendChild(desc); frag.appendChild(card);
+            });
+            this.presetHostEl.appendChild(frag);
+        };
     </script>
 </body>
 

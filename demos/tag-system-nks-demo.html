@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NKS-Style Tag System Demo</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --ink: #e6e6e6;
+      --muted: #aab0bd;
+      --accent: #ffd54a;
+      --accent-2: #7dd3fc;
+      --danger: #ff7171;
+      --ok: #8be28b;
+      --outline: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+    header h1 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    header p {
+      margin: 0 0 12px 0;
+      color: var(--muted);
+      max-width: 80ch;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--outline);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 6px 0 12px 0;
+      color: var(--accent);
+    }
+    .row { margin: 10px 0; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--outline);
+      background: #0f131a;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 6px;
+    }
+    button {
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--outline);
+      background: #121620;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { border-color: #394152; }
+    .primary { background: #1a2130; border-color: #30384a; }
+    .accent { background: #1e2430; border-color: #4b566e; color: var(--accent); }
+    .danger { color: var(--danger); }
+    .muted { color: var(--muted); }
+    .inline { display: inline-flex; gap: 8px; align-items: center; }
+    .inline input[type="number"] { width: 88px; }
+    .status {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 10px 12px; border: 1px dashed var(--outline); border-radius: 8px;
+      background: #121621;
+      font-size: 13px;
+    }
+    .status b { color: var(--accent-2); font-weight: 700; }
+    .tape {
+      border: 1px solid var(--outline);
+      border-radius: 8px;
+      background: #0f131a;
+      padding: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 15px;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .tape .kill { text-decoration: line-through; color: #ff9aa2; }
+    .tape .append { color: #a0ffa0; }
+    .hist {
+      max-height: 280px; overflow: auto;
+      border: 1px solid var(--outline);
+      border-radius: 8px;
+      background: #0f131a;
+      padding: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+    .hist .row { display: grid; grid-template-columns: 60px 1fr; gap: 12px; padding: 4px 0; border-bottom: 1px solid #161b26; }
+    .hist .row:last-child { border-bottom: none; }
+    .legend { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--outline); border-radius: 999px; }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .hint { color: var(--muted); font-size: 12px; }
+    .note { color: #9dd6ff; font-size: 12px; }
+    .footer { margin-top: 14px; color: var(--muted); font-size: 12px; }
+    canvas { width: 100%; height: 280px; border: 1px solid var(--outline); border-radius: 8px; background: #0e1218; }
+  </style>
+  <meta name="description" content="Interactive NKS-style Tag System demo: choose deletion number, define rules, set initial word, and watch evolution." />
+  <meta name="robots" content="noindex" />
+  <script>
+    // Utility: deterministic color per symbol
+    function colorFor(symbol) {
+      // Hash symbol to hue
+      let h = 0;
+      for (let i = 0; i < symbol.length; i++) h = (h * 131 + symbol.charCodeAt(i)) >>> 0;
+      const hue = h % 360;
+      return `hsl(${hue}, 70%, 58%)`;
+    }
+
+    // Parse rules from textarea; each line: "A -> AB"
+    function parseRules(text) {
+      const rules = new Map();
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      for (const line of lines) {
+        // Support forms: A->AB, A → AB, A: AB
+        const m = line.match(/^(.+?)(?:\s*[-:→]*>\s*|\s*:\s*|\s+)(.*)$/);
+        if (!m) continue;
+        const key = m[1].trim();
+        const val = m[2] != null ? m[2].trim() : '';
+        if (!key) continue;
+        rules.set(key, val);
+      }
+      return rules;
+    }
+
+    function stringifyRules(map) {
+      return Array.from(map.entries()).map(([k,v]) => `${k} -> ${v}`).join("\n");
+    }
+
+    function uniqueSymbolsFrom(rules, word) {
+      const set = new Set();
+      for (const [k,v] of rules) { for (const ch of k) set.add(ch); for (const ch of v) set.add(ch); }
+      for (const ch of word) set.add(ch);
+      return Array.from(set);
+    }
+
+    // Tag System engine
+    class TagSystem {
+      constructor(m, rules, word) {
+        this.m = Math.max(1, Number(m) || 2);
+        this.rules = new Map(rules);  // Map(symbol -> string)
+        this.word = String(word || '');
+        this.step = 0;
+        this.halted = false;
+        this.seen = new Set();
+        this.history = []; // {step, removed, looked, appended, result}
+      }
+
+      next() {
+        if (this.halted) return false;
+        if (this.word.length < this.m) {
+          this.halted = true;
+          this.history.push({ step: this.step, removed: this.word, looked: '', appended: '', result: '', event: 'halt' });
+          return false;
+        }
+        const removed = this.word.slice(0, this.m);
+        const looked = this.word[0];
+        const appended = this.rules.get(looked) ?? '';
+        const result = this.word.slice(this.m) + appended;
+        this.word = result;
+        this.step += 1;
+        const key = `#${this.word}`;
+        const loop = this.seen.has(key);
+        this.seen.add(key);
+        this.history.push({ step: this.step, removed, looked, appended, result, event: loop ? 'loop' : '' });
+        if (loop) this.halted = true;
+        return !this.halted;
+      }
+    }
+
+    // UI Controller
+    const App = {
+      running: false,
+      timer: null,
+      speedMs: 120,
+      ts: null,
+      colors: new Map(),
+      examples: {
+        // A few varied examples (not copied from existing demo)
+        'Classic 2‑tag (halts)': {
+          m: 2,
+          rules: new Map([["A","AB"],["B","A"]]),
+          init: 'AAA'
+        },
+        'Binary duplication (steady length)': {
+          m: 2,
+          rules: new Map([["0","00"],["1","11"]]),
+          init: '101001'
+        },
+        'Cyclic 3‑symbols': {
+          m: 2,
+          rules: new Map([["A","B"],["B","C"],["C","A"]]),
+          init: 'ABCABC'
+        },
+        'Growth (mismatch lengths)': {
+          m: 2,
+          rules: new Map([["A","ABA"],["B","BB"]]),
+          init: 'ABABA'
+        },
+        'Eraser': {
+          m: 2,
+          rules: new Map([["X",""],["Y","X"]]),
+          init: 'YYYYYXX'
+        }
+      },
+
+      el: {},
+
+      mount() {
+        this.cacheEls();
+        this.buildExamples();
+        this.bind();
+        // Load from URL if present, else pick first example
+        if (!this.tryLoadFromUrl()) this.loadExample(Object.keys(this.examples)[0]);
+      },
+
+      cacheEls() {
+        const q = sel => document.querySelector(sel);
+        this.el.m = q('#m');
+        this.el.rules = q('#rules');
+        this.el.init = q('#init');
+        this.el.run = q('#run');
+        this.el.step = q('#step');
+        this.el.pause = q('#pause');
+        this.el.reset = q('#reset');
+        this.el.speed = q('#speed');
+        this.el.status = q('#status');
+        this.el.length = q('#length');
+        this.el.stepNo = q('#stepNo');
+        this.el.tape = q('#tape');
+        this.el.history = q('#history');
+        this.el.legend = q('#legend');
+        this.el.examples = q('#examples');
+        this.el.share = q('#share');
+        this.el.canvas = q('#evo');
+        this.ctx = this.el.canvas.getContext('2d');
+      },
+
+      bind() {
+        this.el.run.addEventListener('click', () => this.start());
+        this.el.pause.addEventListener('click', () => this.stop());
+        this.el.reset.addEventListener('click', () => this.reset());
+        this.el.step.addEventListener('click', () => { this.ensureEngine(); this.tick(); });
+        this.el.rules.addEventListener('input', () => this.refreshLegend());
+        this.el.init.addEventListener('input', () => this.refreshLegend());
+        this.el.speed.addEventListener('input', (e) => { this.speedMs = Number(e.target.value); });
+        this.el.examples.addEventListener('change', (e) => this.loadExample(e.target.value));
+        this.el.share.addEventListener('click', () => this.shareUrl());
+        window.addEventListener('resize', () => this.drawEvolution());
+      },
+
+      buildExamples() {
+        const sel = this.el.examples;
+        sel.innerHTML = '';
+        for (const name of Object.keys(this.examples)) {
+          const opt = document.createElement('option');
+          opt.value = name; opt.textContent = name; sel.appendChild(opt);
+        }
+      },
+
+      loadExample(name) {
+        const ex = this.examples[name];
+        if (!ex) return;
+        this.el.examples.value = name;
+        this.el.m.value = ex.m;
+        this.el.rules.value = stringifyRules(ex.rules);
+        this.el.init.value = ex.init;
+        this.reset();
+        this.refreshLegend();
+      },
+
+      tryLoadFromUrl() {
+        const params = new URLSearchParams(location.search);
+        if (!params.has('m') && !params.has('rules') && !params.has('init')) return false;
+        this.el.m.value = params.get('m') || '2';
+        try {
+          const decoded = decodeURIComponent(params.get('rules') || '');
+          this.el.rules.value = decoded;
+        } catch { /* ignore */ }
+        this.el.init.value = params.get('init') || '';
+        this.reset();
+        this.refreshLegend();
+        return true;
+      },
+
+      shareUrl() {
+        const m = this.el.m.value;
+        const rules = encodeURIComponent(this.el.rules.value.trim());
+        const init = encodeURIComponent(this.el.init.value.trim());
+        const url = `${location.origin}${location.pathname}?m=${m}&rules=${rules}&init=${init}`;
+        navigator.clipboard?.writeText(url).catch(() => {});
+        this.toast('Share URL copied to clipboard');
+      },
+
+      toast(msg) {
+        this.el.status.textContent = msg;
+        setTimeout(() => this.updateStatus(), 1200);
+      },
+
+      ensureEngine() {
+        if (this.ts) return;
+        const m = Number(this.el.m.value) || 2;
+        const rules = parseRules(this.el.rules.value);
+        const init = this.el.init.value;
+        this.ts = new TagSystem(m, rules, init);
+        this.history = [{ step: 0, result: init }];
+        this.drawEvolution(true);
+        this.refreshLegend();
+        this.updateStatus();
+        this.renderTape();
+      },
+
+      start() {
+        this.ensureEngine();
+        if (this.running) return;
+        this.running = true;
+        const loop = () => {
+          if (!this.running) return;
+          if (!this.tick()) { this.stop(); return; }
+          this.timer = setTimeout(loop, this.speedMs);
+        };
+        loop();
+      },
+
+      stop() {
+        this.running = false;
+        if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+        this.updateStatus();
+      },
+
+      reset() {
+        this.stop();
+        this.ts = null;
+        this.el.history.innerHTML = '';
+        this.el.tape.textContent = '';
+        this.drawEvolution(true);
+        this.updateStatus();
+      },
+
+      tick() {
+        if (!this.ts) return false;
+        const alive = this.ts.next();
+        const last = this.ts.history[this.ts.history.length - 1];
+        this.appendHistory(last);
+        this.renderTape(last);
+        this.drawEvolution();
+        this.updateStatus();
+        return alive;
+      },
+
+      updateStatus() {
+        if (!this.ts) {
+          this.el.status.innerHTML = 'Ready. Define rules and initial word, then run or step.';
+          this.el.length.textContent = '–';
+          this.el.stepNo.textContent = '–';
+          return;
+        }
+        const halted = this.ts.halted;
+        const loopy = this.ts.history.at(-1)?.event === 'loop';
+        const msg = halted ? (loopy ? 'Stopped (loop detected)' : 'Halted (word too short)') : (this.running ? 'Running…' : 'Paused');
+        this.el.status.innerHTML = msg;
+        this.el.length.textContent = String(this.ts.word.length);
+        this.el.stepNo.textContent = String(this.ts.step);
+      },
+
+      renderTape(last) {
+        if (!this.ts) { this.el.tape.textContent = ''; return; }
+        const m = this.ts.m;
+        const word = this.ts.word;
+        const prev = last || this.ts.history[this.ts.history.length - 1];
+        const removed = prev?.removed ?? '';
+        const appended = prev?.appended ?? '';
+        const kill = (removed || '').padEnd(m, ' ');
+        // Build a small narration line
+        const narr = prev?.step ? `Step ${prev.step}: delete "${removed}" append "${appended}"` : 'Initial';
+        const left = kill ? `<span class="kill">${kill}</span>` : '';
+        const right = appended ? ` ⟶ <span class="append">${appended}</span>` : '';
+        const current = word.replace(/ /g, '·');
+        this.el.tape.innerHTML = `${narr}\n${left}${current}${right}`;
+      },
+
+      appendHistory(entry) {
+        const div = document.createElement('div');
+        div.className = 'row';
+        const label = document.createElement('div');
+        label.textContent = String(entry.step).padStart(4, ' ');
+        const content = document.createElement('div');
+        const action = entry.event === 'loop' ? ' (loop)' : '';
+        content.textContent = `del:"${entry.removed}" look:"${entry.looked}" add:"${entry.appended}" -> ${entry.result}${action}`;
+        div.appendChild(label); div.appendChild(content);
+        this.el.history.appendChild(div);
+        this.el.history.scrollTop = this.el.history.scrollHeight;
+      },
+
+      refreshLegend() {
+        const rules = parseRules(this.el.rules.value);
+        const syms = uniqueSymbolsFrom(rules, this.el.init.value);
+        this.colors.clear();
+        for (const s of syms) this.colors.set(s, colorFor(s));
+        const frag = document.createDocumentFragment();
+        for (const s of syms) {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.innerHTML = `<span class="swatch" style="background:${this.colors.get(s)}"></span><span>${s}</span>`;
+          frag.appendChild(chip);
+        }
+        this.el.legend.innerHTML = '';
+        this.el.legend.appendChild(frag);
+        this.drawEvolution(true);
+      },
+
+      drawEvolution(clearOnly = false) {
+        const c = this.el.canvas; const ctx = this.ctx;
+        const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        const pxW = c.clientWidth * DPR; const pxH = c.clientHeight * DPR;
+        if (c.width !== pxW || c.height !== pxH) { c.width = pxW; c.height = pxH; }
+        ctx.clearRect(0,0,pxW,pxH);
+        if (clearOnly || !this.ts) return;
+        // Render each history row as colored cells. Left aligned like NKS figures.
+        const rowH = 12 * DPR; const gap = 2 * DPR; const cell = 8 * DPR; const cellGap = 1 * DPR;
+        const maxRows = Math.floor((pxH - gap) / (rowH + gap));
+        const history = this.ts.history.slice(-maxRows);
+        let y = gap;
+        for (const h of history) {
+          const str = h.result;
+          let x = gap;
+          for (const ch of str) {
+            const col = this.colors.get(ch) || '#39414f';
+            ctx.fillStyle = col;
+            ctx.fillRect(x, y, cell, cell);
+            x += cell + cellGap;
+            if (x > pxW - cell - gap) break; // clip
+          }
+          y += rowH + gap;
+          if (y > pxH - rowH) break;
+        }
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => App.mount());
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Tag System (NKS‑style) Demo</h1>
+      <p>
+        A tag system evolves a word by: (1) looking at the first symbol, appending a string determined by it, then (2) deleting a fixed number m of symbols from the front. Repeat until the word is shorter than m (halts) or a loop occurs.
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Setup</h2>
+        <div class="row inline">
+          <label for="m">Deletion number m</label>
+          <input id="m" type="number" min="1" value="2" />
+        </div>
+        <div class="row">
+          <label for="rules">Rules (one per line: A -> AB)</label>
+          <textarea id="rules" spellcheck="false" placeholder="A -> AB
+B -> A"></textarea>
+        </div>
+        <div class="row">
+          <label for="init">Initial word</label>
+          <input id="init" type="text" value="AAA" spellcheck="false" />
+        </div>
+
+        <div class="row">
+          <div class="controls">
+            <button id="run" class="primary">Run</button>
+            <button id="pause">Pause</button>
+            <button id="step">Step</button>
+            <button id="reset" class="danger">Reset</button>
+          </div>
+        </div>
+        <div class="row inline">
+          <label for="speed">Speed (ms/step)</label>
+          <input id="speed" type="number" min="10" step="10" value="120" />
+          <button id="share" class="accent">Share URL</button>
+        </div>
+
+        <div class="row">
+          <label>Examples</label>
+          <select id="examples"></select>
+        </div>
+
+        <div class="row status">
+          <div>Status: <b id="status">Ready</b></div>
+          <div>Step: <b id="stepNo">–</b></div>
+          <div>Length: <b id="length">–</b></div>
+        </div>
+
+        <div class="row">
+          <label>Alphabet</label>
+          <div id="legend" class="legend"></div>
+        </div>
+        <div class="hint">Undefined symbols simply append nothing.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Current State</h2>
+        <div id="tape" class="tape">Define a system and press Run.</div>
+
+        <h2>Evolution (rows over time)</h2>
+        <canvas id="evo" width="800" height="280"></canvas>
+
+        <h2>History</h2>
+        <div id="history" class="hist"></div>
+        <div class="footer note">Loop detection is based on previously seen words; when the same word reappears, the demo stops.</div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

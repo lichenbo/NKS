@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3‑Color Cellular Automata — Standalone Demo</title>
+    <style>
+      :root {
+        --bg: #0f1116;
+        --panel: #171923;
+        --muted: #8a93a6;
+        --text: #e6e8ef;
+        --accent: #60a5fa;
+        --ok: #34d399;
+        --warn: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0; height: 100%; color: var(--text); background: var(--bg);
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+      }
+      header {
+        padding: 16px 20px; border-bottom: 1px solid #24283a; background: linear-gradient(180deg, #141825, #101421);
+      }
+      header h1 { margin: 0 0 6px; font-size: 18px; }
+      header p { margin: 0; color: var(--muted); font-size: 13px; }
+      .container { display: grid; grid-template-columns: 320px 1fr; height: calc(100% - 72px); }
+      .controls {
+        padding: 14px; border-right: 1px solid #24283a; background: var(--panel); overflow: auto;
+      }
+      .group { margin-bottom: 14px; }
+      .group h2 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+      .row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+      .row label { min-width: 90px; color: var(--muted); font-size: 12px; }
+      input[type="number"], input[type="text"], select {
+        width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #2a2f45; background: #0f1320; color: var(--text);
+      }
+      input[type="range"] { width: 100%; }
+      input[type="checkbox"] { transform: translateY(1px); }
+      input[type="color"] {
+        appearance: none; width: 32px; height: 24px; border: 1px solid #2a2f45; border-radius: 4px; background: none; padding: 0;
+      }
+      .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+      button {
+        padding: 6px 10px; border: 1px solid #2a2f45; border-radius: 6px; background: #0e1322; color: var(--text);
+        cursor: pointer;
+      }
+      button.primary { background: #1b243b; border-color: #2f3a57; }
+      button:active { transform: translateY(1px); }
+      .meta { color: var(--muted); font-size: 12px; }
+      .canvas-wrap { position: relative; overflow: auto; height: 100%; background: #0a0d17; }
+      canvas { display: block; image-rendering: pixelated; }
+      .footer { padding: 10px 14px; border-top: 1px solid #24283a; color: var(--muted); font-size: 12px; }
+      code { background: #0e1322; padding: 1px 4px; border-radius: 4px; border: 1px solid #2a2f45; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>3‑Color Cellular Automata — Standalone Demo</h1>
+      <p>1D, radius‑1, 3 states {0,1,2}. Rule encoded as a base‑3 integer over all 27 neighborhoods (L,C,R) → output.</p>
+    </header>
+    <div class="container">
+      <aside class="controls">
+        <div class="group">
+          <h2>Run</h2>
+          <div class="row buttons">
+            <button id="playPause" class="primary">Play</button>
+            <button id="step">Step</button>
+            <button id="reset">Reset</button>
+          </div>
+          <div class="row">
+            <label for="speed">Speed</label>
+            <input id="speed" type="range" min="1" max="120" step="1" value="30" />
+            <span class="meta" id="speedLabel">30 gen/s</span>
+          </div>
+          <div class="row">
+            <label>Generation</label>
+            <span id="genLabel" class="meta">0</span>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Grid</h2>
+          <div class="row">
+            <label for="width">Width</label>
+            <input id="width" type="number" min="16" max="2048" step="1" value="256" />
+          </div>
+          <div class="row">
+            <label for="cellSize">Cell Size</label>
+            <input id="cellSize" type="range" min="2" max="10" value="3" />
+            <span class="meta" id="cellSizeLabel">3 px</span>
+          </div>
+          <div class="row">
+            <label for="wrap">Wrap</label>
+            <input id="wrap" type="checkbox" checked />
+          </div>
+          <div class="row">
+            <label for="initMode">Initial Row</label>
+            <select id="initMode">
+              <option value="single" selected>Single 1 in center</option>
+              <option value="random">Random</option>
+            </select>
+            <button id="randomizeInit">Randomize</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Rule</h2>
+          <div class="row">
+            <label for="ruleNumber">Base‑10</label>
+            <input id="ruleNumber" type="number" min="0" step="1" />
+            <button id="randomizeRule">Random</button>
+          </div>
+          <div class="row">
+            <label for="ruleBase3">Base‑3 (27 digits)</label>
+            <input id="ruleBase3" type="text" placeholder="digits[26]..digits[0]" />
+          </div>
+          <div class="meta">
+            Mapping: index = L×9 + C×3 + R; digits[0] → (0,0,0), digits[26] → (2,2,2).
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Colors</h2>
+          <div class="row">
+            <label>State 0</label>
+            <input id="color0" type="color" value="#000000" />
+            <label>1</label>
+            <input id="color1" type="color" value="#ffcc00" />
+            <label>2</label>
+            <input id="color2" type="color" value="#00aaff" />
+          </div>
+        </div>
+      </aside>
+
+      <main class="canvas-wrap">
+        <canvas id="ca"></canvas>
+      </main>
+    </div>
+
+    <div class="footer">
+      Notes: This implements a 1D, radius‑1, 3‑state CA. The rule number is interpreted as a base‑3 integer of 27 digits.
+      For a neighborhood (L,C,R) with states in {0,1,2}, its index is L×9 + C×3 + R. The output state is the base‑3 digit at that index.
+    </div>
+
+    <script>
+      (function() {
+        'use strict';
+
+        function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+        function numberToBase3Digits(num, length = 27) {
+          const digits = new Array(length).fill(0);
+          let n = Math.floor(Number(num));
+          if (!Number.isFinite(n) || n < 0) n = 0;
+          for (let i = 0; i < length && n > 0; i++) {
+            digits[i] = (n % 3) | 0; // digits[0] corresponds to (0,0,0)
+            n = Math.floor(n / 3);
+          }
+          return digits;
+        }
+
+        function digitsToNumber(digits) {
+          let n = 0; let pow = 1;
+          for (let i = 0; i < digits.length; i++) { n += pow * (digits[i] | 0); pow *= 3; }
+          return n;
+        }
+
+        function digitsToString(digits) {
+          return digits.slice().reverse().join(''); // high → low
+        }
+
+        function stringToDigits(str) {
+          const s = (str || '').trim().replace(/[^012]/g, '');
+          const out = new Array(27).fill(0);
+          // s[0] is most significant (for (2,2,2)), s[last] is for (0,0,0)
+          let j = 26;
+          for (let i = 0; i < s.length && j >= 0; i++, j--) {
+            const c = s[i]; out[j] = c === '2' ? 2 : c === '1' ? 1 : 0;
+          }
+          return out;
+        }
+
+        class ThreeColorCA {
+          constructor(opts) {
+            this.width = opts.width | 0;
+            this.wrap = !!opts.wrap;
+            this.ruleDigits = numberToBase3Digits(opts.ruleNumber ?? 0, 27);
+            this.generation = 0;
+            this.rows = [];
+            this.state = new Int8Array(this.width);
+            const init = opts.initial || 'single';
+            if (init === 'single') {
+              this.state[(this.width / 2) | 0] = 1;
+            } else if (init === 'random') {
+              for (let i = 0; i < this.width; i++) this.state[i] = (Math.random() * 3) | 0;
+            } else if (Array.isArray(opts.initialState)) {
+              for (let i = 0; i < this.width && i < opts.initialState.length; i++) this.state[i] = opts.initialState[i] | 0;
+            }
+            this.rows.push(this.state.slice());
+          }
+          setRuleNumber(n) {
+            this.ruleDigits = numberToBase3Digits(n, 27);
+          }
+          setWrap(wrap) { this.wrap = !!wrap; }
+          step() {
+            const w = this.width; const next = new Int8Array(w); const curr = this.state; const digits = this.ruleDigits;
+            for (let x = 0; x < w; x++) {
+              const c = curr[x];
+              const l = (x === 0 ? (this.wrap ? curr[w - 1] : 0) : curr[x - 1]);
+              const r = (x === w - 1 ? (this.wrap ? curr[0] : 0) : curr[x + 1]);
+              const idx = l * 9 + c * 3 + r;
+              next[x] = digits[idx];
+            }
+            this.state = next; this.rows.push(next.slice()); this.generation++;
+            return next;
+          }
+          reset(width, initMode) {
+            if (width != null) this.width = width | 0;
+            this.generation = 0; this.rows = []; this.state = new Int8Array(this.width);
+            const init = initMode || 'single';
+            if (init === 'single') { this.state[(this.width / 2) | 0] = 1; }
+            else if (init === 'random') { for (let i = 0; i < this.width; i++) this.state[i] = (Math.random() * 3) | 0; }
+            this.rows.push(this.state.slice());
+          }
+        }
+
+        class CanvasRenderer {
+          constructor(canvas, colors, cellSize = 3) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d', { alpha: false });
+            this.colors = colors || ['#000000', '#ffcc00', '#00aaff'];
+            this.cellSize = cellSize | 0;
+          }
+          setColors(colors) { this.colors = colors.slice(0, 3); }
+          setCellSize(px) { this.cellSize = clamp(px | 0, 1, 20); }
+          drawAll(rows) {
+            if (!rows.length) return;
+            const wCells = rows[0].length; const hCells = rows.length; const cs = this.cellSize;
+            const canvas = this.canvas; const ctx = this.ctx; ctx.imageSmoothingEnabled = false;
+            canvas.width = wCells * cs; canvas.height = hCells * cs;
+            // Build 1:1 ImageData, then scale drawImage for crisp pixels
+            const img = ctx.createImageData(wCells, hCells);
+            const palette = this.colors.map(hexToRGBA);
+            for (let y = 0; y < hCells; y++) {
+              const row = rows[y];
+              for (let x = 0; x < wCells; x++) {
+                const v = row[x] | 0; const rgba = palette[v] || [0, 0, 0, 255];
+                const i = (y * wCells + x) * 4; img.data[i] = rgba[0]; img.data[i + 1] = rgba[1]; img.data[i + 2] = rgba[2]; img.data[i + 3] = 255;
+              }
+            }
+            const temp = document.createElement('canvas'); temp.width = wCells; temp.height = hCells;
+            temp.getContext('2d').putImageData(img, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(temp, 0, 0, wCells, hCells, 0, 0, wCells * cs, hCells * cs);
+          }
+          appendRow(row, yIndex) {
+            const wCells = row.length; const cs = this.cellSize; const canvas = this.canvas; const ctx = this.ctx; ctx.imageSmoothingEnabled = false;
+            // If width or height changed, redraw full for simplicity
+            if (canvas.width !== wCells * cs || canvas.height < (yIndex + 1) * cs) {
+              // Expand and redraw entire content is handled externally via drawAll
+              return false;
+            }
+            for (let x = 0; x < wCells; x++) {
+              ctx.fillStyle = this.colors[row[x]];
+              ctx.fillRect(x * cs, yIndex * cs, cs, cs);
+            }
+            return true;
+          }
+        }
+
+        function hexToRGBA(hex) {
+          let h = (hex || '#000000').replace('#', '').trim();
+          if (h.length === 3) h = h.split('').map(c => c + c).join('');
+          const r = parseInt(h.slice(0, 2), 16) || 0;
+          const g = parseInt(h.slice(2, 4), 16) || 0;
+          const b = parseInt(h.slice(4, 6), 16) || 0;
+          return [r, g, b, 255];
+        }
+
+        // UI elements
+        const els = {
+          canvas: document.getElementById('ca'),
+          width: document.getElementById('width'),
+          cellSize: document.getElementById('cellSize'),
+          cellSizeLabel: document.getElementById('cellSizeLabel'),
+          ruleNumber: document.getElementById('ruleNumber'),
+          ruleBase3: document.getElementById('ruleBase3'),
+          wrap: document.getElementById('wrap'),
+          initMode: document.getElementById('initMode'),
+          playPause: document.getElementById('playPause'),
+          step: document.getElementById('step'),
+          reset: document.getElementById('reset'),
+          randomizeRule: document.getElementById('randomizeRule'),
+          randomizeInit: document.getElementById('randomizeInit'),
+          speed: document.getElementById('speed'),
+          speedLabel: document.getElementById('speedLabel'),
+          color0: document.getElementById('color0'),
+          color1: document.getElementById('color1'),
+          color2: document.getElementById('color2'),
+          genLabel: document.getElementById('genLabel'),
+        };
+
+        // Defaults
+        const DEFAULT_RULE = (() => {
+          // A small, hand-crafted base-3 string of length 27 to start with (symmetric-ish)
+          // This is arbitrary, intended only to show structure.
+          const s = '210120012001200120012001200'; // 27 digits
+          const digits = stringToDigits(s);
+          return digitsToNumber(digits);
+        })();
+
+        const colors = [els.color0.value, els.color1.value, els.color2.value];
+        const ca = new ThreeColorCA({ width: +els.width.value, wrap: els.wrap.checked, ruleNumber: DEFAULT_RULE, initial: 'single' });
+        const renderer = new CanvasRenderer(els.canvas, colors, +els.cellSize.value);
+
+        // Initialize UI fields for rule
+        function refreshRuleInputsFromDigits() {
+          const digits = ca.ruleDigits;
+          els.ruleNumber.value = String(digitsToNumber(digits));
+          els.ruleBase3.value = digitsToString(digits);
+        }
+
+        refreshRuleInputsFromDigits();
+        renderer.drawAll(ca.rows);
+
+        // Animation loop
+        let running = false; let rafId = 0; let lastTime = 0; let msPerGen = 1000 / (+els.speed.value);
+
+        function loop(t) {
+          if (!running) return;
+          if (!lastTime) lastTime = t;
+          const dt = t - lastTime;
+          if (dt >= msPerGen) {
+            const steps = Math.max(1, Math.floor(dt / msPerGen));
+            for (let i = 0; i < steps; i++) {
+              ca.step();
+              // Try incremental append; if geometry changed, redraw all
+              if (!renderer.appendRow(ca.state, ca.generation)) {
+                renderer.drawAll(ca.rows);
+              }
+            }
+            lastTime = t;
+            els.genLabel.textContent = String(ca.generation);
+            // autoscroll to bottom
+            const wrap = els.canvas.parentElement; wrap.scrollTop = wrap.scrollHeight;
+          }
+          rafId = requestAnimationFrame(loop);
+        }
+
+        function start() {
+          if (running) return;
+          running = true; lastTime = 0; els.playPause.textContent = 'Pause'; rafId = requestAnimationFrame(loop);
+        }
+        function stop() {
+          running = false; els.playPause.textContent = 'Play'; if (rafId) cancelAnimationFrame(rafId);
+        }
+
+        // Handlers
+        els.playPause.addEventListener('click', () => { running ? stop() : start(); });
+        els.step.addEventListener('click', () => {
+          stop(); ca.step(); els.genLabel.textContent = String(ca.generation);
+          if (!renderer.appendRow(ca.state, ca.generation)) renderer.drawAll(ca.rows);
+          const wrap = els.canvas.parentElement; wrap.scrollTop = wrap.scrollHeight;
+        });
+        els.reset.addEventListener('click', () => {
+          stop(); ca.reset(+els.width.value, els.initMode.value);
+          renderer.setCellSize(+els.cellSize.value); renderer.drawAll(ca.rows); els.genLabel.textContent = '0';
+        });
+
+        els.speed.addEventListener('input', () => {
+          const s = clamp(+els.speed.value || 1, 1, 240); els.speedLabel.textContent = s + ' gen/s';
+          msPerGen = 1000 / s;
+        });
+
+        els.width.addEventListener('change', () => { /* apply on reset */ });
+        els.cellSize.addEventListener('input', () => {
+          const px = clamp(+els.cellSize.value || 3, 1, 20); els.cellSizeLabel.textContent = px + ' px';
+          renderer.setCellSize(px); renderer.drawAll(ca.rows);
+        });
+        els.wrap.addEventListener('change', () => { ca.setWrap(els.wrap.checked); });
+        els.initMode.addEventListener('change', () => { /* apply on reset */ });
+
+        els.randomizeInit.addEventListener('click', () => {
+          stop(); ca.reset(+els.width.value, 'random'); renderer.drawAll(ca.rows); els.genLabel.textContent = '0';
+        });
+
+        // Rule inputs
+        function applyRuleNumber(n) {
+          n = Math.floor(Math.max(0, Math.min(n, Math.pow(3, 27) - 1)));
+          ca.setRuleNumber(n); refreshRuleInputsFromDigits();
+        }
+
+        els.ruleNumber.addEventListener('input', () => {
+          const v = +els.ruleNumber.value; if (Number.isFinite(v)) applyRuleNumber(v);
+        });
+        els.ruleBase3.addEventListener('input', () => {
+          const digits = stringToDigits(els.ruleBase3.value);
+          const n = digitsToNumber(digits); applyRuleNumber(n);
+        });
+        els.randomizeRule.addEventListener('click', () => {
+          // 0 .. 3^27 - 1 (<= 7.625e12) fits in JS Number safely
+          const max = Math.pow(3, 27);
+          const n = Math.floor(Math.random() * max);
+          applyRuleNumber(n);
+        });
+
+        // Color changes
+        function refreshPalette() {
+          renderer.setColors([els.color0.value, els.color1.value, els.color2.value]);
+          renderer.drawAll(ca.rows);
+        }
+        els.color0.addEventListener('input', refreshPalette);
+        els.color1.addEventListener('input', refreshPalette);
+        els.color2.addEventListener('input', refreshPalette);
+
+        // Keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+          if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
+          if (e.code === 'Space') { e.preventDefault(); running ? stop() : start(); }
+          else if (e.key === 'r') { e.preventDefault(); els.reset.click(); }
+          else if (e.key === 's') { e.preventDefault(); els.step.click(); }
+        });
+
+      })();
+    </script>
+  </body>
+  </html>
+
