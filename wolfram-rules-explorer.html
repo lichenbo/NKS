@@ -747,9 +747,9 @@
 
                 // sliders
                 document.getElementById('canvas-width')
-                    .addEventListener('input', e => this.setWidth(+e.target.value));
+                    .addEventListener('input', e => this.setCanvasParam('width', +e.target.value));
                 document.getElementById('generations')
-                    .addEventListener('input', e => this.setMaxGenerations(+e.target.value));
+                    .addEventListener('input', e => this.setCanvasParam('generations', +e.target.value));
                 document.getElementById('speed')
                     .addEventListener('input', e => this.setSpeed(+e.target.value));
 
@@ -757,7 +757,7 @@
                 document.getElementById('rule-slider')
                     .addEventListener('input', e => {
                         const val = this.clamp(+e.target.value, 0, RULE_MAX);
-                        this.setRuleFromSlider(val);
+                        this.setRule(val);
                     });
             }
 
@@ -769,19 +769,13 @@
             }
 
             updateRuleFromUI() {
-                // reset rule bits
                 this.rule = new Array(RULE_BITS).fill(0);
-
                 document.querySelectorAll('.rule-output').forEach(output => {
                     const patternVal = parseInt(output.dataset.pattern, 2);
                     this.rule[patternVal] = output.classList.contains('active') ? 1 : 0;
                 });
-
                 this.ruleNumber = this.fromBitArray(this.rule);
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
-                this.updateAllRulesActiveState(this.ruleNumber);
+                this.refreshRuleUI();
             }
 
             /* ---------- rule setters ---------- */
@@ -793,18 +787,10 @@
             setRule(ruleNumber) {
                 this.ruleNumber = this.clamp(ruleNumber, 0, RULE_MAX);
                 this.rule = this.toBitArray(this.ruleNumber);
-
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updateSlider('rule-slider', 'rule-slider-value', this.ruleNumber);
-                this.updateAllRulesActiveState(this.ruleNumber);
+                this.refreshRuleUI();
             }
 
-            setRuleFromSlider(ruleNumber) {
-                this.ruleNumber = this.clamp(ruleNumber, 0, RULE_MAX);
-                this.rule = this.toBitArray(this.ruleNumber);
-
+            refreshRuleUI() {
                 this.updateRuleUI();
                 this.updateRuleDisplay();
                 this.updateRuleAnalysis();
@@ -844,17 +830,10 @@
             }
 
             updateAllRulesActiveState(activeRuleNumber) {
-                // Update saved rules active state
-                const savedRuleEls = this.savedRulesContainer.querySelectorAll('.saved-rule');
-                savedRuleEls.forEach(el => {
-                    const ruleNumber = parseInt(el.dataset.rule);
-                    el.classList.toggle('active', ruleNumber === activeRuleNumber);
-                });
-                
-                // Update preset rules active state - same logic as saved rules
-                this.presetHostEl.querySelectorAll('.preset-rule').forEach(p => {
-                    const presetRule = parseInt(p.dataset.rule);
-                    p.classList.toggle('active', presetRule === activeRuleNumber);
+                [this.savedRulesContainer, this.presetHostEl].forEach(container => {
+                    container.querySelectorAll('[data-rule]').forEach(el => {
+                        el.classList.toggle('active', parseInt(el.dataset.rule) === activeRuleNumber);
+                    });
                 });
             }
 
@@ -955,17 +934,15 @@
 
             /* ---------- user adjustable params ---------- */
 
-            setWidth(w) {
-                this.width = w;
-                this.updateSlider('canvas-width', 'canvas-width-value', w);
-                this.setupCanvas();
-                this.resetGrid();
-            }
-
-            setMaxGenerations(g) {
-                this.maxGenerations = g;
-                this.height = g;
-                this.updateSlider('generations', 'generations-value', g);
+            setCanvasParam(param, value) {
+                if (param === 'width') {
+                    this.width = value;
+                    this.updateSlider('canvas-width', 'canvas-width-value', value);
+                } else if (param === 'generations') {
+                    this.maxGenerations = value;
+                    this.height = value;
+                    this.updateSlider('generations', 'generations-value', value);
+                }
                 this.setupCanvas();
                 this.resetGrid();
             }
@@ -1058,15 +1035,8 @@
                 const active = this.grid[this.currentGeneration]?.reduce((s, c) => s + c, 0) || 0;
                 document.getElementById('active-cells').textContent = active;
 
-                // very simple classification
-                let type = '复杂';
-                if (this.ruleNumber === 30) type = '随机复杂';
-                else if ([90, 150].includes(this.ruleNumber)) type = '分形';
-                else if (this.ruleNumber === 110) type = '复杂结构';
-                else if (this.ruleNumber === 184) type = '粒子';
-                else if ([250, 254].includes(this.ruleNumber)) type = '简单重复';
-                else if (active === 0) type = '消亡';
-                else if (active > this.width * 0.7) type = '填充';
+                const patterns = {30:'随机复杂', 90:'分形', 110:'复杂结构', 150:'分形', 184:'粒子', 250:'简单重复', 254:'简单重复'};
+                const type = patterns[this.ruleNumber] || (active === 0 ? '消亡' : active > this.width * 0.7 ? '填充' : '复杂');
                 document.getElementById('pattern-type').textContent = type;
             }
         }
