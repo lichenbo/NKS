@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All 256 Wolfram Elementary Cellular Automaton Rules</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="wolfram-256-rules-demo.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>All 256 Wolfram Elementary Cellular Automaton Rules</h1>
+            <p class="subtitle">Complete visualization of Stephen Wolfram's elementary cellular automata classification</p>
+            <nav class="header-nav">
+                <a href="index.html" class="nav-link">← Back to NKS Explorer</a>
+                <a href="wolfram-rules-explorer.html" class="nav-link">Interactive Rule Explorer →</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="intro-section">
+            <div class="intro-text">
+                <h2>Elementary Cellular Automata</h2>
+                <p>Elementary cellular automata are the simplest class of one-dimensional cellular automata. Each cell has two possible states (0 or 1), and the rule for updating the state of a cell depends only on the current state of the cell and its two neighbors.</p>
+                <p>Since there are 2³ = 8 possible configurations for a cell and its neighbors, and each configuration can map to either 0 or 1, there are 2⁸ = 256 possible elementary cellular automaton rules, numbered from 0 to 255.</p>
+            </div>
+            
+            <div class="controls-section">
+                <div class="control-group">
+                    <label for="generations-slider">Generations: <span id="generations-value">50</span></label>
+                    <input type="range" id="generations-slider" min="20" max="100" value="50">
+                </div>
+                <div class="control-group">
+                    <label for="width-slider">Width: <span id="width-value">100</span></label>
+                    <input type="range" id="width-slider" min="50" max="200" value="100">
+                </div>
+                <button id="regenerate-btn" class="btn btn-primary">Regenerate All</button>
+                <button id="toggle-numbers-btn" class="btn btn-secondary">Hide Rule Numbers</button>
+            </div>
+        </div>
+
+        <div class="rules-grid" id="rules-grid">
+            <!-- Rules will be generated here by JavaScript -->
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 NKS Explorer. Inspired by Stephen Wolfram's "A New Kind of Science".</p>
+    </footer>
+
+    <!-- Modal for detailed rule view -->
+    <div id="rule-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2 id="modal-rule-title">Rule 30</h2>
+                    <div class="modal-rule-info">
+                        <span id="modal-rule-binary" class="rule-binary">00011110</span>
+                        <span id="modal-rule-classification" class="rule-classification">Chaotic (Class III)</span>
+                    </div>
+                </div>
+                <button id="modal-close-btn" class="modal-close-btn" title="Close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-controls">
+                    <div class="modal-control-group">
+                        <label for="modal-speed-slider">Animation Speed: <span id="modal-speed-value">5</span></label>
+                        <input type="range" id="modal-speed-slider" min="1" max="10" value="5">
+                    </div>
+                    <div class="modal-control-group">
+                        <label for="modal-size-slider">Cell Size: <span id="modal-size-value">3</span></label>
+                        <input type="range" id="modal-size-slider" min="1" max="6" value="3">
+                    </div>
+                    <div class="modal-control-buttons">
+                        <button id="modal-play-btn" class="btn btn-primary">Play</button>
+                        <button id="modal-pause-btn" class="btn btn-secondary">Pause</button>
+                        <button id="modal-restart-btn" class="btn btn-secondary">Restart</button>
+                    </div>
+                </div>
+                
+                <div class="modal-canvas-container">
+                    <canvas id="modal-canvas" class="modal-canvas"></canvas>
+                </div>
+                
+                <div class="modal-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Generation:</span>
+                        <span id="modal-current-generation" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Active Cells:</span>
+                        <span id="modal-active-cells" class="stat-value">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Density:</span>
+                        <span id="modal-density" class="stat-value">0.5%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="wolfram-256-rules-demo.js"></script>
+</body>
+</html>
