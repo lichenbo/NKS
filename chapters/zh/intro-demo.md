@@ -1,4 +1,4 @@
-# 交互演示：[康威的生命游戏](annotation:conways-game-of-life)
+# 交互演示：[康威生命游戏](annotation:conways-game-of-life)
 
 *在深入了解《一种新的科学》之前，亲身体验简单规则如何创造出无限复杂性。*
 
@@ -53,7 +53,7 @@
 
 ## 🧬 游戏规则
 
-康威的生命游戏只遵循**四个简单规则**：
+康威生命游戏只遵循**四个简单规则**：
 
 1. **诞生**：死细胞周围正好有3个活邻居时变成活细胞
 2. **生存**：活细胞有2个或3个活邻居时保持存活
@@ -71,7 +71,7 @@
 
 ## 🌐 探索更多交互演示
 
-### 康威的生命游戏
+### 康威生命游戏
 - [Golly](https://golly.sourceforge.io/) - 高级生命游戏模拟器（跨平台）
 - [Copy.sh 生命游戏](https://copy.sh/life/) - 简洁快速的在线实现
 - [LifeViewer](https://lazyslug.com/lifeviewer/) - 支持RLE格式的模式查看器
