@@ -23,7 +23,7 @@
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     /**
@@ -95,12 +95,12 @@ window.APP = window.APP || {};
             'rule-bg': '背景',
             'rule-header': '标题',
             'rule': '元胞自动机：规则',
-            'intro-demo': '交互演示：康威的生命游戏',
+            'intro-demo': '交互演示：康威生命游戏',
             'wolfram-demo': '🔬 交互演示：Wolfram规则探索器',
             'play': '▶ 播放',
             'pause': '⏸ 暂停',
             'chatbot-title': 'NKS 助手',
-            'chatbot-welcome': '您好！我是您的 NKS 助手。请随时询问关于斯蒂芬·沃尔夫拉姆《一种新科学》的任何问题——细胞自动机、计算等价性、涌现或书中的任何概念！',
+            'chatbot-welcome': '您好！我是您的 NKS 助手。请随时询问关于斯蒂芬·沃尔夫拉姆《一种新科学》的任何问题——细胞自动机、计算等价性、涌现或书中的任何概念！为节省服务器费用（Google Cloud BigQuery免费版），查询速度较慢，请耐心等待。',
             'chatbot-placeholder': '询问细胞自动机、规则30、复杂性...',
             'chatbot-thinking': 'NKS 助手正在思考中...',
             'chatbot-toggle-title': '与 NKS 助手聊天',
@@ -161,12 +161,12 @@ window.APP = window.APP || {};
     function initTranslations() {
         // Expose to global scope for backward compatibility
         window.translations = translations;
-        
+
         // Set default language if not already set
         if (!window.currentLanguage) {
             window.currentLanguage = localStorage.getItem('nks-language') || DEFAULT_LANGUAGE;
         }
-        
+
         console.log('🌍 Translation system initialized with', Object.keys(translations).length, 'languages');
     }
 
@@ -182,22 +182,22 @@ window.APP = window.APP || {};
      */
     function getTranslation(key, language = null, fallback = '') {
         const lang = language || window.currentLanguage || DEFAULT_LANGUAGE;
-        
+
         // Try requested language
         if (translations[lang] && translations[lang][key]) {
             return translations[lang][key];
         }
-        
+
         // Fallback to Chinese if not English
         if (lang !== 'zh' && translations.zh && translations.zh[key]) {
             return translations.zh[key];
         }
-        
+
         // Fallback to English
         if (lang !== 'en' && translations.en && translations.en[key]) {
             return translations.en[key];
         }
-        
+
         return fallback;
     }
 

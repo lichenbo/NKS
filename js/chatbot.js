@@ -42,7 +42,7 @@ window.APP = window.APP || {};
             this.isTyping = false;
             this.messageHistory = [];
             this.storageKey = 'nks-chat-history';
-            
+
             this.initializeElements();
             this.bindEvents();
             this.loadChatHistory();
@@ -103,9 +103,9 @@ window.APP = window.APP || {};
                 }
             });
             
-            // Click on quick input field - open conversation if there's existing history
+            // Click on quick input field - open conversation view
             this.quickInput.addEventListener('click', () => {
-                if (this.messageHistory.length > 0 && !this.isExpanded) {
+                if (!this.isExpanded) {
                     this.expandChat();
                 }
             });
@@ -310,7 +310,7 @@ window.APP = window.APP || {};
         /**
          * Add message to chat history and UI
          * Creates message UI element and stores in history with persistence
-         * 
+         *
          * @param {string} type - Message type ('user' or 'bot')
          * @param {string} content - Message content text
          * @param {boolean} [isError=false] - Whether message is an error message
@@ -320,34 +320,60 @@ window.APP = window.APP || {};
         addMessage(type, content, isError = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}-message${isError ? ' error-message' : ''}`;
-            
+
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'message-avatar';
             avatarDiv.textContent = type === 'user' ? '👤' : '🤖';
-            
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            
+
             const contentP = document.createElement('p');
             contentP.textContent = content;
-            
+
             contentDiv.appendChild(contentP);
             messageDiv.appendChild(avatarDiv);
             messageDiv.appendChild(contentDiv);
-            
+
             this.messagesContainer.appendChild(messageDiv);
-            
+
             // Store in history
             this.messageHistory.push({ type, content, isError });
-            
+
             // Save to localStorage
             this.saveChatHistory();
-            
+
             // Update UI state (might be first message)
             this.updateUIState();
-            
+
             // Scroll to bottom
             this.scrollToBottom();
+        }
+
+        /**
+         * Get welcome message text for current language
+         * @returns {string} Welcome message text
+         * @private
+         */
+        getWelcomeText() {
+            return this.getTranslatedText('chatbot-welcome',
+                'Hello! I\'m your NKS Assistant. Ask me anything about Stephen Wolfram\'s "A New Kind of Science" - cellular automata, computational equivalence, emergence, or any concepts from the book!');
+        }
+
+        /**
+         * Show welcome message for new chat sessions
+         * Displays a friendly greeting from the bot to start conversations
+         * Does not save welcome message to persistent history
+         *
+         * @returns {void}
+         * @public
+         */
+        showWelcomeMessage() {
+            // Display welcome message in UI without storing in history
+            this.displayMessageInUI('bot', this.getWelcomeText());
+
+            // Update UI state
+            this.updateUIState();
         }
         
         /**
@@ -468,7 +494,8 @@ window.APP = window.APP || {};
         /**
          * Load chat history from localStorage with validation and expiration
          * Handles data migration and automatic cleanup of old history
-         * 
+         * Shows welcome message for new users without chat history
+         *
          * Time Complexity: O(h) where h is stored history size
          * @returns {void}
          * @public
@@ -477,43 +504,52 @@ window.APP = window.APP || {};
             try {
                 const storedData = localStorage.getItem(this.storageKey);
                 if (!storedData) {
+                    // No existing history - show welcome message for new users
+                    this.showWelcomeMessage();
                     return;
                 }
-                
+
                 const historyData = JSON.parse(storedData);
-                
+
                 // Validate data structure
                 if (!historyData.messages || !Array.isArray(historyData.messages)) {
                     console.warn('⚠️ Invalid chat history format, clearing...');
                     this.clearChatHistory();
+                    this.showWelcomeMessage();
                     return;
                 }
-                
+
                 // Check if history is too old (optional: clear after 30 days)
                 const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
                 if (historyData.timestamp && historyData.timestamp < thirtyDaysAgo) {
                     this.clearChatHistory();
+                    this.showWelcomeMessage();
                     return;
                 }
-                
+
                 this.messageHistory = historyData.messages;
-                
+
                 // Restore messages to UI if there are any
                 if (this.messageHistory.length > 0) {
                     this.restoreMessagesToUI();
                     this.updateUIState();
+                } else {
+                    // Empty history - show welcome message
+                    this.showWelcomeMessage();
                 }
-                
+
             } catch (error) {
                 console.warn('⚠️ Failed to load chat history:', error);
                 this.clearChatHistory();
+                this.showWelcomeMessage();
             }
         }
         
         /**
          * Restore saved messages to UI without duplicating in history
          * Used during initialization to display previous conversations
-         * 
+         * Shows welcome message first, then chat history
+         *
          * Time Complexity: O(h) where h is message count
          * @returns {void}
          * @private
@@ -523,12 +559,14 @@ window.APP = window.APP || {};
             if (this.messagesContainer) {
                 this.messagesContainer.innerHTML = '';
             }
-            
-            // Restore each message to the UI
+
+            // Show welcome message first
+            this.displayMessageInUI('bot', this.getWelcomeText());
+
+            // Then restore each saved message to the UI
             this.messageHistory.forEach(({ type, content, isError }) => {
                 this.displayMessageInUI(type, content, isError);
             });
-            
         }
         
         /**
@@ -583,14 +621,14 @@ window.APP = window.APP || {};
         /**
          * Public method to clear history with confirmation
          * Can be called from console or UI
-         * 
+         *
          * @returns {void}
          * @public
          */
         clearHistory() {
             if (confirm('Are you sure you want to clear your chat history? This cannot be undone.')) {
                 this.clearChatHistory();
-                this.updateUIState();
+                this.showWelcomeMessage();
             }
         }
         
