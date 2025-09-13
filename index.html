@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A New Kind of Science - Notes</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="https://www.wolframscience.com/favicon.ico">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    
-    
+
+
     <!-- Main Styles -->
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
+
 </head>
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-QR1KHESCTK"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'G-QR1KHESCTK');
+    gtag('config', 'G-QR1KHESCTK');
 </script>
 
 <body>
     <!-- Cellular Automata Background -->
     <canvas id="cellular-automata-bg"></canvas>
-    
+
     <!-- Fractal overlay -->
     <div class="fractal-overlay"></div>
-    
+
     <header data-aos="fade-down">
         <canvas id="header-cellular-automata"></canvas>
         <div class="language-toggle">
@@ -67,29 +70,45 @@
         </div>
     </header>
 
-    <main class="three-column-layout" data-aos="fade-up"  data-aos-delay="200">
+    <main class="three-column-layout" data-aos="fade-up" data-aos-delay="200">
         <!-- Left Column: Outline -->
         <nav class="outline-column glass-panel">
             <div class="panel-header">
                 <h2><span class="icon">📚</span><span data-i18n="outline">Outline</span></h2>
             </div>
             <ul class="chapter-list">
-                <li><a href="#preface" class="chapter-link active" data-chapter="preface" data-i18n="preface">Preface</a></li>
-                <li><a href="#intro-demo" class="chapter-link" data-chapter="intro-demo" data-i18n="intro-demo">Interactive Demo: Conway's Game of Life</a></li>
-                <li><a href="wolfram-rules-explorer.html" class="chapter-link external-demo-link" target="_blank" data-i18n="wolfram-demo">🔬 Interactive Demo: Wolfram Rules Explorer</a></li>
-                <li><a href="#chapter1" class="chapter-link" data-chapter="chapter1">Chapter 1: The Foundations for a New Kind of Science</a></li>
-                <li><a href="#chapter2" class="chapter-link" data-chapter="chapter2">Chapter 2: The Crucial Experiment</a></li>
-                <li><a href="#chapter3" class="chapter-link" data-chapter="chapter3">Chapter 3: The World of Simple Programs</a></li>
-                <li><a href="#chapter3-demo" class="chapter-link" data-chapter="chapter3-demo" data-i18n="chapter3-demo">🔬 Interactive Demo: Chapter 3 Experiments</a></li>
-                <li><a href="#chapter4" class="chapter-link" data-chapter="chapter4">Chapter 4: Systems Based on Numbers</a></li>
-                <li><a href="#chapter5" class="chapter-link" data-chapter="chapter5">Chapter 5: Two Dimensions and Beyond</a></li>
-                <li><a href="#chapter6" class="chapter-link" data-chapter="chapter6">Chapter 6: Starting from Randomness</a></li>
-                <li><a href="#chapter7" class="chapter-link" data-chapter="chapter7">Chapter 7: Mechanisms in Programs and Nature</a></li>
-                <li><a href="#chapter8" class="chapter-link" data-chapter="chapter8">Chapter 8: Implications for Everyday Systems</a></li>
-                <li><a href="#chapter9" class="chapter-link" data-chapter="chapter9">Chapter 9: Fundamental Physics</a></li>
-                <li><a href="#chapter10" class="chapter-link" data-chapter="chapter10">Chapter 10: Processes of Perception and Analysis</a></li>
-                <li><a href="#chapter11" class="chapter-link" data-chapter="chapter11">Chapter 11: The Notion of Computation</a></li>
-                <li><a href="#chapter12" class="chapter-link" data-chapter="chapter12">Chapter 12: The Principle of Computational Equivalence</a></li>
+                <li><a href="#intro-demo" class="chapter-link active" data-chapter="intro-demo"
+                        data-i18n="intro-demo">Interactive Demo: Conway's Game of Life</a></li>
+                <li><a href="#preface" class="chapter-link" data-chapter="preface"
+                        data-i18n="preface">Preface</a></li>
+                <li><a href="wolfram-rules-explorer.html" class="chapter-link external-demo-link" target="_blank"
+                        data-i18n="wolfram-demo">🔬 Interactive Demo: Wolfram Rules Explorer</a></li>
+                <li><a href="#chapter1" class="chapter-link" data-chapter="chapter1">Chapter 1: The Foundations for a
+                        New Kind of Science</a></li>
+                <li><a href="#chapter2" class="chapter-link" data-chapter="chapter2">Chapter 2: The Crucial
+                        Experiment</a></li>
+                <li><a href="#chapter3" class="chapter-link" data-chapter="chapter3">Chapter 3: The World of Simple
+                        Programs</a></li>
+                <li><a href="#chapter3-demo" class="chapter-link" data-chapter="chapter3-demo"
+                        data-i18n="chapter3-demo">🔬 Interactive Demo: Chapter 3 Experiments</a></li>
+                <li><a href="#chapter4" class="chapter-link" data-chapter="chapter4">Chapter 4: Systems Based on
+                        Numbers</a></li>
+                <li><a href="#chapter5" class="chapter-link" data-chapter="chapter5">Chapter 5: Two Dimensions and
+                        Beyond</a></li>
+                <li><a href="#chapter6" class="chapter-link" data-chapter="chapter6">Chapter 6: Starting from
+                        Randomness</a></li>
+                <li><a href="#chapter7" class="chapter-link" data-chapter="chapter7">Chapter 7: Mechanisms in Programs
+                        and Nature</a></li>
+                <li><a href="#chapter8" class="chapter-link" data-chapter="chapter8">Chapter 8: Implications for
+                        Everyday Systems</a></li>
+                <li><a href="#chapter9" class="chapter-link" data-chapter="chapter9">Chapter 9: Fundamental Physics</a>
+                </li>
+                <li><a href="#chapter10" class="chapter-link" data-chapter="chapter10">Chapter 10: Processes of
+                        Perception and Analysis</a></li>
+                <li><a href="#chapter11" class="chapter-link" data-chapter="chapter11">Chapter 11: The Notion of
+                        Computation</a></li>
+                <li><a href="#chapter12" class="chapter-link" data-chapter="chapter12">Chapter 12: The Principle of
+                        Computational Equivalence</a></li>
             </ul>
         </nav>
 
@@ -106,9 +125,10 @@
                 <h2><span class="icon">🔬</span><span data-i18n="annotations">Annotations</span></h2>
             </div>
             <div id="annotation-content" class="content-area">
-                <p class="placeholder" data-i18n="annotation-placeholder">Click on any highlighted link in the notes to view detailed annotations and additional context.</p>
+                <p class="placeholder" data-i18n="annotation-placeholder">Click on any highlighted link in the notes to
+                    view detailed annotations and additional context.</p>
             </div>
-            
+
         </aside>
     </main>
 
@@ -118,7 +138,7 @@
         <button id="mobile-chat-button" class="mobile-round-button" aria-label="Open chat">
             <span>💬</span>
         </button>
-        
+
         <!-- Scroll to Top Button -->
         <button id="scroll-to-top" class="scroll-to-top hidden" title="Back to top">
             <span class="scroll-to-top-icon">↑</span>
@@ -127,22 +147,17 @@
 
     <!-- NKS Chat Input -->
     <div id="nks-chat" class="nks-chat-container">
-        
+
         <!-- Collapsed State: Single Line Input -->
         <div id="chat-input-bar" class="chat-input-bar">
-            <input 
-                type="text" 
-                id="chat-quick-input" 
-                class="chat-quick-input"
-                placeholder="Ask about A New Kind of Science..."
-                data-i18n-placeholder="chat-quick-placeholder"
-                maxlength="500"
-            >
+            <input type="text" id="chat-quick-input" class="chat-quick-input"
+                placeholder="Ask about A New Kind of Science..." data-i18n-placeholder="chat-quick-placeholder"
+                maxlength="500">
             <button id="chat-quick-send" class="chat-quick-send" aria-label="Send message">
                 <span class="send-icon">💬</span>
             </button>
         </div>
-        
+
         <!-- Expanded State: Full Conversation View -->
         <div id="chat-conversation" class="chat-conversation hidden">
             <div class="chat-header">
@@ -154,21 +169,15 @@
                     <span>−</span>
                 </button>
             </div>
-            
+
             <div class="chat-messages" id="chat-messages">
                 <!-- Messages will be added dynamically -->
             </div>
-            
+
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                    <input 
-                        type="text" 
-                        id="chat-input" 
-                        class="chat-input"
-                        placeholder="Continue the conversation..."
-                        data-i18n-placeholder="chat-input-placeholder"
-                        maxlength="500"
-                    >
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Continue the conversation..."
+                        data-i18n-placeholder="chat-input-placeholder" maxlength="500">
                     <button id="chat-send" class="chat-send-btn" aria-label="Send message">
                         <span class="send-icon">💬</span>
                     </button>
@@ -188,29 +197,24 @@
     <!-- License Footer -->
     <footer class="license-footer">
         <div class="license-content">
-            <p>This work is licensed under a 
-                <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
-                   target="_blank" 
-                   rel="noopener noreferrer">
-                   Creative Commons Attribution-ShareAlike 4.0 International License
+            <p>This work is licensed under a
+                <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">
+                    Creative Commons Attribution-ShareAlike 4.0 International License
                 </a>
             </p>
-            <a href="https://creativecommons.org/licenses/by-sa/4.0/" 
-               target="_blank" 
-               rel="noopener noreferrer">
-                <img src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" 
-                     alt="Creative Commons License" 
-                     style="border-width:0">
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">
+                <img src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" alt="Creative Commons License"
+                    style="border-width:0">
             </a>
         </div>
     </footer>
 
     <!-- AOS Animation Library -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <!-- Chart.js for Chapter 3 demo -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <script src="js/translations.js"></script>
     <!-- Shared utilities and modules extracted from script.js -->
     <script src="js/utils.js"></script>
@@ -230,7 +234,7 @@
     <script src="js/webgl-cellular-automata.js"></script>
     <script src="js/gpu-cellular-automata-manager.js"></script>
     <script src="script.js"></script>
-    
+
     <script>
         // Initialize AOS animations
         AOS.init({
@@ -239,7 +243,7 @@
             once: true,
             offset: 50
         });
-        
+
         // Initialize cellular automata with GPU support (async)
         async function initializeCellularAutomata() {
             try {
@@ -249,11 +253,12 @@
                 console.error('Cellular automata initialization failed:', error);
             }
         }
-        
+
         initializeCellularAutomata();
-        
+
         // Initialize chatbot
         APP.Chatbot.initChatbot();
     </script>
 </body>
+
 </html>

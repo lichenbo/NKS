@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initScrollToTop();
     initImageLightbox();
 
-    // Load preface by default
-    loadChapter('preface');
+    // Load interactive demo by default
+    loadChapter('intro-demo');
 });
 
 // Image lightbox functionality now in js/lightbox.js
