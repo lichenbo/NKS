@@ -70,7 +70,11 @@ window.APP = window.APP || {};
             'chatbot-thinking': 'NKS Assistant is thinking...',
             'chatbot-toggle-title': 'Chat with NKS Assistant',
             'chat-quick-placeholder': '💡 Ask about A New Kind of Science...',
-            'chat-input-placeholder': 'Continue the conversation...'
+            'chat-input-placeholder': 'Continue the conversation...',
+            'model-label': 'Model:',
+            'model-chatgpt': 'ChatGPT',
+            'model-gemini': 'Gemini',
+            'model-glm': 'GLM'
         },
         zh: {
             preface: '前言',
@@ -107,7 +111,11 @@ window.APP = window.APP || {};
             'chatbot-thinking': 'NKS 助手正在思考中...',
             'chatbot-toggle-title': '与 NKS 助手聊天',
             'chat-quick-placeholder': '💡 询问《一种新科学》相关问题...',
-            'chat-input-placeholder': '继续对话...'
+            'chat-input-placeholder': '继续对话...',
+            'model-label': '模型：',
+            'model-chatgpt': 'ChatGPT',
+            'model-gemini': 'Gemini',
+            'model-glm': 'GLM'
         },
         ja: {
             preface: '序文',
@@ -144,7 +152,11 @@ window.APP = window.APP || {};
             'chatbot-thinking': 'NKS アシスタントが考えています...',
             'chatbot-toggle-title': 'NKS アシスタントとチャット',
             'chat-quick-placeholder': '💡 『新しい科学』について質問...',
-            'chat-input-placeholder': '会話を続ける...'
+            'chat-input-placeholder': '会話を続ける...',
+            'model-label': 'モデル：',
+            'model-chatgpt': 'ChatGPT',
+            'model-gemini': 'Gemini',
+            'model-glm': 'GLM'
         }
     };
 

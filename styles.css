@@ -2030,6 +2030,80 @@ header {
     transform: scale(1.1);
 }
 
+/* Model Selection Dropdown Styles */
+.chat-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.model-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.model-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.model-select {
+    background: rgba(20, 20, 20, 0.8);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    color: var(--accent-gold);
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 90px;
+}
+
+.model-select:hover {
+    border-color: rgba(212, 175, 55, 0.6);
+    background: rgba(20, 20, 20, 0.9);
+}
+
+.model-select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.model-select option {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.5rem;
+}
+
+.model-select option:hover {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+/* Mobile responsiveness for model selector */
+@media (max-width: 480px) {
+    .chat-controls {
+        gap: 0.5rem;
+    }
+
+    .model-selector {
+        gap: 0.3rem;
+    }
+
+    .model-label {
+        font-size: 0.75rem;
+    }
+
+    .model-select {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.4rem;
+        min-width: 70px;
+    }
+}
+
 .chat-messages {
     flex: 1;
     overflow-y: auto;

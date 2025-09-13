@@ -2,16 +2,17 @@
 
 /**
  * NKS Chatbot System - AI-powered assistant for "A New Kind of Science"
- * Provides intelligent question-answering using RAG model API integration
- * Supports trilingual UI (EN/ZH/JA) with persistent chat history
- * 
+ * Provides intelligent question-answering using unified RAG API with multiple LLM support
+ * Supports trilingual UI (EN/ZH/JA) with persistent chat history and model selection
+ *
  * Key Features:
- * - RAG model integration for book content queries
+ * - Unified API integration supporting multiple LLMs (ChatGPT, Gemini, GLM)
+ * - Model selection dropdown with persistent preferences
  * - Responsive UI: desktop input bar, mobile floating button
  * - Persistent chat history with localStorage
  * - Error handling with user-friendly messages
  * - Dynamic positioning aligned with annotations column
- * 
+ *
  * Time Complexity: O(n) for chat history operations where n is message count
  * Space Complexity: O(h) where h is chat history size in localStorage
  */
@@ -37,14 +38,33 @@ window.APP = window.APP || {};
          * Space Complexity: O(1) for instance properties
          */
         constructor() {
-            this.apiUrl = "https://nks-746942233281.us-west1.run.app";
+            // Unified API Configuration - All models use the same RAG endpoint
+            this.apiUrl = 'https://nks-746942233281.us-west1.run.app';
+            this.models = {
+                'chatgpt': {
+                    name: 'ChatGPT',
+                    modelParam: 'chatgpt'
+                },
+                'gemini': {
+                    name: 'Gemini',
+                    modelParam: 'gemini'
+                },
+                'glm': {
+                    name: 'GLM',
+                    modelParam: 'glm'
+                }
+            };
+
+            this.currentModel = 'chatgpt'; // Default model
             this.isExpanded = false;
             this.isTyping = false;
             this.messageHistory = [];
             this.storageKey = 'nks-chat-history';
+            this.modelStorageKey = 'nks-chat-model';
 
             this.initializeElements();
             this.bindEvents();
+            this.loadSettings();
             this.loadChatHistory();
         }
         
@@ -59,18 +79,18 @@ window.APP = window.APP || {};
         initializeElements() {
             // Main container
             this.chatContainer = document.getElementById('nks-chat');
-            
+
             // Mobile round button
             this.mobileButton = document.getElementById('mobile-chat-button');
-            
+
             // Collapsed state elements
             this.inputBar = document.getElementById('chat-input-bar');
             this.quickInput = document.getElementById('chat-quick-input');
             this.quickSendButton = document.getElementById('chat-quick-send');
-            
+
             // Track mobile state
             this.isMobile = window.innerWidth <= 768;
-            
+
             // Expanded state elements
             this.conversation = document.getElementById('chat-conversation');
             this.minimizeButton = document.getElementById('chat-minimize');
@@ -78,6 +98,9 @@ window.APP = window.APP || {};
             this.inputField = document.getElementById('chat-input');
             this.sendButton = document.getElementById('chat-send');
             this.typingIndicator = document.getElementById('chat-typing');
+
+            // Model selector elements
+            this.modelSelect = document.getElementById('llm-model-select');
         }
         
         /**
@@ -121,14 +144,19 @@ window.APP = window.APP || {};
             
             // Minimize button
             this.minimizeButton.addEventListener('click', () => this.minimizeChat());
-            
+
+            // Model selection
+            if (this.modelSelect) {
+                this.modelSelect.addEventListener('change', (e) => this.handleModelChange(e.target.value));
+            }
+
             // Chat can only be closed via the minimize button
-            
+
             // Handle window resize
             window.addEventListener('resize', () => {
                 this.isMobile = window.innerWidth <= 768;
             });
-            
+
             // Update placeholder text when language changes
             document.addEventListener('languageChanged', () => this.updateLanguageElements());
         }
@@ -264,34 +292,45 @@ window.APP = window.APP || {};
         async getBotResponse(message) {
             // Show typing indicator
             this.showTypingIndicator();
-            
+
             try {
-                // Call RAG API
+                const model = this.models[this.currentModel];
+                if (!model) {
+                    throw new Error(`Unknown model: ${this.currentModel}`);
+                }
+
+                // Prepare unified API request with model parameter
+                const requestBody = {
+                    prompt: message,
+                    model: model.modelParam // Pass selected model as parameter
+                };
+
+                // Call unified RAG API with model selection
                 const response = await fetch(this.apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ prompt: message })
+                    body: JSON.stringify(requestBody)
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
-                // API returns pure text, so get it as text instead of JSON
+
+                // API returns plain text response
                 const botResponse = await response.text();
-                
+
                 // Hide typing indicator and add bot response
                 this.hideTypingIndicator();
                 this.addMessage('bot', botResponse);
-                
+
             } catch (error) {
                 console.error('Chatbot API error:', error);
-                
+
                 // Hide typing indicator and show error message
                 this.hideTypingIndicator();
-                
+
                 let errorMessage;
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
                     errorMessage = 'I\'m having trouble connecting to my knowledge base. Please check your internet connection and try again.';
@@ -299,10 +338,12 @@ window.APP = window.APP || {};
                     errorMessage = 'I\'m receiving too many requests right now. Please wait a moment and try again.';
                 } else if (error.message.includes('HTTP 5')) {
                     errorMessage = 'My knowledge service is temporarily unavailable. Please try again in a few minutes.';
+                } else if (error.message.includes('HTTP 400')) {
+                    errorMessage = 'Invalid request. The selected model might not be supported.';
                 } else {
                     errorMessage = 'I encountered an unexpected error. Please try asking your question in a different way.';
                 }
-                
+
                 this.addMessage('bot', errorMessage, true);
             }
         }
@@ -468,6 +509,62 @@ window.APP = window.APP || {};
             return fallback;
         }
         
+        // --- Model Management Methods ---
+
+        /**
+         * Handle model selection change
+         * @param {string} modelId - Selected model ID
+         * @returns {void}
+         * @public
+         */
+        handleModelChange(modelId) {
+            if (this.models[modelId]) {
+                this.currentModel = modelId;
+                this.saveModelSelection();
+
+                // Add system message about model change
+                const modelName = this.models[modelId].name;
+                const message = `Switched to ${modelName}. Your conversation continues with the new model.`;
+                this.addMessage('bot', message);
+            }
+        }
+
+
+        /**
+         * Save current model selection
+         * @returns {void}
+         * @private
+         */
+        saveModelSelection() {
+            try {
+                localStorage.setItem(this.modelStorageKey, this.currentModel);
+            } catch (error) {
+                console.warn('⚠️ Failed to save model selection:', error);
+            }
+        }
+
+        /**
+         * Load saved settings including model selection
+         * @returns {void}
+         * @private
+         */
+        loadSettings() {
+            try {
+                // Load model selection
+                const savedModel = localStorage.getItem(this.modelStorageKey);
+                if (savedModel && this.models[savedModel]) {
+                    this.currentModel = savedModel;
+                }
+
+                // Update model selector if element exists
+                if (this.modelSelect) {
+                    this.modelSelect.value = this.currentModel;
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to load settings:', error);
+            }
+        }
+
         // --- localStorage Methods for Persistent Chat History ---
         
         /**

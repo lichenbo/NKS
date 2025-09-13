@@ -167,9 +167,19 @@
                     <span class="chat-icon">🤖</span>
                     <span data-i18n="chatbot-title">NKS Assistant</span>
                 </div>
-                <button id="chat-minimize" class="chat-minimize" aria-label="Minimize chat">
-                    <span>−</span>
-                </button>
+                <div class="chat-controls">
+                    <div class="model-selector">
+                        <label for="llm-model-select" class="model-label" data-i18n="model-label">Model:</label>
+                        <select id="llm-model-select" class="model-select" title="Select AI Model">
+                            <option value="chatgpt" data-i18n="model-chatgpt">ChatGPT</option>
+                            <option value="gemini" data-i18n="model-gemini">Gemini</option>
+                            <option value="glm" data-i18n="model-glm">GLM</option>
+                        </select>
+                    </div>
+                    <button id="chat-minimize" class="chat-minimize" aria-label="Minimize chat">
+                        <span>−</span>
+                    </button>
+                </div>
             </div>
 
             <div class="chat-messages" id="chat-messages">
