@@ -612,6 +612,9 @@ window.APP = window.APP || {};
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
             this.breathingEffect = new BreathingEffect();
 
+            // Guard to avoid multiple queued rule changes after completion
+            this.nextRuleTimer = null;
+
             this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
@@ -702,10 +705,13 @@ window.APP = window.APP || {};
                 this.grid = this.stateManager.grid;
                 this.currentRow = this.stateManager.currentRow;
             } else {
-                // Cycle to next rule and restart after delay
-                setTimeout(() => {
-                    this.cycleToNextRule();
-                }, 1800);
+                // Schedule next rule exactly once
+                if (!this.nextRuleTimer) {
+                    this.nextRuleTimer = setTimeout(() => {
+                        this.nextRuleTimer = null;
+                        this.cycleToNextRule();
+                    }, 1800);
+                }
             }
         }
 
@@ -739,10 +745,13 @@ window.APP = window.APP || {};
                 this.grid = this.stateManager.grid;
                 this.currentRow = this.stateManager.currentRow;
             } else {
-                // Cycle to next rule and restart after delay
-                setTimeout(() => {
-                    this.cycleToNextRule();
-                }, 1800);
+                // Schedule next rule exactly once
+                if (!this.nextRuleTimer) {
+                    this.nextRuleTimer = setTimeout(() => {
+                        this.nextRuleTimer = null;
+                        this.cycleToNextRule();
+                    }, 1800);
+                }
             }
         }
 

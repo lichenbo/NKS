@@ -763,6 +763,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
             this.breathingEffect = new BreathingEffect();
+            // Guard timer to prevent multiple queued rule changes
+            this.nextRuleTimer = null;
             this.animatingGPU = false; // Prevent concurrent GPU animations
 
             // Update global rule name for indicator
@@ -955,10 +957,13 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.grid = this.stateManager.grid;
                 this.currentRow = this.stateManager.currentRow;
             } else {
-                // Cycle to next rule and restart after delay
-                setTimeout(() => {
-                    this.cycleToNextRule();
-                }, 1800);
+                // Schedule next rule exactly once
+                if (!this.nextRuleTimer) {
+                    this.nextRuleTimer = setTimeout(() => {
+                        this.nextRuleTimer = null;
+                        this.cycleToNextRule();
+                    }, 1800);
+                }
             }
         }
 
