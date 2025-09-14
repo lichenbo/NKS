@@ -45,7 +45,6 @@ window.APP = window.APP || {};
             
             // GPU state
             this.useWebGL = false;
-            this.initializationError = null;
             
             // Performance monitoring using shared utility
             // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
@@ -292,8 +291,6 @@ window.APP = window.APP || {};
          * @param {Array} gridData - Current generation grid data
          */
         uploadGridToTexture(gridData) {
-            if (!this.useWebGL || !this.gl) return;
-
             const textureData = new Uint8Array(gridData.map(cell => cell * 255));
             
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures[this.currentTextureIndex]);
@@ -310,10 +307,6 @@ window.APP = window.APP || {};
          * @returns {Promise<Uint8Array>} Next generation grid data
          */
         async computeNextGenerationWebGL(ruleNumber) {
-            if (!this.useWebGL || !this.gl) {
-                throw new Error('WebGL not available');
-            }
-
             const inputTextureIndex = this.currentTextureIndex;
             const outputTextureIndex = 1 - this.currentTextureIndex;
 
@@ -354,8 +347,6 @@ window.APP = window.APP || {};
             return resultData.map(value => value > 127 ? 1 : 0);
         }
 
-        // CPU fallback removed - WebGL should work or fail completely
-
         /**
          * Clean up WebGL resources
          */
@@ -383,9 +374,7 @@ window.APP = window.APP || {};
         cleanup() {
             super.cleanup();
             this.cleanupWebGL();
-            if (this.performanceMonitor) {
-                this.performanceMonitor.cleanup();
-            }
+            this.performanceMonitor?.cleanup();
         }
 
         /**
@@ -402,8 +391,6 @@ window.APP = window.APP || {};
         }
     }
 
-    // Performance monitoring is now handled by shared CAPerformanceMonitor utility
-
     /**
      * WebGL Background Cellular Automata - Rule 30 with WebGL acceleration
      */
@@ -414,16 +401,12 @@ window.APP = window.APP || {};
 
             // Use shared utilities
             this.ruleNumber = 30;
-            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
 
             this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
 
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.rule);
-        }
 
         async animate() {
             const startTime = performance.now();
@@ -468,8 +451,6 @@ window.APP = window.APP || {};
             }
         }
 
-        // CPU animation removed - WebGL only
-
         // Override initAnimation to update state manager
         initAnimation() {
             super.initAnimation();
@@ -502,9 +483,6 @@ window.APP = window.APP || {};
             this.startAnimation();
         }
 
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
-        }
 
         cycleToNextRule() {
             // Use shared utility to get different random rule
@@ -578,8 +556,6 @@ window.APP = window.APP || {};
                 }
             }
         }
-
-        // CPU animation removed - WebGL only
 
         // Override initAnimation to update state manager
         initAnimation() {
