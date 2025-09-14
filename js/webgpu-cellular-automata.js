@@ -372,9 +372,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             // Initialize when WebGPU is ready
             this.initializationPromise.then(() => {
-                this.initializeForRule(this.ruleNumber).then(() => {
-                    this.startAnimation();
-                });
+                this.initializeForRule(this.ruleNumber);
+                this.startAnimation();
             }).catch(error => {
                 console.error('WebGPU background initialization failed:', error);
             });
