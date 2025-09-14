@@ -7,8 +7,8 @@
  * Features:
  * - Fragment shader-based cellular automata evolution using ping-pong textures
  * - Support for multiple Elementary CA rules (30, 90, 110, 54, 150, 126)
- * - Automatic fallback to CPU for unsupported browsers
- * - Performance monitoring and adaptive quality
+ * - High-performance GPU-only implementation (no CPU fallback)
+ * - Performance monitoring and quality optimization
  * - Memory-efficient texture management
  * 
  * Browser Support: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+ (93% coverage)
@@ -49,10 +49,9 @@ window.APP = window.APP || {};
             
             // Performance monitoring using shared utility
             // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
-            // Disable automatic fallbacks since slow FPS is intentional
             this.performanceMonitor = new CAPerformanceMonitor({
-                fallbackThreshold: 0.1, // Extremely low threshold - only fallback on complete failure
-                onFallback: () => this.fallbackToCPU()
+                fallbackThreshold: 0.1
+                // No fallback callback - WebGL should work or fail completely
             });
             
             // Initialize WebGL acceleration
@@ -96,9 +95,10 @@ window.APP = window.APP || {};
                 // Handle context loss
                 this.canvas.addEventListener('webglcontextlost', (event) => {
                     event.preventDefault();
-                    console.warn('WebGL context lost');
+                    console.error('WebGL context lost');
                     this.useWebGL = false;
-                    this.fallbackToCPU();
+                    // No CPU fallback - WebGL should work or fail completely
+                    throw new Error('WebGL context lost');
                 });
 
                 this.canvas.addEventListener('webglcontextrestored', () => {
@@ -391,21 +391,7 @@ window.APP = window.APP || {};
             return resultData.map(value => value > 127 ? 1 : 0);
         }
 
-        /**
-         * Fallback to CPU implementation when WebGL fails
-         */
-        fallbackToCPU() {
-            console.log('Falling back to CPU cellular automata implementation');
-            this.useWebGL = false;
-            
-            // Clean up WebGL resources
-            this.cleanupWebGL();
-            
-            // Resume normal CPU animation
-            if (!this.animationInterval) {
-                this.startAnimation();
-            }
-        }
+        // CPU fallback removed - WebGL should work or fail completely
 
         /**
          * Clean up WebGL resources
@@ -502,17 +488,11 @@ window.APP = window.APP || {};
         async animate() {
             const startTime = performance.now();
 
-            // Use WebGL acceleration if available
+            // Use WebGL acceleration - no CPU fallback
             if (this.useWebGL && this.gl) {
-                try {
-                    await this.animateWithWebGL();
-                } catch (error) {
-                    console.warn('WebGL animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
+                await this.animateWithWebGL();
             } else {
-                this.animateWithCPU();
+                throw new Error('WebGL context not available');
             }
 
             const endTime = performance.now();
@@ -555,35 +535,7 @@ window.APP = window.APP || {};
             }
         }
 
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            CellularAutomataRenderer.renderBackgroundRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            }
-        }
+        // CPU animation removed - WebGL only
 
         // Override initAnimation to update state manager
         initAnimation() {
@@ -652,17 +604,11 @@ window.APP = window.APP || {};
             // Update breathing effect using shared utility
             const currentAlpha = this.breathingEffect.update();
 
-            // Use WebGL acceleration if available
+            // Use WebGL acceleration - no CPU fallback
             if (this.useWebGL && this.gl) {
-                try {
-                    await this.animateWithWebGL();
-                } catch (error) {
-                    console.warn('WebGL animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
+                await this.animateWithWebGL();
             } else {
-                this.animateWithCPU();
+                throw new Error('WebGL context not available');
             }
 
             const endTime = performance.now();
@@ -715,45 +661,7 @@ window.APP = window.APP || {};
             }
         }
 
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            const currentAlpha = this.breathingEffect.getCurrentAlpha();
-            CellularAutomataRenderer.renderHeaderRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                currentAlpha,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            } else {
-                // Schedule next rule exactly once
-                if (!this.nextRuleTimer) {
-                    this.nextRuleTimer = setTimeout(() => {
-                        this.nextRuleTimer = null;
-                        this.cycleToNextRule();
-                    }, 1800);
-                }
-            }
-        }
+        // CPU animation removed - WebGL only
 
         // Override initAnimation to update state manager
         initAnimation() {

@@ -8,8 +8,8 @@
  * - Compute shader-based cellular automata evolution
  * - Storage buffer ping-pong for efficient memory management
  * - Support for multiple Elementary CA rules (30, 90, 110, 54, 150, 126)
- * - Automatic fallback to WebGL/CPU for unsupported browsers
- * - Performance monitoring and adaptive quality
+ * - High-performance GPU-only implementation (no CPU fallback)
+ * - Performance monitoring and quality optimization
  * 
  * Browser Support: Chrome 113+, Edge 113+, Firefox 141+, Safari 26+
  * Performance: 10-50x improvement over CPU for large grids
@@ -25,7 +25,7 @@ window.APP = window.APP || {};
     /**
      * WebGPU-accelerated Cellular Automata Canvas
      * Extends base CellularAutomataCanvas with WebGPU compute shader acceleration
-     * Provides automatic fallback to CPU implementation for unsupported browsers
+     * GPU-only implementation - requires WebGPU support or will fail
      */
     class WebGPUCellularAutomataCanvas extends APP.CellularAutomata.CellularAutomataCanvas {
         constructor(canvasId, cellSize, options = {}) {
@@ -60,10 +60,9 @@ window.APP = window.APP || {};
 
             // Performance monitoring using shared utility
             // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
-            // Disable automatic fallbacks since slow FPS is intentional
             this.performanceMonitor = new CAPerformanceMonitor({
-                fallbackThreshold: 0.1, // Extremely low threshold - only fallback on complete failure
-                onFallback: () => this.fallbackToCPU()
+                fallbackThreshold: 0.1
+                // No fallback callback - WebGPU should work or fail completely
             });
 
             // Start initialization, but don't block the constructor.
@@ -72,16 +71,14 @@ window.APP = window.APP || {};
                 if (success) {
                     return this.setupWebGPUCompute();
                 }
-                // If WebGPU is not supported, reject to trigger the catch block
-                return Promise.reject(new Error('WebGPU not supported or device request failed'));
+                // If WebGPU is not supported, throw error
+                throw new Error('WebGPU not supported or device request failed');
             }).catch(error => {
-                // This catch block handles both WebGPU setup failures and explicit rejections.
-                console.warn(`WebGPU initialization failed: ${error.message}`);
+                // This catch block handles WebGPU setup failures
+                console.error(`WebGPU initialization failed: ${error.message}`);
                 this.initializationError = error;
-                this.fallbackToCPU();
-                // We resolve the promise here so that subclasses can still proceed
-                // with their CPU-based animation setup in their .then() chains.
-                return Promise.resolve();
+                // Don't fallback - let the error propagate
+                throw error;
             });
         }
 
@@ -113,10 +110,11 @@ window.APP = window.APP || {};
 
                 // Handle device lost
                 this.webgpuDevice.lost.then((info) => {
-                    console.warn('WebGPU device lost:', info.message);
+                    console.error('WebGPU device lost:', info.message);
                     this.deviceLost = true;
                     this.useWebGPU = false;
-                    this.fallbackToCPU();
+                    // No CPU fallback - WebGPU implementation should fail completely
+                    throw new Error(`WebGPU device lost: ${info.message}`);
                 });
 
                 this.deviceLost = false;
@@ -157,7 +155,7 @@ window.APP = window.APP || {};
             } catch (error) {
                 console.error('WebGPU compute pipeline setup failed:', error);
                 this.useWebGPU = false;
-                this.fallbackToCPU();
+                throw error; // Don't fallback to CPU
             }
         }
 
@@ -427,21 +425,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             }
         }
 
-        /**
-         * Fallback to CPU implementation when GPU fails
-         */
-        fallbackToCPU() {
-            console.log('Falling back to CPU cellular automata implementation');
-            this.useWebGPU = false;
-
-            // Clean up GPU resources
-            this.cleanupWebGPU();
-
-            // Resume normal CPU animation
-            if (!this.animationInterval) {
-                this.startAnimation();
-            }
-        }
+        // CPU fallback removed - WebGPU should work or fail completely
 
         /**
          * Clean up storage buffers only
@@ -543,8 +527,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     this.setupStorageBuffers();
                     this.setupBindGroup();
                 } catch (error) {
-                    console.warn('GPU buffer setup failed during initAnimation:', error);
-                    this.fallbackToCPU();
+                    console.error('GPU buffer setup failed during initAnimation:', error);
+                    throw error; // Don't fallback to CPU
                 }
             }
         }
@@ -567,7 +551,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                         });
                     } catch (error) {
                         console.error('Failed to create GPU buffers:', error);
-                        this.fallbackToCPU();
+                        throw error; // Don't fallback to CPU
                     }
                 }
             } else {
@@ -643,17 +627,11 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         async animate() {
             const startTime = performance.now();
 
-            // Use GPU acceleration if available
+            // Use GPU acceleration - no CPU fallback
             if (this.useWebGPU && this.computePipeline) {
-                try {
-                    await this.animateWithGPU();
-                } catch (error) {
-                    console.warn('GPU animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
+                await this.animateWithGPU();
             } else {
-                this.animateWithCPU();
+                throw new Error('WebGPU compute pipeline not available');
             }
 
             const endTime = performance.now();
@@ -704,35 +682,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             }
         }
 
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            CellularAutomataRenderer.renderBackgroundRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            }
-        }
+        // CPU animation removed - WebGPU only
 
         // Override initAnimation to update state manager
         initAnimation() {
@@ -837,8 +787,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.cleanupStorageBuffers();
 
                 if (!this.webgpuDevice || this.deviceLost) {
-                    this.fallbackToCPU();
-                    return;
+                    throw new Error('WebGPU device not available or lost');
                 }
 
                 this.setupStorageBuffers();
@@ -853,17 +802,11 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             // Update breathing effect using shared utility
             const currentAlpha = this.breathingEffect.update();
 
-            // Use GPU acceleration if available
+            // Use GPU acceleration - no CPU fallback
             if (this.useWebGPU && this.computePipeline) {
-                try {
-                    await this.animateWithGPU();
-                } catch (error) {
-                    console.warn('GPU animation failed, falling back to CPU:', error);
-                    this.fallbackToCPU();
-                    this.animateWithCPU();
-                }
+                await this.animateWithGPU();
             } else {
-                this.animateWithCPU();
+                throw new Error('WebGPU compute pipeline not available');
             }
 
             const endTime = performance.now();
@@ -919,53 +862,14 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.currentRow = this.stateManager.currentRow;
 
             } catch (error) {
-                console.warn('GPU animation failed, falling back to CPU:', error);
-                this.fallbackToCPU();
-                this.animateWithCPU(); // Continue animation on CPU
+                console.error('GPU animation failed:', error);
+                throw error; // Don't fallback to CPU
             } finally {
                 this.animatingGPU = false;
             }
         }
 
-        animateWithCPU() {
-            // Use shared state manager for CPU fallback
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store and render using shared utilities
-            this.stateManager.storeCurrentGeneration();
-            const currentAlpha = this.breathingEffect.getCurrentAlpha();
-            CellularAutomataRenderer.renderHeaderRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                currentAlpha,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared CPU implementation
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            } else {
-                // Schedule next rule exactly once
-                if (!this.nextRuleTimer) {
-                    this.nextRuleTimer = setTimeout(() => {
-                        this.nextRuleTimer = null;
-                        this.cycleToNextRule();
-                    }, 1800);
-                }
-            }
-        }
+        // CPU animation removed - WebGPU only
 
         // Override initAnimation to update state manager
         initAnimation() {
