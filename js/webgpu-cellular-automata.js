@@ -42,7 +42,6 @@ window.APP = window.APP || {};
 
             // GPU state
             this.useWebGPU = false;
-            this.deviceLost = false;
 
             // Performance monitoring using shared utility
             // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
@@ -70,7 +69,6 @@ window.APP = window.APP || {};
 
             this.webgpuDevice = await adapter.requestDevice();
             this.webgpuDevice.lost.then(() => {
-                this.deviceLost = true;
                 this.useWebGPU = false;
             });
 
@@ -158,15 +156,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             const bufferSize = this.cols * 4; // 4 bytes per u32
 
-            this.inputBuffer = this.webgpuDevice.createBuffer({
-                size: bufferSize,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-            });
+            const storageUsage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST;
 
-            this.outputBuffer = this.webgpuDevice.createBuffer({
-                size: bufferSize,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-            });
+            this.inputBuffer = this.webgpuDevice.createBuffer({ size: bufferSize, usage: storageUsage });
+            this.outputBuffer = this.webgpuDevice.createBuffer({ size: bufferSize, usage: storageUsage });
 
             this.readBuffer = this.webgpuDevice.createBuffer({
                 size: bufferSize,
@@ -277,8 +270,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             }
         }
 
-        // CPU fallback removed - WebGPU should work or fail completely
-
         /**
          * Clean up storage buffers
          */
@@ -314,9 +305,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         cleanup() {
             super.cleanup();
             this.cleanupWebGPU();
-            if (this.performanceMonitor) {
-                this.performanceMonitor.cleanup();
-            }
+            this.performanceMonitor?.cleanup();
         }
 
         /**
@@ -339,8 +328,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     }
 
-    // Performance monitoring is now handled by shared CAPerformanceMonitor utility
-
     /**
      * WebGPU Background Cellular Automata - Rule 30 with GPU acceleration
      */
@@ -353,7 +340,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             // Use shared utilities
             this.ruleNumber = 30;
-            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
             this.animatingGPU = false; // Prevent concurrent GPU animations
 
@@ -372,9 +358,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.updateGPUUniforms(ruleNumber);
         }
 
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.rule);
-        }
 
         async animate() {
             const startTime = performance.now();
@@ -426,8 +409,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.animatingGPU = false;
             }
         }
-
-        // CPU animation removed - WebGPU only
 
         // Override initAnimation to update state manager
         initAnimation() {
@@ -503,9 +484,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
             // Re-initialize GPU resources for new rule
             await this.webgpuDevice.queue.onSubmittedWorkDone();
-            this.cleanupStorageBuffers();
-            this.setupStorageBuffers();
-            this.setupBindGroup();
+            this.ensureGPUBuffers();
             this.updateGPUUniforms(this.currentRuleNumber);
         }
 
@@ -528,10 +507,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     await this.cycleToNextRule();
                 }
 
-                // Check if WebGPU is still available after potential cycling
-                if (!this.useWebGPU || !this.webgpuDevice) {
-                    throw new Error('WebGPU not available');
-                }
 
                 // On the first row of a new animation, clear canvas and upload initial grid
                 if (this.stateManager.currentRow === 0) {
@@ -572,8 +547,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.animatingGPU = false;
             }
         }
-
-        // CPU animation removed - WebGPU only
 
         // Override initAnimation to update state manager
         initAnimation() {
