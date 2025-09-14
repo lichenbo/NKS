@@ -60,61 +60,32 @@ window.APP = window.APP || {};
 
         /**
          * Initialize WebGL 2.0 context and setup GPU resources
-         * @returns {boolean} True if WebGL is available and initialized
          */
         initializeWebGL() {
-            // Get WebGL 2.0 context
             this.gl = this.canvas.getContext('webgl2', {
                 alpha: false,
                 antialias: false,
                 depth: false,
                 stencil: false,
                 preserveDrawingBuffer: false
-            });
+            }) || this.canvas.getContext('webgl2');
 
             if (!this.gl) {
-                // Try fallback options
-                this.gl = this.canvas.getContext('webgl2') || 
-                          this.canvas.getContext('experimental-webgl2');
-                
-                if (!this.gl) {
-                    console.log('WebGL 2.0 not supported in this browser');
-                    console.log('Canvas:', this.canvas);
-                    console.log('Canvas ID:', this.canvas?.id);
-                    return false;
-                }
+                throw new Error('WebGL 2.0 not supported');
             }
 
-            try {
-                // Setup shaders and WebGL state
-                this.setupShaders();
-                this.setupGeometry();
-                this.setupTextures();
-                this.setupFramebuffers();
-                
-                // Handle context loss
-                this.canvas.addEventListener('webglcontextlost', (event) => {
-                    event.preventDefault();
-                    console.error('WebGL context lost');
-                    this.useWebGL = false;
-                    // No CPU fallback - WebGL should work or fail completely
-                    throw new Error('WebGL context lost');
-                });
+            this.setupShaders();
+            this.setupGeometry();
+            this.setupTextures();
+            this.setupFramebuffers();
 
-                this.canvas.addEventListener('webglcontextrestored', () => {
-                    console.log('WebGL context restored, reinitializing');
-                    this.initializeWebGL();
-                });
+            this.canvas.addEventListener('webglcontextlost', (event) => {
+                event.preventDefault();
+                this.useWebGL = false;
+                throw new Error('WebGL context lost');
+            });
 
-                this.useWebGL = true;
-                console.log('WebGL cellular automata acceleration enabled');
-                return true;
-
-            } catch (error) {
-                console.error('WebGL initialization failed:', error);
-                this.initializationError = error;
-                return false;
-            }
+            this.useWebGL = true;
         }
 
         /**
@@ -181,7 +152,7 @@ window.APP = window.APP || {};
             this.gl.linkProgram(this.shaderProgram);
 
             if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
-                throw new Error('Shader program linking failed: ' + this.gl.getProgramInfoLog(this.shaderProgram));
+                throw new Error('Shader program linking failed');
             }
 
             // Get uniform and attribute locations
@@ -213,9 +184,8 @@ window.APP = window.APP || {};
             this.gl.compileShader(shader);
 
             if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-                const error = this.gl.getShaderInfoLog(shader);
                 this.gl.deleteShader(shader);
-                throw new Error('Shader compilation failed: ' + error);
+                throw new Error('Shader compilation failed');
             }
 
             return shader;
@@ -290,7 +260,7 @@ window.APP = window.APP || {};
          */
         setupFramebuffers() {
             this.frameBuffers = [];
-            
+
             for (let i = 0; i < 2; i++) {
                 const framebuffer = this.gl.createFramebuffer();
                 this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
@@ -298,16 +268,9 @@ window.APP = window.APP || {};
                     this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0,
                     this.gl.TEXTURE_2D, this.textures[i], 0
                 );
-                
-                // Check framebuffer completeness
-                const status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
-                if (status !== this.gl.FRAMEBUFFER_COMPLETE) {
-                    throw new Error('Framebuffer not complete: ' + status);
-                }
-                
                 this.frameBuffers.push(framebuffer);
             }
-            
+
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
 
@@ -399,35 +362,18 @@ window.APP = window.APP || {};
         cleanupWebGL() {
             if (!this.gl) return;
 
-            if (this.textures) {
-                this.textures.forEach(texture => {
-                    if (texture) this.gl.deleteTexture(texture);
-                });
-                this.textures = [];
-            }
+            this.textures?.forEach(texture => this.gl.deleteTexture(texture));
+            this.frameBuffers?.forEach(framebuffer => this.gl.deleteFramebuffer(framebuffer));
 
-            if (this.frameBuffers) {
-                this.frameBuffers.forEach(framebuffer => {
-                    if (framebuffer) this.gl.deleteFramebuffer(framebuffer);
-                });
-                this.frameBuffers = [];
-            }
+            if (this.vertexBuffer) this.gl.deleteBuffer(this.vertexBuffer);
+            if (this.vao) this.gl.deleteVertexArray(this.vao);
+            if (this.shaderProgram) this.gl.deleteProgram(this.shaderProgram);
 
-            if (this.vertexBuffer) {
-                this.gl.deleteBuffer(this.vertexBuffer);
-                this.vertexBuffer = null;
-            }
-
-            if (this.vao) {
-                this.gl.deleteVertexArray(this.vao);
-                this.vao = null;
-            }
-
-            if (this.shaderProgram) {
-                this.gl.deleteProgram(this.shaderProgram);
-                this.shaderProgram = null;
-            }
-
+            this.textures = [];
+            this.frameBuffers = [];
+            this.vertexBuffer = null;
+            this.vao = null;
+            this.shaderProgram = null;
             this.gl = null;
         }
 
@@ -443,19 +389,13 @@ window.APP = window.APP || {};
         }
 
         /**
-         * Override initAnimation to setup WebGL textures and update state manager
+         * Override initAnimation to setup WebGL textures
          */
         initAnimation() {
             super.initAnimation();
-            
-            // Update state manager with new dimensions
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
-            
-            // Recreate textures for new dimensions
+            this.stateManager?.updateDimensions(this.cols, this.rows);
+
             if (this.useWebGL && this.gl) {
-                this.cleanupWebGL();
                 this.setupTextures();
                 this.setupFramebuffers();
             }
@@ -487,14 +427,7 @@ window.APP = window.APP || {};
 
         async animate() {
             const startTime = performance.now();
-
-            // Use WebGL acceleration - no CPU fallback
-            if (this.useWebGL && this.gl) {
-                await this.animateWithWebGL();
-            } else {
-                throw new Error('WebGL context not available');
-            }
-
+            await this.animateWithWebGL();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);
         }
@@ -600,17 +533,8 @@ window.APP = window.APP || {};
 
         async animate() {
             const startTime = performance.now();
-
-            // Update breathing effect using shared utility
-            const currentAlpha = this.breathingEffect.update();
-
-            // Use WebGL acceleration - no CPU fallback
-            if (this.useWebGL && this.gl) {
-                await this.animateWithWebGL();
-            } else {
-                throw new Error('WebGL context not available');
-            }
-
+            this.breathingEffect.update();
+            await this.animateWithWebGL();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);
         }
