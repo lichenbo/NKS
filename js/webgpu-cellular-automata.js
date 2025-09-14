@@ -31,17 +31,8 @@ window.APP = window.APP || {};
         constructor(canvasId, cellSize, options = {}) {
             super(canvasId, cellSize, options);
 
-            // Debug: log dimensions after base class initialization
-            console.log('WebGPU CA initialized with dimensions:', {
-                cols: this.cols,
-                rows: this.rows,
-                canvasWidth: this.canvas?.width,
-                canvasHeight: this.canvas?.height
-            });
-
             // WebGPU specific properties
             this.webgpuDevice = null;
-            this.webgpuAdapter = null;
             this.computePipeline = null;
             this.bindGroup = null;
             this.inputBuffer = null;
@@ -72,12 +63,12 @@ window.APP = window.APP || {};
                 throw new Error('WebGPU not supported');
             }
 
-            this.webgpuAdapter = await navigator.gpu.requestAdapter();
-            if (!this.webgpuAdapter) {
+            const adapter = await navigator.gpu.requestAdapter();
+            if (!adapter) {
                 throw new Error('No WebGPU adapter found');
             }
 
-            this.webgpuDevice = await this.webgpuAdapter.requestDevice();
+            this.webgpuDevice = await adapter.requestDevice();
             this.webgpuDevice.lost.then(() => {
                 this.deviceLost = true;
                 this.useWebGPU = false;
@@ -315,7 +306,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.cleanupStorageBuffers();
             this.computePipeline = null;
             this.webgpuDevice = null;
-            this.webgpuAdapter = null;
         }
 
         /**
@@ -334,17 +324,14 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          */
         initAnimation() {
             super.initAnimation();
-            if (this.useWebGPU && this.cols > 0) {
-                this.setupStorageBuffers();
-                this.setupBindGroup();
-            }
+            this.ensureGPUBuffers();
         }
 
         /**
          * Ensure GPU buffers are created when needed
          */
         ensureGPUBuffers() {
-            if (!this.inputBuffer) {
+            if (!this.inputBuffer && this.useWebGPU && this.cols > 0) {
                 this.setupStorageBuffers();
                 this.setupBindGroup();
             }
@@ -445,9 +432,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         // Override initAnimation to update state manager
         initAnimation() {
             super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
+            this.stateManager?.updateDimensions(this.cols, this.rows);
         }
     }
 
@@ -476,16 +461,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.animatingGPU = false; // Prevent concurrent GPU animations
 
             // Update global rule name for indicator
-            if (typeof window !== 'undefined') {
-                if ('headerRuleName' in window) {
-                    window.headerRuleName = this.currentRuleNumber.toString();
-                }
-                
-                // Update rule indicator with initial rule
-                if (window.RuleIndicators) {
-                    window.RuleIndicators.update('header', this.currentRuleNumber);
-                }
-            }
+            window.headerRuleName = this.currentRuleNumber.toString();
+            window.RuleIndicators?.update('header', this.currentRuleNumber);
 
             // Wait for WebGPU initialization before starting
             this.initializationPromise.then(() => {
@@ -512,15 +489,11 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
 
             // Update UI with VFX
-            if (typeof window !== 'undefined') {
-                if ('headerRuleName' in window) {
-                    window.headerRuleName = this.currentRuleNumber.toString();
-                }
-                if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
-                    window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
-                } else if (window.RuleIndicators) {
-                    window.RuleIndicators.update('header', this.currentRuleNumber);
-                }
+            window.headerRuleName = this.currentRuleNumber.toString();
+            if (window.APP?.CellularAutomata?.updateHeaderRuleIndicatorWithVFX) {
+                window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
+            } else if (window.RuleIndicators) {
+                window.RuleIndicators.update('header', this.currentRuleNumber);
             }
 
             // Reset animation state using shared utilities
@@ -529,33 +502,17 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             // Re-initialize GPU resources for new rule
-            if (this.useWebGPU && this.webgpuDevice) {
-                await this.webgpuDevice.queue.onSubmittedWorkDone();
-                this.cleanupStorageBuffers();
-
-                if (!this.webgpuDevice || this.deviceLost) {
-                    throw new Error('WebGPU device not available or lost');
-                }
-
-                this.setupStorageBuffers();
-                this.setupBindGroup();
-                this.updateGPUUniforms(this.currentRuleNumber);
-            }
+            await this.webgpuDevice.queue.onSubmittedWorkDone();
+            this.cleanupStorageBuffers();
+            this.setupStorageBuffers();
+            this.setupBindGroup();
+            this.updateGPUUniforms(this.currentRuleNumber);
         }
 
         async animate() {
             const startTime = performance.now();
-
-            // Update breathing effect using shared utility
             this.breathingEffect.update();
-
-            // Use GPU acceleration - no CPU fallback
-            if (this.useWebGPU && this.computePipeline) {
-                await this.animateWithGPU();
-            } else {
-                throw new Error('WebGPU compute pipeline not available');
-            }
-
+            await this.animateWithGPU();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);
         }
@@ -572,8 +529,8 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 }
 
                 // Check if WebGPU is still available after potential cycling
-                if (!this.useWebGPU || !this.webgpuDevice || this.recreatingResources) {
-                    throw new Error('WebGPU not available or resources are being recreated');
+                if (!this.useWebGPU || !this.webgpuDevice) {
+                    throw new Error('WebGPU not available');
                 }
 
                 // On the first row of a new animation, clear canvas and upload initial grid
@@ -621,9 +578,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         // Override initAnimation to update state manager
         initAnimation() {
             super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
+            this.stateManager?.updateDimensions(this.cols, this.rows);
         }
     }
 

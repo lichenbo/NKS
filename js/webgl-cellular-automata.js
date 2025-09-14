@@ -473,9 +473,7 @@ window.APP = window.APP || {};
         // Override initAnimation to update state manager
         initAnimation() {
             super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
+            this.stateManager?.updateDimensions(this.cols, this.rows);
         }
     }
 
@@ -514,15 +512,11 @@ window.APP = window.APP || {};
             this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
 
             // Update UI with VFX
-            if (typeof window !== 'undefined') {
-                if ('headerRuleName' in window) {
-                    window.headerRuleName = this.currentRuleNumber.toString();
-                }
-                if (window.APP && window.APP.CellularAutomata && window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX) {
-                    window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
-                } else if (window.RuleIndicators) {
-                    window.RuleIndicators.update('header', this.currentRuleNumber);
-                }
+            window.headerRuleName = this.currentRuleNumber.toString();
+            if (window.APP?.CellularAutomata?.updateHeaderRuleIndicatorWithVFX) {
+                window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
+            } else if (window.RuleIndicators) {
+                window.RuleIndicators.update('header', this.currentRuleNumber);
             }
 
             // Reset animation state using shared utilities
@@ -590,9 +584,7 @@ window.APP = window.APP || {};
         // Override initAnimation to update state manager
         initAnimation() {
             super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
+            this.stateManager?.updateDimensions(this.cols, this.rows);
         }
     }
 
