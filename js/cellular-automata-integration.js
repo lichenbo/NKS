@@ -202,33 +202,28 @@
         const gpuStatusElement = document.getElementById('gpu-status-text');
         if (!gpuStatusElement) return;
 
-        try {
-            // Determine the engines being used
-            const bgEngine = window.backgroundCA?.computeEngine?.constructor?.name || 'Unknown';
-            const headerEngine = window.headerCA?.computeEngine?.constructor?.name || 'Unknown';
-            
-            let statusText = 'Unknown';
-            let statusColor = '#999';
+        // Determine the engines being used
+        const bgEngine = window.backgroundCA?.computeEngine?.constructor?.name || 'Unknown';
+        const headerEngine = window.headerCA?.computeEngine?.constructor?.name || 'Unknown';
 
-            if (bgEngine.includes('WebGPU') || headerEngine.includes('WebGPU')) {
-                statusText = 'WebGPU';
-                statusColor = '#00ff00'; // Green for best performance
-            } else if (bgEngine.includes('WebGL') || headerEngine.includes('WebGL')) {
-                statusText = 'WebGL';
-                statusColor = '#ffaa00'; // Orange for good performance
-            } else if (bgEngine.includes('CPU')) {
-                statusText = 'CPU';
-                statusColor = '#ffdd00'; // Yellow for basic performance
-            }
+        let statusText = 'Unknown';
+        let statusColor = '#999';
 
-            gpuStatusElement.textContent = statusText;
-            gpuStatusElement.style.color = statusColor;
-
-            console.log(`🔧 GPU Status: ${statusText} (BG: ${bgEngine}, Header: ${headerEngine})`);
-
-        } catch (error) {
-            console.warn('Failed to update GPU status:', error);
+        if (bgEngine.includes('WebGPU') || headerEngine.includes('WebGPU')) {
+            statusText = 'WebGPU';
+            statusColor = '#00ff00'; // Green for best performance
+        } else if (bgEngine.includes('WebGL') || headerEngine.includes('WebGL')) {
+            statusText = 'WebGL';
+            statusColor = '#ffaa00'; // Orange for good performance
+        } else if (bgEngine.includes('CPU')) {
+            statusText = 'CPU';
+            statusColor = '#ffdd00'; // Yellow for basic performance
         }
+
+        gpuStatusElement.textContent = statusText;
+        gpuStatusElement.style.color = statusColor;
+
+        console.log(`🔧 GPU Status: ${statusText} (BG: ${bgEngine}, Header: ${headerEngine})`);
     }
 
     /**

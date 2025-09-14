@@ -434,18 +434,13 @@ window.APP = window.APP || {};
             if (status === null) {
                 // Detect current status
                 if (gpuManager && gpuManager.getAccelerationStatus) {
-                    try {
-                        const accelerationStatus = gpuManager.getAccelerationStatus();
-                        if (accelerationStatus && accelerationStatus.capabilities) {
-                            const path = accelerationStatus.capabilities.selectedPath;
-                            element.textContent = path.toUpperCase();
-                            element.style.color = ''; // Use CSS color
-                        } else {
-                            element.textContent = 'Detecting...';
-                            element.style.color = ''; // Use CSS color
-                        }
-                    } catch (error) {
-                        element.textContent = 'CPU';
+                    const accelerationStatus = gpuManager.getAccelerationStatus();
+                    if (accelerationStatus && accelerationStatus.capabilities) {
+                        const path = accelerationStatus.capabilities.selectedPath;
+                        element.textContent = path.toUpperCase();
+                        element.style.color = ''; // Use CSS color
+                    } else {
+                        element.textContent = 'Detecting...';
                         element.style.color = ''; // Use CSS color
                     }
                 } else {

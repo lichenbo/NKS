@@ -35,9 +35,7 @@ function initImageLightbox() {
 
   const close = () => {
     if (openerEl && document.contains(openerEl)) {
-      try {
-        openerEl.focus({ preventScroll: true });
-      } catch (_) {}
+      openerEl.focus({ preventScroll: true });
       if (openerHadTabindex === null && openerEl.hasAttribute('tabindex')) {
         openerEl.removeAttribute('tabindex');
       }
@@ -95,9 +93,7 @@ function initImageLightbox() {
     document.body.style.overflow = 'hidden';
     setInertOutside(true);
     setTimeout(() => {
-      try {
-        closeBtn.focus();
-      } catch (_) {}
+      closeBtn.focus();
     }, 0);
   });
 }

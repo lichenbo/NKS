@@ -536,11 +536,7 @@ window.APP = window.APP || {};
          * @private
          */
         saveModelSelection() {
-            try {
-                localStorage.setItem(this.modelStorageKey, this.currentModel);
-            } catch (error) {
-                console.warn('⚠️ Failed to save model selection:', error);
-            }
+            localStorage.setItem(this.modelStorageKey, this.currentModel);
         }
 
         /**
@@ -549,19 +545,15 @@ window.APP = window.APP || {};
          * @private
          */
         loadSettings() {
-            try {
-                // Load model selection
-                const savedModel = localStorage.getItem(this.modelStorageKey);
-                if (savedModel && this.models[savedModel]) {
-                    this.currentModel = savedModel;
-                }
+            // Load model selection
+            const savedModel = localStorage.getItem(this.modelStorageKey);
+            if (savedModel && this.models[savedModel]) {
+                this.currentModel = savedModel;
+            }
 
-                // Update model selector if element exists
-                if (this.modelSelect) {
-                    this.modelSelect.value = this.currentModel;
-                }
-            } catch (error) {
-                console.warn('⚠️ Failed to load settings:', error);
+            // Update model selector if element exists
+            if (this.modelSelect) {
+                this.modelSelect.value = this.currentModel;
             }
         }
 
@@ -704,14 +696,10 @@ window.APP = window.APP || {};
          * @public
          */
         clearChatHistory() {
-            try {
-                localStorage.removeItem(this.storageKey);
-                this.messageHistory = [];
-                if (this.messagesContainer) {
-                    this.messagesContainer.innerHTML = '';
-                }
-            } catch (error) {
-                console.warn('⚠️ Failed to clear chat history:', error);
+            localStorage.removeItem(this.storageKey);
+            this.messageHistory = [];
+            if (this.messagesContainer) {
+                this.messagesContainer.innerHTML = '';
             }
         }
         
