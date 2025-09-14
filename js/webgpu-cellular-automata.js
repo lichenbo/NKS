@@ -280,7 +280,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
                 return result;
             } finally {
-                if (this.readBuffer.mapState !== 'unmapped') {
+                if (this.readBuffer && this.readBuffer.mapState !== 'unmapped') {
                     this.readBuffer.unmap();
                 }
             }
@@ -292,7 +292,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          * Clean up storage buffers
          */
         cleanupStorageBuffers() {
-            if (this.readBuffer?.mapState !== 'unmapped') {
+            if (this.readBuffer && this.readBuffer.mapState !== 'unmapped') {
                 this.readBuffer.unmap();
             }
 
