@@ -4,7 +4,7 @@
 
 在这链条的演进中，无限的[复杂性](annotation:complexity)得以显现。物质如何成型，生命如何[涌现](annotation:emergence)，智能如何自启 —— 都在这个过程中被赋予了清晰的生成路径，展现为一种源于规则的逻辑必然。
 
-这些由简单规则自发生成的复杂过程，其内在的计算能力，最终都等价于"[通用计算](annotation:computational-equivalence)"这一最高等级。其自身的演化，也因此成为通往其未来的唯一路径，这正是"[计算不可简化性](annotation:computational-irreducibility)"这一核心原则。
+这些由简单规则自发生成的复杂过程，其内在的计算能力，最终都等价于"[通用计算](annotation:computational-equivalence)"这一最高等级。其自身的演化是通往其未来的唯一路径，这正是"[计算不可简化性](annotation:computational-irreducibility)"这一核心原则。
 
 这便是《一种新科学》的最终宣告：宇宙的本质，是一个动态的生成过程。它由最简单的规则驱动，以不可约的链条展开，永不停歇地[涌现](annotation:emergence)出一切复杂的「存在」—— 数学、物质、生命、与智能。
 
