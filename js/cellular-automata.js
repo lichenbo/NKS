@@ -114,6 +114,8 @@ window.APP = window.APP || {};
                     this.stopAnimation();
                     this.setupCanvas();
                     this.updateCanvasDimensions();
+                    // Mark that we just resized so subclasses can adjust visuals
+                    this._justResized = true;
                     this.startAnimation();
                 }, this.resizeDebounce);
             };
@@ -143,6 +145,8 @@ window.APP = window.APP || {};
             if (this.animationInterval) {
                 clearInterval(this.animationInterval);
             }
+            // Draw immediately to avoid blank frame on resize/start
+            this.animate();
             this.animationInterval = setInterval(() => this.animate(), this.animationSpeed);
         }
 
@@ -304,8 +308,13 @@ window.APP = window.APP || {};
         }
 
         animate() {
-            // Update breathing effect
-            const currentAlpha = this.breathingEffect.update();
+            // Update breathing effect; normalize after resize to avoid sudden dark flash
+            let currentAlpha = this.breathingEffect.update();
+            if (this._justResized) {
+                this._justResized = false;
+                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
+                currentAlpha = this.breathingEffect.getCurrentAlpha();
+            }
 
             // Only clear if starting over
             if (this.stateManager.currentRow === 0) {

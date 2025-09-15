@@ -506,6 +506,10 @@ window.APP = window.APP || {};
         async animate() {
             const startTime = performance.now();
             this.breathingEffect.update();
+            if (this._justResized) {
+                this._justResized = false;
+                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
+            }
             await this.animateWithWebGL();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);

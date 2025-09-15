@@ -3,18 +3,14 @@ document.addEventListener('DOMContentLoaded', function () {
     initLanguageSystem();
     initChapterNavigation();
     initAnnotationSystem();
-    initAnnotationContent();
+    clearAnnotationContent();
     initScrollToTop();
     initImageLightbox();
     loadChapter('site-guide');
 });
 
-// Runtime cache for annotations (key-language -> {title, content})
 const annotationCache = {};
 
-// Utilities and loaders live in js/utils.js; typing in js/typing.js
-
-// Configure marked for our annotation syntax
 function initMarkdownRenderer() {
     marked.setOptions({
         breaks: true,
@@ -23,30 +19,15 @@ function initMarkdownRenderer() {
 }
 
 function initChapterNavigation() {
-    const chapterLinks = DOM.queryAll('.chapter-link');
-
-    chapterLinks.forEach(link => {
-        link.addEventListener('click', function (e) {
-            // Skip external demo links - let them work normally
-            if (this.classList.contains('external-demo-link')) {
-                return; // Don't preventDefault, allow normal navigation
-            }
-
-            e.preventDefault();
-
-            // Remove active class from all links
-            chapterLinks.forEach(l => l.classList.remove('active'));
-
-            // Add active class to clicked link
-            this.classList.add('active');
-
-            // Load the selected chapter
-            const targetChapter = this.getAttribute('data-chapter');
-            loadChapter(targetChapter);
-
-            // Clear annotation content when switching chapters
-            clearAnnotationContent();
-        });
+    document.addEventListener('click', function (e) {
+        const link = e.target && e.target.closest ? e.target.closest('.chapter-link') : null;
+        if (!link) return;
+        if (link.classList.contains('external-demo-link')) return; // let normal nav happen
+        e.preventDefault();
+        document.querySelectorAll('.chapter-link.active').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        loadChapter(link.getAttribute('data-chapter'));
+        clearAnnotationContent();
     });
 }
 
@@ -54,66 +35,27 @@ async function loadChapter(chapterId) {
     const notesContent = DOM.byId('notes-content');
 
     try {
-        // Show loading state
         const loadingText = translations[currentLanguage]['loading'] || 'Loading chapter content...';
         notesContent.innerHTML = `<div class="loading">${loadingText}</div>`;
 
-        // Handle special demo pages
-        if (chapterId === 'intro-demo') {
-            const filePath = currentLanguage === 'zh' ? 'chapters/zh/intro-demo.md' : 'chapters/intro-demo.md';
-            const response = await fetch(filePath);
-
-            if (!response.ok) {
-                throw new Error(`Demo file not found: ${filePath}`);
-            }
-
-            const markdownContent = await response.text();
-
-            // Process the content as markdown to get proper formatting
-            const processedMarkdown = TextUtils.processAnnotationLinks(markdownContent);
-            const parsedContent = marked.parse(processedMarkdown);
-
-            // Display the content
-            notesContent.innerHTML = parsedContent;
-
-            // Initialize Game of Life if the required elements exist
-            setTimeout(() => {
-                if (document.getElementById('game-canvas')) {
-                    APP.GameOfLife.initGameOfLife();
-                }
-            }, 200);
-
-            return;
-        }
-
-        // Use unified language file loader
         const markdownText = await loadLanguageFile('chapters', `${chapterId}.md`);
         if (!markdownText) {
             throw new Error(`Chapter file not found: ${chapterId}.md`);
         }
 
-        // Process annotation links BEFORE markdown parsing
         const processedMarkdown = TextUtils.processAnnotationLinks(markdownText);
+        notesContent.innerHTML = marked.parse(processedMarkdown);
 
-        // Parse markdown to HTML
-        let htmlContent = marked.parse(processedMarkdown);
-
-        // Display the content
-        notesContent.innerHTML = htmlContent;
-
-        setTimeout(() => {
-            initLayeredContentSystem();
-        }, 200);
+        setTimeout(() => { initLayeredContentSystem(); }, 200);
+        if (chapterId === 'intro-demo') {
+            setTimeout(() => {
+                if (document.getElementById('game-canvas')) APP.GameOfLife.initGameOfLife();
+            }, 200);
+        }
 
     } catch (error) {
         console.error('Error loading chapter:', error);
-        notesContent.innerHTML = `
-            <div class="error">
-                <h2>Error Loading Chapter</h2>
-                <p>Could not load <code>${chapterId}.md</code></p>
-                <p>Please make sure the file exists in the <code>chapters/</code> directory.</p>
-            </div>
-        `;
+        notesContent.innerHTML = `<div class="error"><h2>Error Loading Chapter</h2><p>Could not load <code>${chapterId}.md</code></p><p>Please make sure the file exists in the <code>chapters/</code> directory.</p></div>`;
     }
 }
 
@@ -140,31 +82,7 @@ let linkCheckInterval = null;
 
 // debounce, isMobile, shouldUseInlineAnnotations live in js/utils.js
 
-// Prevent animation restarts during mobile scrolling
-let isScrolling = false;
-let scrollTimeout;
-
-if (isMobile()) {
-    // Track scrolling state on mobile
-    document.addEventListener('touchstart', () => {
-        isScrolling = true;
-        clearTimeout(scrollTimeout);
-    });
-
-    document.addEventListener('touchend', () => {
-        scrollTimeout = setTimeout(() => {
-            isScrolling = false;
-        }, 150);
-    });
-
-    document.addEventListener('scroll', () => {
-        isScrolling = true;
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            isScrolling = false;
-        }, 150);
-    });
-}
+// Removed unused mobile scroll tracking
 
 async function loadAnnotation(key) {
     // Create a cache key that includes language
@@ -183,11 +101,8 @@ async function loadAnnotation(key) {
         }
         const htmlContent = TextUtils.processExternalLinks(marked.parse(markdownText));
 
-        // Extract title from the first heading
-        const title = TextUtils.extractTitle(markdownText, key.replace('-', ' '));
-
         const annotation = {
-            title: title,
+            title: TextUtils.extractTitle(markdownText, key.replace('-', ' ')),
             content: htmlContent
         };
 
@@ -219,20 +134,13 @@ async function showDesktopAnnotation(key) {
         currentTyped = null;
     }
 
-    annotationContent.innerHTML = `
-        <div class="loading">Loading annotation...</div>
-    `;
+    annotationContent.innerHTML = `<div class="loading">Loading annotation...</div>`;
 
     const annotation = await loadAnnotation(key);
 
     if (annotation) {
         // Create the structure first
-        annotationContent.innerHTML = `
-            <div class="annotation-title">${annotation.title}</div>
-            <div class="annotation-text">
-                <span id="typewriter-text"></span>
-            </div>
-        `;
+        annotationContent.innerHTML = `<div class="annotation-title">${annotation.title}</div><div class="annotation-text"><span id="typewriter-text"></span></div>`;
 
         // Custom incremental typing + link enabling
         startLinkMonitoring();
@@ -246,10 +154,7 @@ async function showDesktopAnnotation(key) {
             }
         });
     } else {
-        annotationContent.innerHTML = `
-            <h3>Annotation Not Found</h3>
-            <p class="placeholder">The annotation "${key}" could not be loaded. Make sure the file "annotations/${key}.md" exists.</p>
-        `;
+        annotationContent.innerHTML = `<h3>Annotation Not Found</h3><p class="placeholder">The annotation "${key}" could not be loaded. Make sure the file "annotations/${key}.md" exists.</p>`;
     }
 }
 
@@ -270,15 +175,7 @@ async function showInlineAnnotation(key, clickedElement) {
     inlineAnnotation.className = 'inline-annotation';
     inlineAnnotation.setAttribute('data-annotation-key', key);
 
-    inlineAnnotation.innerHTML = `
-        <div class="inline-annotation-header">
-            <div class="inline-annotation-title">Loading...</div>
-            <button class="inline-annotation-toggle" title="Collapse">−</button>
-        </div>
-        <div class="inline-annotation-content">
-            <div class="loading">Loading annotation...</div>
-        </div>
-    `;
+    inlineAnnotation.innerHTML = `<div class="inline-annotation-header"><div class="inline-annotation-title">Loading...</div><button class="inline-annotation-toggle" title="Collapse">−</button></div><div class="inline-annotation-content"><div class="loading">Loading annotation...</div></div>`;
 
     // Insert the annotation after the paragraph containing the clicked element
     const paragraph = clickedElement.closest('p, li, div, h1, h2, h3, h4, h5, h6');
@@ -302,11 +199,7 @@ async function showInlineAnnotation(key, clickedElement) {
         titleElement.textContent = annotation.title;
 
         // Create the structure for content
-        contentElement.innerHTML = `
-            <div class="annotation-text">
-                <span id="inline-typewriter-text-${key}"></span>
-            </div>
-        `;
+        contentElement.innerHTML = `<div class="annotation-text"><span id="inline-typewriter-text-${key}"></span></div>`;
 
         // Custom incremental typing + link enabling
         startLinkMonitoring(`#inline-typewriter-text-${key}`);
@@ -321,9 +214,7 @@ async function showInlineAnnotation(key, clickedElement) {
         });
     } else {
         titleElement.textContent = 'Annotation Not Found';
-        contentElement.innerHTML = `
-            <p class="placeholder">The annotation "${key}" could not be loaded.</p>
-        `;
+        contentElement.innerHTML = `<p class="placeholder">The annotation "${key}" could not be loaded.</p>`;
     }
 
     // Add collapse/expand functionality
@@ -391,10 +282,7 @@ function clearAnnotationContent() {
     const annotationsTitle = translations[currentLanguage]['annotations'] || 'Annotations';
     const placeholderText = translations[currentLanguage]['annotation-placeholder'] || 'Click on any highlighted link in the notes to view detailed annotations and additional context.';
 
-    annotationContent.innerHTML = `
-        <h3>${annotationsTitle}</h3>
-        <p class="placeholder">${placeholderText}</p>
-    `;
+    annotationContent.innerHTML = `<h3>${annotationsTitle}</h3><p class="placeholder">${placeholderText}</p>`;
 
     // Remove any existing inline annotations
     DOM.queryAll('.inline-annotation').forEach(a => a.remove());
@@ -403,11 +291,6 @@ function clearAnnotationContent() {
     document.querySelectorAll('.annotation-link').forEach(link => {
         link.classList.remove('active');
     });
-}
-
-// Initialize annotation content on page load
-function initAnnotationContent() {
-    clearAnnotationContent();
 }
 
 // Scroll-to-top functionality
@@ -437,13 +320,7 @@ function initScrollToTop() {
     }
 
     // Add scroll event listener with throttling
-    let scrollTimeout;
-    window.addEventListener('scroll', function () {
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-        }
-        scrollTimeout = setTimeout(toggleScrollToTopButton, 10);
-    });
+    window.addEventListener('scroll', debounce(toggleScrollToTopButton, 10));
 
     // Add click event listener
     scrollToTopBtn.addEventListener('click', function (e) {
@@ -457,95 +334,58 @@ function initScrollToTop() {
 
 
 // Language system (translations/currentLanguage in js/translations.js)
+let languageInitDone = false;
 function initLanguageSystem() {
-    const langOptions = document.querySelectorAll('.lang-option');
-    updateLanguageButtons();
-
-    langOptions.forEach(button => {
-        button.addEventListener('click', function () {
-            const selectedLang = this.getAttribute('data-lang');
-            if (selectedLang !== currentLanguage) {
-                currentLanguage = selectedLang;
-                localStorage.setItem('nks-language', currentLanguage);
-                updateLanguageButtons();
-                updatePageLanguage();
-
-                // Update annotation content to show correct language
-                clearAnnotationContent();
-
-                // Update rule indicators to show correct language
-                APP.CellularAutomata.updateRuleIndicators();
-
-                // Reload current chapter with new language
-                const activeChapter = document.querySelector('.chapter-link.active');
-                if (activeChapter) {
-                    const chapterId = activeChapter.getAttribute('data-chapter');
-                    loadChapter(chapterId);
-                }
-            }
+    if (!languageInitDone) {
+        document.addEventListener('click', function (e) {
+            const btn = e.target && e.target.closest ? e.target.closest('.lang-option') : null;
+            if (!btn) return;
+            const selectedLang = btn.getAttribute('data-lang');
+            if (selectedLang === currentLanguage) return;
+            currentLanguage = selectedLang;
+            localStorage.setItem('nks-language', currentLanguage);
+            refreshLanguageUI();
+            clearAnnotationContent();
+            APP.CellularAutomata.updateRuleIndicators();
+            const activeChapter = document.querySelector('.chapter-link.active');
+            if (activeChapter) loadChapter(activeChapter.getAttribute('data-chapter'));
         });
-    });
-
-    // Initialize with current language
-    updatePageLanguage();
+        languageInitDone = true;
+    }
+    refreshLanguageUI();
     APP.CellularAutomata.updateRuleIndicators();
 }
 
-function updateLanguageButtons() {
-    const langOptions = DOM.queryAll('.lang-option');
-
-    langOptions.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        button.classList.toggle('active', buttonLang === currentLanguage);
+function refreshLanguageUI() {
+    const t = translations[currentLanguage] || {};
+    DOM.queryAll('.lang-option').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLanguage);
     });
-}
-
-function updatePageLanguage() {
-    const elements = DOM.queryAll('[data-i18n]');
-    const currentTranslations = translations[currentLanguage] || {};
-
-    elements.forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (currentTranslations[key]) {
-            element.textContent = currentTranslations[key];
-        }
+    DOM.queryAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
     });
-
-    // Update placeholder text for inputs
-    const placeholderElements = DOM.queryAll('[data-i18n-placeholder]');
-    placeholderElements.forEach(element => {
-        const key = element.getAttribute('data-i18n-placeholder');
-        if (currentTranslations[key]) {
-            element.placeholder = currentTranslations[key];
-        }
+    DOM.queryAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
     });
-
-    // Update chapter links text
-    updateChapterLinks();
-}
-
-function updateChapterLinks() {
-    const chapterLinks = DOM.queryAll('.chapter-link');
-    const currentTranslations = translations[currentLanguage] || {};
-
-    chapterLinks.forEach(link => {
+    DOM.queryAll('.chapter-link').forEach(link => {
         const chapterKey = link.getAttribute('data-chapter');
-        if (currentTranslations[chapterKey]) {
-            link.textContent = currentTranslations[chapterKey];
-        }
+        if (t[chapterKey]) link.textContent = t[chapterKey];
     });
 }
 
 // Layered content (expand/collapse sections)
+let layeredInitDone = false;
 function initLayeredContentSystem() {
-    // Add click event listeners to expand/collapse buttons
-    const expandToggles = document.querySelectorAll('.expand-toggle');
-    expandToggles.forEach(toggle => {
-        toggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            toggleLayeredSection(this);
-        });
+    if (layeredInitDone) return;
+    document.addEventListener('click', function (e) {
+        const toggle = e.target && e.target.closest ? e.target.closest('.expand-toggle') : null;
+        if (!toggle) return;
+        e.preventDefault();
+        toggleLayeredSection(toggle);
     });
+    layeredInitDone = true;
 }
 
 function toggleLayeredSection(toggleButton) {
@@ -602,18 +442,14 @@ function toggleLayeredSection(toggleButton) {
 function updateToggleText(toggle, isExpanded) {
     const textElement = toggle.querySelector('.toggle-text');
     const iconElement = toggle.querySelector('.toggle-icon');
-
     if (textElement) {
-        if (currentLanguage === 'zh') {
-            textElement.textContent = isExpanded ? '收起详细内容' : '展开详细内容';
-        } else if (currentLanguage === 'ja') {
-            textElement.textContent = isExpanded ? '詳細を閉じる' : '詳細を開く';
-        } else {
-            textElement.textContent = isExpanded ? 'Collapse Details' : 'Expand Details';
-        }
+        const labels = {
+            zh: ['收起详细内容', '展开详细内容'],
+            ja: ['詳細を閉じる', '詳細を開く'],
+            en: ['Collapse Details', 'Expand Details'],
+        };
+        const pair = labels[currentLanguage] || labels.en;
+        textElement.textContent = isExpanded ? pair[0] : pair[1];
     }
-
-    if (iconElement) {
-        iconElement.textContent = isExpanded ? '▲' : '▼';
-    }
+    if (iconElement) iconElement.textContent = isExpanded ? '▲' : '▼';
 }

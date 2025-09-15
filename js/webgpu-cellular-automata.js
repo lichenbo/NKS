@@ -213,11 +213,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          * @param {number} ruleNumber - Elementary CA rule number
          */
         updateGPUUniforms(ruleNumber) {
+            if (!this.webgpuDevice || !this.uniformBuffer) return; // Not ready yet
             const rule = this.convertRuleToGPUFormat(ruleNumber);
             const uniformData = new Uint32Array(12);
             uniformData.set(rule, 0);
             uniformData[8] = this.cols;
-            this.webgpuDevice.queue.writeBuffer(this.uniformBuffer, 0, uniformData);
+            this.webgpuDevice.queue?.writeBuffer(this.uniformBuffer, 0, uniformData);
         }
 
         /**
@@ -225,8 +226,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
          * @param {Array} gridData - Current generation grid data
          */
         uploadGridToGPU(gridData) {
+            if (!this.webgpuDevice || !this.inputBuffer) return;
             const gpuData = new Uint32Array(gridData);
-            this.webgpuDevice.queue.writeBuffer(this.inputBuffer, 0, gpuData);
+            this.webgpuDevice.queue?.writeBuffer(this.inputBuffer, 0, gpuData);
         }
 
         /**
@@ -358,6 +360,20 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.updateGPUUniforms(ruleNumber);
         }
 
+        // Preserve state and rebuild GPU buffers on resize
+        updateCanvasDimensions() {
+            super.updateCanvasDimensions();
+            if (this.stateManager) {
+                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
+            }
+            if (this.useWebGPU) {
+                this.cleanupStorageBuffers();
+                this.ensureGPUBuffers();
+                if (this.uniformBuffer) this.updateGPUUniforms(this.ruleNumber);
+                if (this.inputBuffer) this.uploadGridToGPU(this.stateManager.grid);
+            }
+        }
+
 
         async animate() {
             const startTime = performance.now();
@@ -454,6 +470,20 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             });
         }
 
+        // Preserve state and rebuild GPU buffers on resize
+        updateCanvasDimensions() {
+            super.updateCanvasDimensions();
+            if (this.stateManager) {
+                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
+            }
+            if (this.useWebGPU) {
+                this.cleanupStorageBuffers();
+                this.ensureGPUBuffers();
+                if (this.uniformBuffer) this.updateGPUUniforms(this.currentRuleNumber);
+                if (this.inputBuffer) this.uploadGridToGPU(this.stateManager.grid);
+            }
+        }
+
         initializeForRule(ruleNumber) {
             this.currentRuleNumber = ruleNumber;
             this.ensureGPUBuffers();
@@ -491,6 +521,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         async animate() {
             const startTime = performance.now();
             this.breathingEffect.update();
+            if (this._justResized) {
+                this._justResized = false;
+                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
+            }
             await this.animateWithGPU();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);

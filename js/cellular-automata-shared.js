@@ -299,6 +299,26 @@ window.APP = window.APP || {};
                         }
                     }
                 }
+
+                // Also re-center previously drawn rows to the new width
+                if (Array.isArray(this.drawnRows) && this.drawnRows.length) {
+                    const oldDrawn = this.drawnRows;
+                    const newDrawn = new Array(oldDrawn.length);
+                    const oldCenter = Math.floor(oldCols / 2);
+                    const newCenter = Math.floor(cols / 2);
+                    const offset = newCenter - oldCenter;
+                    for (let r = 0; r < oldDrawn.length; r++) {
+                        const rowData = oldDrawn[r];
+                        if (!Array.isArray(rowData)) { newDrawn[r] = rowData; continue; }
+                        const newRow = new Array(cols).fill(0);
+                        for (let c = 0; c < rowData.length; c++) {
+                            const nc = c + offset;
+                            if (nc >= 0 && nc < cols) newRow[nc] = rowData[c];
+                        }
+                        newDrawn[r] = newRow;
+                    }
+                    this.drawnRows = newDrawn;
+                }
             }
             
             // Keep the same current row if it's still valid
