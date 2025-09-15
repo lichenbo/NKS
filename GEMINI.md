@@ -43,7 +43,6 @@ This is a client-side web application that presents notes and annotations for St
   - `chapter2.md`, `chapter3.md` - Additional English chapters
   - `preface.md` - Project preface and introduction
   - `zh/` - Chinese translations (intro-demo.md, chapter1.md, chapter2.md, chapter3.md, preface.md)
-    - `chapter1_layered.md` - **Special layered version of Chapter 1 with collapsible content sections**
   - `ja/` - Japanese translations (preface.md, intro-demo.md)
 - `annotations/` - Annotation content as individual markdown files
   - Individual annotation files (e.g., `cellular-automata.md`, `emergence.md`, `computational-art.md`)
@@ -73,7 +72,7 @@ Since this is a static HTML/CSS/JS project with no build system:
   - `chapter1.md` contains the hybrid approach with Wolfram's personal discovery journey integrated throughout
   - Maintains all annotation links and educational completeness from academic structure
   - Integrates first-person narrative elements for enhanced reader engagement while preserving technical depth
-- **Layered content system**: Chapter 1 Chinese version (`chapters/zh/chapter1_layered.md`) uses special layered format
+- **Layered content system**: 
   - Content organized into `.content-layer.simplified` and `.content-layer.detailed` sections
   - Expand/collapse buttons (`<button class="expand-toggle">`) allow progressive disclosure
   - Detailed sections start hidden and can be expanded section by section
@@ -170,7 +169,6 @@ Since this is a static HTML/CSS/JS project with no build system:
 
 ### Layered Content System
 - **Chapter detection**: `loadChapter()` function automatically detects Chapter 1 + Chinese language combination
-- **Special loading**: Uses `chapters/zh/chapter1_layered.md` instead of regular chapter file
 - **Content structure**: Markdown contains HTML divs with `.content-layer.simplified` and `.content-layer.detailed` classes
 - **Toggle buttons**: `<button class="expand-toggle" data-expanded="false">` elements control section visibility
 - **JavaScript functions**:

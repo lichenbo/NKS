@@ -92,7 +92,7 @@ function initChapterNavigation() {
             if (this.classList.contains('external-demo-link')) {
                 return; // Don't preventDefault, allow normal navigation
             }
-            
+
             e.preventDefault();
 
             // Remove active class from all links
@@ -146,50 +146,28 @@ async function loadChapter(chapterId) {
         if (chapterId === 'intro-demo') {
             const filePath = currentLanguage === 'zh' ? 'chapters/zh/intro-demo.md' : 'chapters/intro-demo.md';
             const response = await fetch(filePath);
-            
+
             if (!response.ok) {
                 throw new Error(`Demo file not found: ${filePath}`);
             }
 
             const markdownContent = await response.text();
-            
+
             // Process the content as markdown to get proper formatting
             const processedMarkdown = processAnnotationLinksInMarkdown(markdownContent);
             const parsedContent = marked.parse(processedMarkdown);
-            
+
             // Display the content
             notesContent.innerHTML = parsedContent;
-            
+
             // Initialize Game of Life if the required elements exist
             setTimeout(() => {
                 if (document.getElementById('game-canvas')) {
                     APP.GameOfLife.initGameOfLife();
                 }
             }, 200);
-            
-            return;
-        }
 
-        // Handle Chapter 1 with layered content (only for Chinese)
-        if (chapterId === 'chapter1' && currentLanguage === 'zh') {
-            const response = await fetch('chapters/zh/chapter1_layered.md');
-            
-            if (response.ok) {
-                const layeredContent = await response.text();
-                const processedMarkdown = processAnnotationLinksInMarkdown(layeredContent);
-                const parsedContent = marked.parse(processedMarkdown);
-                
-                notesContent.innerHTML = parsedContent;
-                
-                // Initialize layered content functionality
-                setTimeout(() => {
-                    initLayeredContentSystem();
-                }, 200);
-                
-                return;
-            } else {
-                console.warn(`Chinese layered version not found, falling back to regular chapter1.md`);
-            }
+            return;
         }
 
         // Use unified language file loader
@@ -206,6 +184,10 @@ async function loadChapter(chapterId) {
 
         // Display the content
         notesContent.innerHTML = htmlContent;
+
+        setTimeout(() => {
+            initLayeredContentSystem();
+        }, 200);
 
     } catch (error) {
         console.error('Error loading chapter:', error);
@@ -295,13 +277,13 @@ if (isMobile()) {
         isScrolling = true;
         clearTimeout(scrollTimeout);
     });
-    
+
     document.addEventListener('touchend', () => {
         scrollTimeout = setTimeout(() => {
             isScrolling = false;
         }, 150);
     });
-    
+
     document.addEventListener('scroll', () => {
         isScrolling = true;
         clearTimeout(scrollTimeout);
@@ -350,7 +332,7 @@ async function loadAnnotation(key) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
         let htmlContent = marked.parse(markdownText);
-        
+
         // Process external links to open in new tab
         htmlContent = TextUtils.processExternalLinks(htmlContent);
 
@@ -448,7 +430,7 @@ async function showDesktopAnnotation(key) {
         // Use custom incremental typing
         // Start checking for links during typing
         startLinkMonitoring();
-        
+
         // Use incremental typing that doesn't reset innerHTML
         currentTyped = startIncrementalTyping('typewriter-text', annotation.content, {
             typeSpeed: 10,
@@ -528,7 +510,7 @@ async function showInlineAnnotation(key, clickedElement) {
         // Use custom incremental typing
         // Start checking for links during typing
         startLinkMonitoring(`#inline-typewriter-text-${key}`);
-        
+
         // Use incremental typing that doesn't reset innerHTML
         currentTyped = startIncrementalTyping(`inline-typewriter-text-${key}`, annotation.content, {
             typeSpeed: 10,
@@ -546,11 +528,11 @@ async function showInlineAnnotation(key, clickedElement) {
     }
 
     // Add collapse/expand functionality
-    toggleBtn.addEventListener('click', function(e) {
+    toggleBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         const content = inlineAnnotation.querySelector('.inline-annotation-content');
         const isCollapsed = content.style.display === 'none';
-        
+
         if (isCollapsed) {
             content.style.display = 'block';
             toggleBtn.textContent = '−';
@@ -564,9 +546,9 @@ async function showInlineAnnotation(key, clickedElement) {
 
     // Scroll the annotation into view smoothly
     setTimeout(() => {
-        inlineAnnotation.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'nearest' 
+        inlineAnnotation.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
         });
     }, 100);
 }
@@ -594,7 +576,7 @@ function startLinkMonitoring(selector = '#typewriter-text') {
     if (linkCheckInterval) {
         clearInterval(linkCheckInterval);
     }
-    
+
     // Check for new links every 50ms during typing
     linkCheckInterval = setInterval(() => {
         if (selector.includes('inline-typewriter-text-')) {
@@ -616,7 +598,7 @@ function stopLinkMonitoring() {
 function clearAnnotationContent() {
     // Stop link monitoring
     stopLinkMonitoring();
-    
+
     // Destroy any existing Typed instance
     if (currentTyped && typeof currentTyped.destroy === 'function') {
         currentTyped.destroy();
@@ -653,14 +635,14 @@ function initAnnotationContent() {
 // Initialize scroll-to-top functionality
 function initScrollToTop() {
     const scrollToTopBtn = DOM.byId('scroll-to-top');
-    
+
     if (!scrollToTopBtn) return;
 
     // Show/hide button based on scroll position
     function toggleScrollToTopButton() {
         const scrollY = window.scrollY || document.documentElement.scrollTop;
         const showThreshold = 300; // Show button after scrolling 300px
-        
+
         if (scrollY > showThreshold) {
             scrollToTopBtn.classList.remove('hidden');
         } else {
@@ -678,7 +660,7 @@ function initScrollToTop() {
 
     // Add scroll event listener with throttling
     let scrollTimeout;
-    window.addEventListener('scroll', function() {
+    window.addEventListener('scroll', function () {
         if (scrollTimeout) {
             clearTimeout(scrollTimeout);
         }
@@ -686,7 +668,7 @@ function initScrollToTop() {
     });
 
     // Add click event listener
-    scrollToTopBtn.addEventListener('click', function(e) {
+    scrollToTopBtn.addEventListener('click', function (e) {
         e.preventDefault();
         scrollToTop();
     });
@@ -757,7 +739,7 @@ function initLanguageSystem() {
 
 function updateLanguageButtons() {
     const langOptions = DOM.queryAll('.lang-option');
-    
+
     langOptions.forEach(button => {
         const buttonLang = button.getAttribute('data-lang');
         button.classList.toggle('active', buttonLang === currentLanguage);
@@ -791,7 +773,7 @@ function updatePageLanguage() {
 function updateChapterLinks() {
     const chapterLinks = DOM.queryAll('.chapter-link');
     const currentTranslations = translations[currentLanguage] || {};
-    
+
     chapterLinks.forEach(link => {
         const chapterKey = link.getAttribute('data-chapter');
         if (currentTranslations[chapterKey]) {
@@ -803,26 +785,26 @@ function updateChapterLinks() {
 // Initialize layered content system for collapsible content
 function initLayeredContentSystem() {
     console.log('🔧 Initializing layered content system...');
-    
+
     // Add click event listeners to expand/collapse buttons
     const expandToggles = document.querySelectorAll('.expand-toggle');
     expandToggles.forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
+        toggle.addEventListener('click', function (e) {
             e.preventDefault();
             toggleLayeredSection(this);
         });
     });
-    
+
     console.log(`✅ Layered content system initialized with ${expandToggles.length} toggles`);
 }
 
 function toggleLayeredSection(toggleButton) {
     const isExpanded = toggleButton.dataset.expanded === 'true';
-    
+
     // Find the detailed content layer in the same section
     let detailedLayer;
     let currentElement = toggleButton.previousElementSibling;
-    
+
     // Look backwards for the detailed content layer
     while (currentElement) {
         const detailedContent = currentElement.querySelector('.content-layer.detailed');
@@ -836,25 +818,25 @@ function toggleLayeredSection(toggleButton) {
         }
         currentElement = currentElement.previousElementSibling;
     }
-    
+
     if (!detailedLayer) {
         console.warn('No detailed content layer found for toggle button');
         return;
     }
-    
+
     if (!isExpanded) {
         // Expand to show detailed content
         detailedLayer.style.display = 'block';
         detailedLayer.style.maxHeight = 'none';
         detailedLayer.style.opacity = '1';
         toggleButton.dataset.expanded = 'true';
-        
+
         // Smooth scroll to bring detailed content into view
         setTimeout(() => {
-            detailedLayer.scrollIntoView({ 
-                behavior: 'smooth', 
+            detailedLayer.scrollIntoView({
+                behavior: 'smooth',
                 block: 'start',
-                inline: 'nearest' 
+                inline: 'nearest'
             });
         }, 100);
     } else {
@@ -866,14 +848,14 @@ function toggleLayeredSection(toggleButton) {
         }, 300);
         toggleButton.dataset.expanded = 'false';
     }
-    
+
     updateToggleText(toggleButton, !isExpanded);
 }
 
 function updateToggleText(toggle, isExpanded) {
     const textElement = toggle.querySelector('.toggle-text');
     const iconElement = toggle.querySelector('.toggle-icon');
-    
+
     if (textElement) {
         if (currentLanguage === 'zh') {
             textElement.textContent = isExpanded ? '收起详细内容' : '展开详细内容';
@@ -883,7 +865,7 @@ function updateToggleText(toggle, isExpanded) {
             textElement.textContent = isExpanded ? 'Collapse Details' : 'Expand Details';
         }
     }
-    
+
     if (iconElement) {
         iconElement.textContent = isExpanded ? '▲' : '▼';
     }
