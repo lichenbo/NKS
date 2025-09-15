@@ -1,4 +1,4 @@
-# 第一章：新科学的基础
+# [第一章：新科学的基础](annotation:chapter1)
 
 ## 基本思想概述
 
@@ -142,7 +142,7 @@
   <span class="toggle-icon">▼</span>
 </button>
 
-### 人工生命
+### [人工生命](annotation:artificial-life)
 <div class="content-layer simplified">
 人工生命研究曾以复杂程序模拟生物，但本书发现简单程序同样足够，不仅能再现特性，还能揭示更接近真实生物的基本机理。
 </div>
@@ -154,10 +154,10 @@
   <span class="toggle-icon">▼</span>
 </button>
 
-**突变理论**
+### [突变理论](annotation:catastrophe-theory)
 传统的数学模型通常基于连续变化的量。然而在自然界中，离散的变化常常可见。在1970年代流行的突变理论，关注的是即使在传统的数学模型中，某些简单的离散变化仍然可能发生。在本书中，我并非从任何连续性的假设出发——我研究的行为类型往往比突变理论中的那些要复杂得多。
 
-### 混沌理论
+### [混沌理论](annotation:deterministic-chaos)
 <div class="content-layer simplified">
 混沌理论揭示系统对初始条件极端敏感，因此难以预测，但这并不必然导致复杂行为。本书展示：即便初始条件极其简单，系统也常能生成高度复杂的表现，这正是自然复杂性的关键例证。
 </div>
@@ -169,56 +169,124 @@
   <span class="toggle-icon">▼</span>
 </button>
 
-### 复杂性理论
+### [复杂性理论](annotation:complexity)
 
+<div class="content-layer simplified">
+过去的复杂性研究零散且局限；本书以一般简单程序为基础，将复杂性作为普适现象系统研究，并给出其来源的基本理解框架。
+</div>
+<div class="content-layer detailed">
 我在早期80年代的发现让我认为复杂性能够像一个基础独立现象一样研究，而且这逐渐变得受人欢迎。但是基于我早期发现的大多数科研工作都结束了，而更多地被其他的现有科学框架所包含，并且设法对任何一般的和基础性的问题取得微小进展。本书阐述的新科学的一个特点就是，它最终使得对一般现象的复杂性和其起源的基本理解的发展成为可能。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
-### 计算复杂性理论
+### [计算复杂性理论](annotation:computational-complexity)
 
 自七十年代发展的计算复杂性理论试图描述计算型任务的困难程度。而其具体的结果往往基于有复杂结构的具体的程序，即使行为很简单。而本书阐述的新科学开发了更多一般类型的程序，可以为计算复杂性理论中长久以来的问题提供新的线索。
 
-### 控制论
+
+### [控制论](annotation:cybernetics)
 
 在20世纪40年代有种说法是可以基于电器的模拟来理解生物系统。但本质上来说，唯一可用的分析方法是来自于传统数学，而典型的复杂的生物行为就很少成功获取。
 
-### 动态系统理论
 
+### [动态系统理论](annotation:dynamical-systems)
+
+<div class="content-layer simplified">
+以方程为核心的动态系统方法在许多情况下过于局限；大量系统的真实行为复杂到超出其有效刻画能力。
+</div>
+<div class="content-layer detailed">
 作为约一个世纪以前发展的一个数学分支学科，动态系统理论领域关注于通过特定的数学方程来研究随着时间变化的系统，并用传统的几何和其他数学方法来描述其可能产生的行为形式。但在本书中所主张的是，实际上这些系统的行为本质上太过复杂而很难有效地用这种方法来捕获。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 ### 进化论
 
+<div class="content-layer simplified">
+达尔文选择并不足以解释复杂性的由来，甚至常与复杂性相反；本书提出全新机制，更能解释生物中的复杂形态。
+</div>
+<div class="content-layer detailed">
 达尔文的自然选择下的进化论通常被用来解释我们所看到的生物系统的复杂性，而实际上近几年这个理论不止用在生物学。但是一直没弄明白的是，为什么这个理论能够暗示产生了复杂性。确实我会在本书中说到，它在很多方面都反对复杂性。但是本书中发现的一个全新的完全不同的机制，我相信能够有效解释我们在生物界中看到的许多复杂例子。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 ### 实验数学
 
+<div class="content-layer simplified">
+实验数学多验证既有问题；本书以计算实验为核心，探索更一般的系统，超出现有数学可解析的范围。
+</div>
+<div class="content-layer detailed">
 通过计算出的数据来探索数学系统的想法已有很长历史，随着计算机和Mathmatica（译注：作者开发的一款数学软件）的出现，更是逐渐广为流传。但毫无例外的是，它在过去只适合研究那些已经被别的数学方法研究过的问题和系统，这在数学的传统中非常普遍。而我在本书中的方法，是以计算实验作为基本方法来探索更多一般的系统，这在传统数学中是从未出现的，这也通常不能被现有的数学方法所理解。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 ### [分形几何](annotation:fractals) 
+<div class="content-layer simplified">
+分形强调嵌套的复杂形状，但本书还展示大量更复杂、非嵌套的形态生成机制。
+</div>
+<div class="content-layer detailed">
 直到最近，科学和数学中广泛讨论的唯一形状类型是那些规则或平滑的形状。但从1970年代末开始，分形几何领域强调了包含任意复杂部分的嵌套形状的重要性，并论证说这种形状在自然界中很常见。在本书中，我们将遇到相当数量的产生这种嵌套形状的系统。但我们也会发现许多产生更为复杂、没有嵌套结构的形状的系统。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 ### 一般系统理论
 
 在60年代特别受欢迎的一般系统理论，主要关注研究大型基元网络——通常是理想化的人类组织。但是没有本书中的各类方法，几乎不可能得出确切的结论。
 
+
 ### 纳米技术
 
 自90年代早期开始快速发展的纳米技术，其目标是实现原子尺度上的技术系统。但到目前为止，其关注领域已经收缩到熟悉的机械和其他设备。本书中展现的一系列的系统其简单结构，但表现复杂行为，其中一些在某些方面上十分适合直接在原子尺度上实现。
 
+
 ### 非线性动力学
 
-线性数学方程通常十分容易求解，并且广泛应用于科学。非线性领域关注分析更为复杂的方程。其最为成功的就是“孤子方程”，在这种方程通过谨慎操作可以得到类似线性的性质。但在本书中讨论的这类系统通常表现为复杂的行为，而且没有这样的简化属性。
+线性数学方程通常十分容易求解，并且广泛应用于科学。非线性领域关注分析更为复杂的方程。其最为成功的就是[孤子方程](annotation:soliton-equations)，在这种方程通过谨慎操作可以得到类似线性的性质。但在本书中讨论的这类系统通常表现为复杂的行为，而且没有这样的简化属性。
+
 
 ### 科学计算
 
 科学计算领域通常关心使用传统数学模型——通常用于各种流体和固体，并且试图在计算机上用数值近似实现。一般来说，很难从使用近似的效果中分离出复杂的现象。我在本书中提出的几种模型不使用近似的实现，却很容易就识别出更复杂的现象。
 
-### 自组织
+### [自组织](annotation:self-organization)
 
+<div class="content-layer simplified">
+自组织研究多局限于简单结构；借助本书框架，可解释大规模复杂结构如何自发形成。
+</div>
+<div class="content-layer detailed">
 在自然中经常能看见一些系统，期初是混乱无特点的，但接着不由自主地将自身变得有组织并产生了特定的结构。自组织中的松散领域通常关心理解这个现象。但大多数部分，他们都使用了传统数学模型，导致的结果是只能研究相当简单的结构。而有了本书中的观点，就可能理解这种巨大的复杂结构是如何形成的。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 ### 统计力学
 
-自一个世纪前发展来的物理学分支统计力学，关心理解由大量气体分子和其他部分组成的系统中的平均行为。对任何一个特定的实例，这种系统都会表现得复杂。但是着眼于大量实例的平均值，统计力学通常就能避免这种复杂性。为了与实际情况取得联系，它通常使用所谓的热力学第二定律，或是熵增加原理。但一个多世纪依赖，在理解这种原理的基础上，总会有难以理解的困难。如果使用本书的想法，我觉得会有一个框架可以解决这些问题。
+<div class="content-layer simplified">
+统计力学用平均掩盖个例复杂性，并依赖[熵增原理](annotation:second-law-thermodynamics)，其基础长期存疑；本书提供新的计算框架，有望澄清其根基。
+</div>
+<div class="content-layer detailed">
+自一个世纪前发展来的物理学分支统计力学，关心理解由大量气体分子和其他部分组成的系统中的平均行为。对任何一个特定的实例，这种系统都会表现得复杂。但是着眼于大量实例的平均值，统计力学通常就能避免这种复杂性。为了与实际情况取得联系，它通常使用所谓的热力学第二定律，或是[熵增加原理](annotation:second-law-thermodynamics)。但一个多世纪依赖，在理解这种原理的基础上，总会有难以理解的困难。如果使用本书的想法，我觉得会有一个框架可以解决这些问题。
+</div>
+<button class="expand-toggle" data-target="simplified" data-expanded="false">
+  <span class="toggle-text">展开详细内容</span>
+  <span class="toggle-icon">▼</span>
+</button>
 
 
 ## 本书中科学的个人故事
