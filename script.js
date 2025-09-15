@@ -1,88 +1,27 @@
 document.addEventListener('DOMContentLoaded', function () {
     initMarkdownRenderer();
-    initLanguageSystem();  // Initialize language first
+    initLanguageSystem();
     initChapterNavigation();
     initAnnotationSystem();
     initAnnotationContent();
     initScrollToTop();
     initImageLightbox();
-
-    // Load site guide by default
     loadChapter('site-guide');
 });
 
-// Image lightbox functionality now in js/lightbox.js
-
-/**
- * Cache for storing loaded annotation content by language to prevent redundant fetches
- * Structure: { 'en': { 'annotation-key': 'content' }, 'zh': { 'annotation-key': 'content' } }
- * @type {Object<string, Object<string, string>>}
- */
+// Runtime cache for annotations (key-language -> {title, content})
 const annotationCache = {};
 
-/**
- * Unified language file loader with intelligent fallback system
- * Implements language-specific file loading with graceful fallbacks:
- * - Chinese (zh): tries zh/file -> file
- * - Japanese (ja): tries ja/file -> zh/file -> file  
- * - English (en): tries file directly
- * 
- * Time Complexity: O(1) - constant network requests (max 3 fallback attempts)
- * Space Complexity: O(n) where n is the size of the loaded file content
- * 
- * @async
- * @function loadLanguageFile
- * @param {string} basePath - Base directory path (e.g., 'chapters', 'annotations')
- * @param {string} fileName - Target filename (e.g., 'chapter1.md')
- * @param {string|null} [language=null] - Language code ('en', 'zh', 'ja'), defaults to currentLanguage
- * @returns {Promise<string|null>} File content as text, or null if file not found
- * @throws {Error} Network errors are caught and logged, returns null on failure
- * 
- * Called by: loadChapter(), loadAnnotation()
- * Calls: fetch(), response.text()
- */
-// loadLanguageFile function now in js/utils.js
+// Utilities and loaders live in js/utils.js; typing in js/typing.js
 
-// DOM, Events, and TextUtils utilities now in js/utils.js
-
-// IncrementalTyper class and startIncrementalTyping function now in js/typing.js
-
-
-/**
- * Initialize markdown renderer with configuration for NKS content
- * Configures marked.js library with GitHub-flavored markdown and line breaks
- * 
- * Time Complexity: O(1)
- * Space Complexity: O(1)
- * 
- * @function initMarkdownRenderer
- * @returns {void}
- * 
- * Called by: DOMContentLoaded event handler
- * Calls: marked.setOptions()
- */
+// Configure marked for our annotation syntax
 function initMarkdownRenderer() {
-    // Configure marked for our annotation syntax
     marked.setOptions({
         breaks: true,
         gfm: true
     });
 }
 
-/**
- * Initialize chapter navigation system with click handlers
- * Sets up event listeners for chapter links with active state management
- * Handles both internal navigation and external demo links
- * 
- * Time Complexity: O(n) where n is number of chapter links
- * Space Complexity: O(1) for event listeners
- * 
- * @function initChapterNavigation
- * @returns {void}
- * 
- * Called by: DOMContentLoaded event handler
- * Calls: loadChapter(), clearAnnotationContent()
- */
 function initChapterNavigation() {
     const chapterLinks = DOM.queryAll('.chapter-link');
 
@@ -111,29 +50,6 @@ function initChapterNavigation() {
     });
 }
 
-/**
- * Load and display chapter content with language support
- * Handles special cases like demo pages and layered content for Chapter 1 Chinese
- * Processes markdown content and manages annotation links
- * 
- * Key Features:
- * - Language-aware file loading with fallback system
- * - Special handling for intro-demo and layered Chapter 1 (Chinese)
- * - Markdown processing with annotation link conversion
- * - Loading state management and error handling
- * - Automatic layered content system initialization
- * 
- * Time Complexity: O(n) where n is content length for processing
- * Space Complexity: O(n) for content storage
- * 
- * @async
- * @function loadChapter
- * @param {string} chapterId - Chapter identifier ('preface', 'chapter1', 'intro-demo', etc.)
- * @returns {Promise<void>} Resolves when chapter is loaded and processed
- * 
- * Called by: initChapterNavigation(), DOMContentLoaded handler
- * Calls: loadLanguageFile(), processAnnotationLinksInMarkdown(), initLayeredContentSystem()
- */
 async function loadChapter(chapterId) {
     const notesContent = DOM.byId('notes-content');
 
@@ -154,7 +70,7 @@ async function loadChapter(chapterId) {
             const markdownContent = await response.text();
 
             // Process the content as markdown to get proper formatting
-            const processedMarkdown = processAnnotationLinksInMarkdown(markdownContent);
+            const processedMarkdown = TextUtils.processAnnotationLinks(markdownContent);
             const parsedContent = marked.parse(processedMarkdown);
 
             // Display the content
@@ -177,7 +93,7 @@ async function loadChapter(chapterId) {
         }
 
         // Process annotation links BEFORE markdown parsing
-        const processedMarkdown = processAnnotationLinksInMarkdown(markdownText);
+        const processedMarkdown = TextUtils.processAnnotationLinks(markdownText);
 
         // Parse markdown to HTML
         let htmlContent = marked.parse(processedMarkdown);
@@ -201,57 +117,18 @@ async function loadChapter(chapterId) {
     }
 }
 
-/**
- * Process annotation links in markdown content
- * Wrapper function for TextUtils.processAnnotationLinks to maintain API consistency
- * 
- * Time Complexity: O(n*m) where n is text length, m is number of annotation links
- * Space Complexity: O(n) for processed content
- * 
- * @function processAnnotationLinksInMarkdown
- * @param {string} markdown - Markdown content with annotation links
- * @returns {string} Processed markdown with HTML annotation spans
- * 
- * Called by: loadChapter()
- * Calls: TextUtils.processAnnotationLinks()
- */
-function processAnnotationLinksInMarkdown(markdown) {
-    return TextUtils.processAnnotationLinks(markdown);
-}
-
-// Removed unused processAnnotationLinks function - functionality is handled by processAnnotationLinksInMarkdown
-
-/**
- * Initialize annotation system with global click event delegation
- * Sets up click handlers for annotation links with active state management
- * Uses event delegation pattern to handle dynamically added annotation links
- * 
- * Time Complexity: O(1) for setup, O(n) per click where n is annotation links
- * Space Complexity: O(1) for event listener
- * 
- * @function initAnnotationSystem
- * @returns {void}
- * 
- * Called by: DOMContentLoaded event handler
- * Calls: showAnnotation()
- */
+// Annotation system: click delegation + loaders
 function initAnnotationSystem() {
-    // Add click event listeners to all annotation links
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('annotation-link')) {
+        const target = e.target && e.target.closest ? e.target.closest('.annotation-link') : null;
+        if (target) {
             e.preventDefault();
 
-            // Remove active class from all annotation links
-            document.querySelectorAll('.annotation-link').forEach(link => {
-                link.classList.remove('active');
-            });
+            document.querySelectorAll('.annotation-link').forEach(l => l.classList.remove('active'));
+            target.classList.add('active');
 
-            // Add active class to clicked link
-            e.target.classList.add('active');
-
-            // Get annotation data
-            const annotationKey = e.target.getAttribute('data-annotation');
-            showAnnotation(annotationKey, e.target);
+            const annotationKey = target.getAttribute('data-annotation');
+            showAnnotation(annotationKey, target);
         }
     });
 }
@@ -261,11 +138,7 @@ function initAnnotationSystem() {
 let currentTyped = null;
 let linkCheckInterval = null;
 
-// debounce function now in js/utils.js
-
-// isMobile function now in js/utils.js
-
-// shouldUseInlineAnnotations function now in js/utils.js
+// debounce, isMobile, shouldUseInlineAnnotations live in js/utils.js
 
 // Prevent animation restarts during mobile scrolling
 let isScrolling = false;
@@ -293,29 +166,6 @@ if (isMobile()) {
     });
 }
 
-/**
- * Load annotation content with caching and language support
- * Implements efficient caching system to prevent redundant network requests
- * Supports language fallback system and external link processing
- * 
- * Key Features:
- * - Language-aware caching with compound cache keys (key-language)
- * - Markdown to HTML conversion with marked.js
- * - External link processing for security (target="_blank")
- * - Fallback system through loadLanguageFile utility
- * 
- * Time Complexity: O(1) for cached content, O(n) for new content where n is file size
- * Space Complexity: O(n) for content storage in cache
- * 
- * @async
- * @function loadAnnotation
- * @param {string} key - Annotation identifier (filename without extension)
- * @returns {Promise<string>} HTML content of the annotation
- * @throws {Error} If annotation file not found after fallback attempts
- * 
- * Called by: showAnnotation(), showDesktopAnnotation(), showInlineAnnotation()
- * Calls: loadLanguageFile(), marked.parse(), TextUtils.processExternalLinks()
- */
 async function loadAnnotation(key) {
     // Create a cache key that includes language
     const cacheKey = `${key}-${currentLanguage}`;
@@ -331,10 +181,7 @@ async function loadAnnotation(key) {
         if (!markdownText) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
-        let htmlContent = marked.parse(markdownText);
-
-        // Process external links to open in new tab
-        htmlContent = TextUtils.processExternalLinks(htmlContent);
+        const htmlContent = TextUtils.processExternalLinks(marked.parse(markdownText));
 
         // Extract title from the first heading
         const title = TextUtils.extractTitle(markdownText, key.replace('-', ' '));
@@ -354,23 +201,6 @@ async function loadAnnotation(key) {
     }
 }
 
-/**
- * Show annotation using appropriate display method (desktop sidebar or inline)
- * Responsive annotation display that switches based on viewport size
- * Routes to either desktop sidebar or inline mobile display
- * 
- * Time Complexity: O(1) for routing decision
- * Space Complexity: O(1)
- * 
- * @async
- * @function showAnnotation
- * @param {string} key - Annotation identifier
- * @param {HTMLElement|null} [clickedElement=null] - Element that triggered annotation (for positioning)
- * @returns {Promise<void>} Resolves when annotation is displayed
- * 
- * Called by: initAnnotationSystem() click handler
- * Calls: shouldUseInlineAnnotations(), showInlineAnnotation(), showDesktopAnnotation()
- */
 async function showAnnotation(key, clickedElement = null) {
     // Check if we should use inline annotation for mobile phones or desktop sidebar
     if (shouldUseInlineAnnotations()) {
@@ -380,28 +210,6 @@ async function showAnnotation(key, clickedElement = null) {
     }
 }
 
-/**
- * Display annotation in desktop sidebar with incremental typing animation
- * Handles desktop-specific annotation display in the right sidebar panel
- * Features custom incremental typing animation that preserves HTML structure
- * 
- * Key Features:
- * - Incremental typing animation with HTML preservation
- * - Sidebar container management and scrolling
- * - Link monitoring for dynamically added annotation links
- * - Error handling with fallback messages
- * 
- * Time Complexity: O(n) where n is annotation content length
- * Space Complexity: O(n) for content processing
- * 
- * @async
- * @function showDesktopAnnotation
- * @param {string} key - Annotation identifier
- * @returns {Promise<void>} Resolves when annotation is displayed and animated
- * 
- * Called by: showAnnotation()
- * Calls: loadAnnotation(), startIncrementalTyping(), startLinkMonitoring()
- */
 async function showDesktopAnnotation(key) {
     const annotationContent = DOM.byId('annotation-content');
 
@@ -411,7 +219,6 @@ async function showDesktopAnnotation(key) {
         currentTyped = null;
     }
 
-    // Show loading state
     annotationContent.innerHTML = `
         <div class="loading">Loading annotation...</div>
     `;
@@ -427,17 +234,15 @@ async function showDesktopAnnotation(key) {
             </div>
         `;
 
-        // Use custom incremental typing
-        // Start checking for links during typing
+        // Custom incremental typing + link enabling
         startLinkMonitoring();
 
         // Use incremental typing that doesn't reset innerHTML
         currentTyped = startIncrementalTyping('typewriter-text', annotation.content, {
             typeSpeed: 10,
             onComplete: function () {
-                // Stop monitoring
                 stopLinkMonitoring();
-                enableAnnotationLinks();
+                enableLinksIn('#typewriter-text');
             }
         });
     } else {
@@ -452,10 +257,7 @@ async function showInlineAnnotation(key, clickedElement) {
     if (!clickedElement) return;
 
     // Remove any existing inline annotations
-    const existingAnnotations = DOM.queryAll('.inline-annotation');
-    existingAnnotations.forEach(annotation => {
-        annotation.remove();
-    });
+    DOM.queryAll('.inline-annotation').forEach(a => a.remove());
 
     // Destroy any existing Typed instance
     if (currentTyped) {
@@ -468,7 +270,6 @@ async function showInlineAnnotation(key, clickedElement) {
     inlineAnnotation.className = 'inline-annotation';
     inlineAnnotation.setAttribute('data-annotation-key', key);
 
-    // Create initial structure with loading state
     inlineAnnotation.innerHTML = `
         <div class="inline-annotation-header">
             <div class="inline-annotation-title">Loading...</div>
@@ -507,17 +308,15 @@ async function showInlineAnnotation(key, clickedElement) {
             </div>
         `;
 
-        // Use custom incremental typing
-        // Start checking for links during typing
+        // Custom incremental typing + link enabling
         startLinkMonitoring(`#inline-typewriter-text-${key}`);
 
         // Use incremental typing that doesn't reset innerHTML
         currentTyped = startIncrementalTyping(`inline-typewriter-text-${key}`, annotation.content, {
             typeSpeed: 10,
             onComplete: function () {
-                // Stop monitoring
                 stopLinkMonitoring();
-                enableInlineAnnotationLinks(key);
+                enableLinksIn(`#inline-typewriter-text-${key}`);
             }
         });
     } else {
@@ -544,7 +343,6 @@ async function showInlineAnnotation(key, clickedElement) {
         }
     });
 
-    // Scroll the annotation into view smoothly
     setTimeout(() => {
         inlineAnnotation.scrollIntoView({
             behavior: 'smooth',
@@ -553,19 +351,9 @@ async function showInlineAnnotation(key, clickedElement) {
     }, 100);
 }
 
-function enableAnnotationLinks() {
-    // Enable all links within the annotation text
-    const annotationLinks = document.querySelectorAll('#typewriter-text a');
-    annotationLinks.forEach(link => {
-        link.style.pointerEvents = 'auto';
-        link.style.cursor = 'pointer';
-    });
-}
-
-function enableInlineAnnotationLinks(key) {
-    // Enable all links within the inline annotation text
-    const annotationLinks = document.querySelectorAll(`#inline-typewriter-text-${key} a`);
-    annotationLinks.forEach(link => {
+// Enable links within a container selector
+function enableLinksIn(selector) {
+    document.querySelectorAll(`${selector} a`).forEach(link => {
         link.style.pointerEvents = 'auto';
         link.style.cursor = 'pointer';
     });
@@ -578,14 +366,7 @@ function startLinkMonitoring(selector = '#typewriter-text') {
     }
 
     // Check for new links every 50ms during typing
-    linkCheckInterval = setInterval(() => {
-        if (selector.includes('inline-typewriter-text-')) {
-            const key = selector.replace('#inline-typewriter-text-', '');
-            enableInlineAnnotationLinks(key);
-        } else {
-            enableAnnotationLinks();
-        }
-    }, 50);
+    linkCheckInterval = setInterval(() => enableLinksIn(selector), 50);
 }
 
 function stopLinkMonitoring() {
@@ -616,10 +397,7 @@ function clearAnnotationContent() {
     `;
 
     // Remove any existing inline annotations
-    const existingAnnotations = DOM.queryAll('.inline-annotation');
-    existingAnnotations.forEach(annotation => {
-        annotation.remove();
-    });
+    DOM.queryAll('.inline-annotation').forEach(a => a.remove());
 
     // Remove active class from all annotation links
     document.querySelectorAll('.annotation-link').forEach(link => {
@@ -632,7 +410,7 @@ function initAnnotationContent() {
     clearAnnotationContent();
 }
 
-// Initialize scroll-to-top functionality
+// Scroll-to-top functionality
 function initScrollToTop() {
     const scrollToTopBtn = DOM.byId('scroll-to-top');
 
@@ -650,7 +428,7 @@ function initScrollToTop() {
         }
     }
 
-    // Smooth scroll to top function
+    // Smooth scroll to top
     function scrollToTop() {
         window.scrollTo({
             top: 0,
@@ -678,33 +456,9 @@ function initScrollToTop() {
 }
 
 
-// Language System - Note: translations and currentLanguage are now handled by js/translations.js
-
-/**
- * Initialize multilingual language system with localStorage persistence
- * Sets up language toggle buttons and manages language switching with
- * automatic content reloading and UI updates
- * 
- * Key Features:
- * - Three-language support (EN/ZH/JA) with fallback system
- * - Persistent language preference in localStorage
- * - Automatic content reloading on language change
- * - UI element translation updates
- * - Chapter link updates for language-specific navigation
- * 
- * Time Complexity: O(n) where n is number of language buttons
- * Space Complexity: O(1) for event listeners
- * 
- * @function initLanguageSystem
- * @returns {void}
- * 
- * Called by: DOMContentLoaded event handler
- * Calls: updateLanguageButtons(), updatePageLanguage(), updateChapterLinks()
- */
+// Language system (translations/currentLanguage in js/translations.js)
 function initLanguageSystem() {
     const langOptions = document.querySelectorAll('.lang-option');
-
-    // currentLanguage is already initialized from localStorage at top level
     updateLanguageButtons();
 
     langOptions.forEach(button => {
@@ -782,10 +536,8 @@ function updateChapterLinks() {
     });
 }
 
-// Initialize layered content system for collapsible content
+// Layered content (expand/collapse sections)
 function initLayeredContentSystem() {
-    console.log('🔧 Initializing layered content system...');
-
     // Add click event listeners to expand/collapse buttons
     const expandToggles = document.querySelectorAll('.expand-toggle');
     expandToggles.forEach(toggle => {
@@ -794,8 +546,6 @@ function initLayeredContentSystem() {
             toggleLayeredSection(this);
         });
     });
-
-    console.log(`✅ Layered content system initialized with ${expandToggles.length} toggles`);
 }
 
 function toggleLayeredSection(toggleButton) {
@@ -819,10 +569,7 @@ function toggleLayeredSection(toggleButton) {
         currentElement = currentElement.previousElementSibling;
     }
 
-    if (!detailedLayer) {
-        console.warn('No detailed content layer found for toggle button');
-        return;
-    }
+    if (!detailedLayer) return;
 
     if (!isExpanded) {
         // Expand to show detailed content
