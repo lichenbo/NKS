@@ -676,8 +676,7 @@ window.APP = window.APP || {};
         constructor() {
             super('header-cellular-automata', 2, {
                 animationSpeed: 150,
-                parentElement: true,
-                resizeDebounce: 250
+                parentElement: true
             });
             if (!this.canvas) return;
 

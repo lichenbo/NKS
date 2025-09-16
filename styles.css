@@ -30,7 +30,7 @@
     --transition-fast: 0.2s ease;
     --transition-medium: 0.4s ease;
     --transition-slow: 0.6s ease;
-    
+
     /* Border Radius */
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
@@ -41,23 +41,55 @@
    UTILITY CLASSES
    ================================ */
 /* Common border radius patterns */
-.rounded-sm { border-radius: var(--border-radius-sm); }
-.rounded-md { border-radius: var(--border-radius-md); }
-.rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-sm {
+    border-radius: var(--border-radius-sm);
+}
+
+.rounded-md {
+    border-radius: var(--border-radius-md);
+}
+
+.rounded-lg {
+    border-radius: var(--border-radius-lg);
+}
 
 /* Common spacing patterns */
-.p-sm { padding: var(--spacing-sm); }
-.p-md { padding: var(--spacing-md); }
-.p-lg { padding: var(--spacing-lg); }
+.p-sm {
+    padding: var(--spacing-sm);
+}
 
-.m-sm { margin: var(--spacing-sm); }
-.m-md { margin: var(--spacing-md); }
-.m-lg { margin: var(--spacing-lg); }
+.p-md {
+    padding: var(--spacing-md);
+}
+
+.p-lg {
+    padding: var(--spacing-lg);
+}
+
+.m-sm {
+    margin: var(--spacing-sm);
+}
+
+.m-md {
+    margin: var(--spacing-md);
+}
+
+.m-lg {
+    margin: var(--spacing-lg);
+}
 
 /* Common transition patterns */
-.transition-fast { transition: var(--transition-fast); }
-.transition-medium { transition: var(--transition-medium); }
-.transition-slow { transition: var(--transition-slow); }
+.transition-fast {
+    transition: var(--transition-fast);
+}
+
+.transition-medium {
+    transition: var(--transition-medium);
+}
+
+.transition-slow {
+    transition: var(--transition-slow);
+}
 
 /* ================================
    RESET & BASE STYLES
@@ -327,48 +359,58 @@ header {
 }
 
 @keyframes glitch-shake {
-    0% { 
-        transform: translate(1px, 0px) rotate(0deg); 
+    0% {
+        transform: translate(1px, 0px) rotate(0deg);
         filter: hue-rotate(0deg);
     }
-    10% { 
-        transform: translate(-1px, -2px) rotate(-1deg); 
+
+    10% {
+        transform: translate(-1px, -2px) rotate(-1deg);
         filter: hue-rotate(90deg);
     }
-    20% { 
-        transform: translate(-3px, 0px) rotate(1deg); 
+
+    20% {
+        transform: translate(-3px, 0px) rotate(1deg);
         filter: hue-rotate(180deg);
     }
-    30% { 
-        transform: translate(3px, 2px) rotate(0deg); 
+
+    30% {
+        transform: translate(3px, 2px) rotate(0deg);
         filter: hue-rotate(270deg);
     }
-    40% { 
-        transform: translate(1px, -1px) rotate(1deg); 
+
+    40% {
+        transform: translate(1px, -1px) rotate(1deg);
         filter: hue-rotate(360deg);
     }
-    50% { 
-        transform: translate(-1px, 2px) rotate(-1deg); 
+
+    50% {
+        transform: translate(-1px, 2px) rotate(-1deg);
         filter: hue-rotate(90deg);
     }
-    60% { 
-        transform: translate(-3px, 1px) rotate(0deg); 
+
+    60% {
+        transform: translate(-3px, 1px) rotate(0deg);
         filter: hue-rotate(180deg);
     }
-    70% { 
-        transform: translate(3px, 1px) rotate(-1deg); 
+
+    70% {
+        transform: translate(3px, 1px) rotate(-1deg);
         filter: hue-rotate(270deg);
     }
-    80% { 
-        transform: translate(-1px, -1px) rotate(1deg); 
+
+    80% {
+        transform: translate(-1px, -1px) rotate(1deg);
         filter: hue-rotate(0deg);
     }
-    90% { 
-        transform: translate(1px, 2px) rotate(0deg); 
+
+    90% {
+        transform: translate(1px, 2px) rotate(0deg);
         filter: hue-rotate(90deg);
     }
-    100% { 
-        transform: translate(1px, -2px) rotate(-1deg); 
+
+    100% {
+        transform: translate(1px, -2px) rotate(-1deg);
         filter: hue-rotate(180deg);
     }
 }
@@ -380,23 +422,27 @@ header {
 }
 
 @keyframes flip-rotate {
-    0% { 
+    0% {
         transform: rotateY(0deg) scale(1);
         opacity: 1;
     }
+
     25% {
         transform: rotateY(90deg) scale(1.1);
         opacity: 0.7;
     }
+
     50% {
         transform: rotateY(180deg) scale(1.2);
         opacity: 0.3;
     }
+
     75% {
         transform: rotateY(270deg) scale(1.1);
         opacity: 0.7;
     }
-    100% { 
+
+    100% {
         transform: rotateY(360deg) scale(1);
         opacity: 1;
     }
@@ -416,11 +462,12 @@ header {
 }
 
 @keyframes particle-glow {
-    0% { 
+    0% {
         box-shadow: 0 0 6px var(--accent-gold);
         transform: scale(1);
     }
-    100% { 
+
+    100% {
         box-shadow: 0 0 12px var(--accent-gold);
         transform: scale(1.2);
     }
@@ -432,11 +479,12 @@ header {
 }
 
 @keyframes vfx-pulse {
-    0% { 
+    0% {
         border-color: var(--accent-gold);
         box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
     }
-    100% { 
+
+    100% {
         border-color: #fff;
         box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
         transform: scale(1.02);
@@ -449,12 +497,15 @@ header {
     gap: 0.02em;
     vertical-align: baseline;
 }
+
 .vfx-odometer-digit {
     display: inline-block;
     overflow: hidden;
-    height: 1em; /* 1 line height */
+    height: 1em;
+    /* 1 line height */
     line-height: 1em;
 }
+
 .vfx-odometer-column {
     display: inline-flex;
     flex-direction: column;
@@ -462,6 +513,7 @@ header {
     transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
 }
+
 .vfx-odometer-cell {
     display: block;
     height: 1em;
@@ -473,6 +525,7 @@ header {
     position: relative;
     overflow: hidden;
 }
+
 .vfx-wipe::after {
     content: '';
     position: absolute;
@@ -480,25 +533,46 @@ header {
     top: 0;
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.25) 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
+    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.25) 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
     filter: blur(0.5px);
     animation: vfx-wipe-sweep 0.8s ease-in-out forwards;
     pointer-events: none;
     mix-blend-mode: screen;
 }
+
 @keyframes vfx-wipe-sweep {
-    0% { width: 0%; transform: translateX(0%); opacity: 0.6; }
-    50% { width: 120%; transform: translateX(40%); opacity: 0.9; }
-    100% { width: 0%; transform: translateX(120%); opacity: 0; }
+    0% {
+        width: 0%;
+        transform: translateX(0%);
+        opacity: 0.6;
+    }
+
+    50% {
+        width: 120%;
+        transform: translateX(40%);
+        opacity: 0.9;
+    }
+
+    100% {
+        width: 0%;
+        transform: translateX(120%);
+        opacity: 0;
+    }
 }
 
 /* 7. Counter Tween subtle pulse */
 .vfx-counter {
     animation: vfx-counter-pulse 0.08s ease-in-out infinite alternate;
 }
+
 @keyframes vfx-counter-pulse {
-    0% { text-shadow: 0 0 6px rgba(212,175,55,0.2); }
-    100% { text-shadow: 0 0 10px rgba(212,175,55,0.45); }
+    0% {
+        text-shadow: 0 0 6px rgba(212, 175, 55, 0.2);
+    }
+
+    100% {
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+    }
 }
 
 /* ================================
@@ -739,6 +813,14 @@ header {
     line-height: 1.8;
 }
 
+/* Responsive images for chapter/main content */
+.main-content-area img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: var(--spacing-md) auto;
+}
+
 .notes-column ul,
 .notes-column ol,
 .main-content-area ul,
@@ -916,7 +998,8 @@ header {
 #image-lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6); /* Dim page while keeping it visible */
+    background: rgba(0, 0, 0, 0.6);
+    /* Dim page while keeping it visible */
     display: none;
     align-items: center;
     justify-content: center;
@@ -932,10 +1015,11 @@ header {
     position: relative;
     max-width: 95vw;
     max-height: 95vh;
-    background: #ffffff; /* White image box */
+    background: #ffffff;
+    /* White image box */
     border-radius: 8px;
     padding: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 #image-lightbox img {
@@ -962,7 +1046,7 @@ header {
     line-height: 36px;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Indicate zoom interaction on images */
@@ -1076,10 +1160,11 @@ header {
         padding: 6px 8px;
         font-size: 0.8rem;
     }
-    
+
     /* Add top spacing to header content to avoid language switcher overlap */
     .header-content {
-        margin-top: 3rem; /* Space for language switcher + some padding */
+        margin-top: 3rem;
+        /* Space for language switcher + some padding */
     }
 
     .gpu-indicator {
@@ -1087,7 +1172,7 @@ header {
         left: var(--spacing-sm);
         padding: 4px 8px;
     }
-    
+
     #gpu-status-text {
         font-size: 0.6rem;
     }
@@ -1182,10 +1267,11 @@ header {
     .subtitle {
         font-size: 0.9rem;
     }
-    
+
     /* Ensure adequate space for language switcher on smallest screens */
     .header-content {
-        margin-top: 3.5rem; /* Extra space for very small screens */
+        margin-top: 3.5rem;
+        /* Extra space for very small screens */
     }
 
     .three-column-layout {
@@ -1244,6 +1330,7 @@ header {
         max-height: 0;
         margin: 0;
     }
+
     to {
         opacity: 1;
         max-height: 500px;
@@ -1341,13 +1428,13 @@ header {
         margin: var(--spacing-sm) 0;
         border-radius: 6px;
     }
-    
+
     .inline-annotation-content {
         padding: var(--spacing-sm);
         font-size: 0.9rem;
         max-height: 300px;
     }
-    
+
     .inline-annotation-toggle {
         width: 28px;
         height: 28px;
@@ -1362,11 +1449,13 @@ header {
     position: fixed;
     bottom: 12px;
     right: 12px;
-    display: none; /* Hidden by default, shown only on mobile */
+    display: none;
+    /* Hidden by default, shown only on mobile */
     flex-direction: column;
     gap: 12px;
     z-index: 1000;
-    pointer-events: auto; /* Ensure container allows clicks */
+    pointer-events: auto;
+    /* Ensure container allows clicks */
 }
 
 /* Show container on mobile */
@@ -1374,7 +1463,7 @@ header {
     .mobile-actions-container {
         display: flex;
     }
-    
+
     /* Mobile chat button inside flexbox container */
     .mobile-actions-container .mobile-round-button {
         align-items: center;
@@ -1389,24 +1478,28 @@ header {
         cursor: pointer;
         font-size: 1.2rem;
         transition: all 0.3s ease;
-        order: 2; /* Chat button is second (below scroll button) */
-        pointer-events: auto; /* Ensure button is clickable */
-        position: relative; /* Ensure proper stacking context */
-        z-index: 1; /* Make sure it's above other elements */
+        order: 2;
+        /* Chat button is second (below scroll button) */
+        pointer-events: auto;
+        /* Ensure button is clickable */
+        position: relative;
+        /* Ensure proper stacking context */
+        z-index: 1;
+        /* Make sure it's above other elements */
     }
-    
+
     .mobile-actions-container .mobile-round-button:hover {
         background: rgba(26, 26, 26, 1);
         border-color: var(--accent-gold);
         box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
         transform: scale(1.05);
     }
-    
+
     .mobile-actions-container .mobile-round-button.has-history {
         border-color: var(--accent-gold);
         background: rgba(212, 175, 55, 0.1);
     }
-    
+
     .mobile-actions-container .mobile-round-button.has-history::after {
         content: '';
         position: absolute;
@@ -1470,13 +1563,15 @@ header {
 /* Mobile styles - button now inside flexbox container */
 @media (max-width: 768px) {
     .scroll-to-top {
-        position: static; /* Remove fixed positioning */
+        position: static;
+        /* Remove fixed positioning */
         display: flex;
         width: 40px;
         height: 40px;
-        order: 1; /* Scroll-to-top is first (above chat button) */
+        order: 1;
+        /* Scroll-to-top is first (above chat button) */
     }
-    
+
     .scroll-to-top-icon {
         font-size: 16px;
     }
@@ -1612,10 +1707,13 @@ header {
     margin: 1rem auto;
     display: block;
     transition: border-color var(--transition-fast);
-    touch-action: none; /* Prevent browser touch gestures */
-    user-select: none; /* Prevent text selection */
+    touch-action: none;
+    /* Prevent browser touch gestures */
+    user-select: none;
+    /* Prevent text selection */
     -webkit-user-select: none;
-    -webkit-touch-callout: none; /* Prevent iOS callout menu */
+    -webkit-touch-callout: none;
+    /* Prevent iOS callout menu */
 }
 
 .game-canvas:hover {
@@ -1661,7 +1759,7 @@ header {
         padding: 1rem;
         margin: 1rem 0;
     }
-    
+
     .control-row {
         flex-direction: row;
         justify-content: center;
@@ -1669,17 +1767,19 @@ header {
         gap: 0.5rem;
         flex-wrap: wrap;
     }
-    
+
     .pattern-buttons {
         justify-content: center;
     }
-    
+
     .game-canvas {
         height: 300px;
         max-width: 100%;
     }
-    
-    .control-btn, .pattern-btn, .size-btn {
+
+    .control-btn,
+    .pattern-btn,
+    .size-btn {
         font-size: 0.8rem;
         padding: 0.4rem 0.8rem;
         white-space: nowrap;
@@ -1692,13 +1792,15 @@ header {
     .control-row {
         gap: 0.3rem;
     }
-    
-    .control-btn, .pattern-btn, .size-btn {
+
+    .control-btn,
+    .pattern-btn,
+    .size-btn {
         font-size: 0.75rem;
         padding: 0.3rem 0.6rem;
         border-radius: 4px;
     }
-    
+
     .slider {
         width: 100px;
         margin: 0 0.25rem;
@@ -1734,7 +1836,8 @@ header {
 
 .content-layer.detailed {
     overflow: hidden;
-    display: none; /* Start hidden */
+    display: none;
+    /* Start hidden */
     opacity: 0;
     max-height: 0;
     transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
@@ -1810,7 +1913,7 @@ header {
         font-size: 0.85rem;
         margin: 1rem 0;
     }
-    
+
     .content-layer.detailed {
         padding-left: 0.75rem;
         margin-left: 0.25rem;
@@ -1823,7 +1926,7 @@ header {
         padding: 8px 12px;
         font-size: 0.8rem;
     }
-    
+
     .content-layer.detailed {
         padding-left: 0.5rem;
         margin-left: 0;
@@ -1836,7 +1939,8 @@ header {
     position: fixed;
     bottom: 2rem;
     z-index: 1000;
-    opacity: 1; /* Always visible on desktop */
+    opacity: 1;
+    /* Always visible on desktop */
     transition: opacity 0.3s ease;
     /* Container acts as positioning context for children */
 }
@@ -1846,17 +1950,20 @@ header {
     .nks-chat-container {
         /* Use JavaScript-like positioning but with CSS */
         left: auto;
-        right: var(--spacing-lg); /* Same right margin as annotations column */
-        width: 280px; /* Match annotations column min-width */
+        right: var(--spacing-lg);
+        /* Same right margin as annotations column */
+        width: 280px;
+        /* Match annotations column min-width */
     }
-    
+
     /* Make width responsive to match the grid column exactly */
     .three-column-layout {
         --sidebar-width: minmax(280px, 320px);
     }
-    
+
     .nks-chat-container {
-        width: min(320px, max(280px, 20vw)); /* Match the grid column width calculation */
+        width: min(320px, max(280px, 20vw));
+        /* Match the grid column width calculation */
     }
 }
 
@@ -1900,7 +2007,8 @@ header {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     width: 100%;
-    min-width: 200px; /* Ensure minimum width for button + input + padding */
+    min-width: 200px;
+    /* Ensure minimum width for button + input + padding */
     box-sizing: border-box;
 }
 
@@ -1918,7 +2026,8 @@ header {
     font-size: 0.95rem;
     outline: none;
     font-family: inherit;
-    min-width: 120px; /* Ensure input field has minimum usable width */
+    min-width: 120px;
+    /* Ensure input field has minimum usable width */
 }
 
 .chat-quick-input::placeholder {
@@ -2200,7 +2309,8 @@ header {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    min-width: 200px; /* Ensure minimum width for button + input + padding */
+    min-width: 200px;
+    /* Ensure minimum width for button + input + padding */
     box-sizing: border-box;
 }
 
@@ -2215,7 +2325,8 @@ header {
     outline: none;
     transition: all 0.3s ease;
     font-family: inherit;
-    min-width: 120px; /* Ensure input field has minimum usable width */
+    min-width: 120px;
+    /* Ensure input field has minimum usable width */
 }
 
 .chat-input:focus {
@@ -2241,7 +2352,8 @@ header {
     color: #1a1a1a;
     font-weight: bold;
     font-size: 1.2rem;
-    flex-shrink: 0; /* Prevent button from shrinking */
+    flex-shrink: 0;
+    /* Prevent button from shrinking */
 }
 
 .chat-send-btn:hover {
@@ -2299,6 +2411,7 @@ header {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2306,10 +2419,14 @@ header {
 }
 
 @keyframes typing {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: scale(1);
         opacity: 0.5;
     }
+
     30% {
         transform: scale(1.2);
         opacity: 1;
@@ -2318,11 +2435,12 @@ header {
 
 /* Mobile Chat - Simple Two-State Behavior */
 @media (max-width: 768px) {
+
     /* Hide desktop input bar completely on mobile */
     .nks-chat-container .chat-input-bar {
         display: none !important;
     }
-    
+
     /* Full conversation view on mobile */
     .chat-conversation {
         position: fixed;
@@ -2340,12 +2458,12 @@ header {
         transition: transform 0.3s ease;
         z-index: 1002;
     }
-    
+
     .chat-conversation:not(.hidden) {
         transform: translateY(0) !important;
         opacity: 1 !important;
     }
-    
+
     .chat-conversation .chat-messages {
         height: calc(100vh - 140px);
         padding: 1rem;
@@ -2353,9 +2471,11 @@ header {
 }
 
 @media (max-width: 480px) {
+
     /* Mobile actions container remains the same size on smaller screens */
     .mobile-actions-container .mobile-round-button {
-        font-size: 1.1rem; /* Slightly smaller icon to fit */
+        font-size: 1.1rem;
+        /* Slightly smaller icon to fit */
     }
 }
 
@@ -2501,8 +2621,13 @@ header {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .canvas-container {
@@ -2511,7 +2636,9 @@ header {
     margin: 1rem 0;
 }
 
-.main-canvas, .demo-canvas, .example-canvas {
+.main-canvas,
+.demo-canvas,
+.example-canvas {
     border: 1px solid rgba(212, 175, 55, 0.3);
     border-radius: 8px;
     background: white;
@@ -2600,8 +2727,13 @@ header {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .tab-title {
@@ -2725,7 +2857,7 @@ header {
         padding: 1.5rem 1rem;
         margin-top: 2rem;
     }
-    
+
     .license-content p {
         font-size: 0.8rem;
     }

@@ -196,25 +196,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         /**
-         * Convert rule number to binary array for GPU uniform
-         * @param {number} ruleNumber - Elementary CA rule number (0-255)
-         * @returns {Uint32Array} Rule lookup table as 32-bit integers
-         */
-        convertRuleToGPUFormat(ruleNumber) {
-            const rule = new Uint32Array(8);
-            for (let i = 0; i < 8; i++) {
-                rule[i] = (ruleNumber >> i) & 1;
-            }
-            return rule;
-        }
-
-        /**
          * Update GPU uniforms with current rule and grid size
          * @param {number} ruleNumber - Elementary CA rule number
          */
         updateGPUUniforms(ruleNumber) {
             if (!this.webgpuDevice || !this.uniformBuffer) return; // Not ready yet
-            const rule = this.convertRuleToGPUFormat(ruleNumber);
+            const rule = CellularAutomataRules.toWebGPUFormat(ruleNumber);
             const uniformData = new Uint32Array(12);
             uniformData.set(rule, 0);
             uniformData[8] = this.cols;
@@ -331,49 +318,89 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     }
 
     /**
-     * WebGPU Background Cellular Automata - Rule 30 with GPU acceleration
+     * Shared controller for WebGPU cellular automata scenes.
+     * Manages rule changes, rendering hooks, and GPU buffer lifecycle.
      */
-    class WebGPUBackgroundCellularAutomata extends WebGPUCellularAutomataCanvas {
-        constructor(canvasId = 'cellular-automata-bg') {
-            super(canvasId, 3, { animationSpeed: 200 });
-            if (!this.canvas) {
-                return;
-            }
+    class WebGPUAutomataScene extends WebGPUCellularAutomataCanvas {
+        constructor(canvasId, cellSize, config = {}) {
+            super(canvasId, cellSize, config);
+            if (!this.canvas) return;
 
-            // Use shared utilities
-            this.ruleNumber = 30;
+            const {
+                renderFrame,
+                getAlpha,
+                onFrameStart,
+                onComplete,
+                onRuleChange,
+                initialRule,
+                getInitialRule
+            } = config;
+
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
-            this.animatingGPU = false; // Prevent concurrent GPU animations
+            this.animatingGPU = false;
 
-            // Initialize when WebGPU is ready
-            this.initializationPromise.then(() => {
-                this.initializeForRule(this.ruleNumber);
-                this.startAnimation();
-            }).catch(error => {
-                console.error('WebGPU background initialization failed:', error);
-            });
+            this.renderFrame = typeof renderFrame === 'function'
+                ? (frame) => renderFrame({ ...frame, instance: this })
+                : () => {};
+            this.getAlpha = typeof getAlpha === 'function'
+                ? () => getAlpha(this)
+                : () => 1;
+            this.onFrameStart = typeof onFrameStart === 'function'
+                ? () => onFrameStart(this)
+                : () => {};
+            this.onComplete = typeof onComplete === 'function'
+                ? () => onComplete(this)
+                : async () => {};
+            this._onRuleChange = typeof onRuleChange === 'function'
+                ? (ruleNumber, isInitial) => onRuleChange(this, ruleNumber, isInitial)
+                : () => {};
+
+            const initialRuleNumber = initialRule ?? (typeof getInitialRule === 'function'
+                ? getInitialRule(this)
+                : 30);
+            this.setRule(initialRuleNumber, true);
+
+            this.initializationPromise
+                .then(() => {
+                    this.initializeForRule(this.currentRuleNumber);
+                    this.startAnimation();
+                })
+                .catch((error) => {
+                    console.error('WebGPU initialization failed:', error);
+                });
+        }
+
+        setRule(ruleNumber, isInitial = false) {
+            this.currentRuleNumber = parseInt(ruleNumber, 10);
+            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
+            this._onRuleChange(this.currentRuleNumber, isInitial);
         }
 
         initializeForRule(ruleNumber) {
-            this.ruleNumber = ruleNumber;
             this.ensureGPUBuffers();
             this.updateGPUUniforms(ruleNumber);
         }
 
-        // Preserve state and rebuild GPU buffers on resize
-        updateCanvasDimensions() {
-            super.updateCanvasDimensions();
-            if (this.stateManager) {
-                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
-            }
+        restartForRule(ruleNumber, isInitial = false) {
+            this.setRule(ruleNumber, isInitial);
+            this.stateManager.updateDimensions(this.cols, this.rows);
+            this.grid = this.stateManager.grid;
+            this.currentRow = this.stateManager.currentRow;
+            this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.initializeForRule(this.currentRuleNumber);
             if (this.useWebGPU) {
-                this.cleanupStorageBuffers();
-                this.ensureGPUBuffers();
-                if (this.uniformBuffer) this.updateGPUUniforms(this.ruleNumber);
-                if (this.inputBuffer) this.uploadGridToGPU(this.stateManager.grid);
+                this.uploadGridToGPU(this.stateManager.grid);
             }
         }
 
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
+            }
+        }
 
         async animate() {
             const startTime = performance.now();
@@ -383,41 +410,39 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         async animateWithGPU() {
-            // Prevent concurrent GPU animations
             if (this.animatingGPU) return;
             this.animatingGPU = true;
 
             try {
-                // Only clear if starting over
+                await this.onFrameStart();
+
+                if (this.stateManager.isAnimationComplete()) {
+                    await this.onComplete();
+                }
+
                 if (this.stateManager.currentRow === 0) {
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                     this.stateManager.drawnRows.length = 0;
-
-                    // Upload initial grid to GPU
                     this.uploadGridToGPU(this.stateManager.grid);
                 }
 
-                // Store current row for rendering
                 this.stateManager.storeCurrentGeneration();
 
-                // Use shared renderer
-                CellularAutomataRenderer.renderBackgroundRows(
-                    this.ctx,
-                    this.stateManager.drawnRows,
-                    this.cols,
-                    this.stateManager.currentRow,
-                    this.cellSize,
-                    this.offsetX,
-                    this.offsetY
-                );
+                this.renderFrame({
+                    ctx: this.ctx,
+                    drawnRows: this.stateManager.drawnRows,
+                    cols: this.cols,
+                    currentRow: this.stateManager.currentRow,
+                    cellSize: this.cellSize,
+                    offsetX: this.offsetX,
+                    offsetY: this.offsetY,
+                    alpha: this.getAlpha()
+                });
 
-                // Calculate next generation using GPU
                 if (!this.stateManager.isAnimationComplete()) {
                     const nextGrid = await this.computeNextGenerationGPU();
                     this.stateManager.grid = Array.from(nextGrid);
                     this.stateManager.currentRow++;
-                    
-                    // Keep compatibility
                     this.grid = this.stateManager.grid;
                     this.currentRow = this.stateManager.currentRow;
                 }
@@ -425,167 +450,86 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 this.animatingGPU = false;
             }
         }
+    }
 
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            this.stateManager?.updateDimensions(this.cols, this.rows);
+    /**
+     * WebGPU Background Cellular Automata - Rule 30 with GPU acceleration
+     */
+    class WebGPUBackgroundCellularAutomata extends WebGPUAutomataScene {
+        constructor(canvasId = 'cellular-automata-bg') {
+            super(canvasId, 3, {
+                animationSpeed: 200,
+                initialRule: 30,
+                renderFrame: ({ ctx, drawnRows, cols, currentRow, cellSize, offsetX, offsetY }) => {
+                    CellularAutomataRenderer.renderBackgroundRows(
+                        ctx,
+                        drawnRows,
+                        cols,
+                        currentRow,
+                        cellSize,
+                        offsetX,
+                        offsetY
+                    );
+                },
+                onRuleChange: (_, ruleNumber) => {
+                    if (window.APP?.CellularAutomata?.updateBackgroundRuleIndicator) {
+                        window.APP.CellularAutomata.updateBackgroundRuleIndicator(ruleNumber);
+                    } else {
+                        window.RuleIndicators?.update('background', ruleNumber);
+                    }
+                }
+            });
         }
     }
 
     /**
      * WebGPU Header Cellular Automata - Multiple rules with GPU acceleration
      */
-    class WebGPUHeaderCellularAutomata extends WebGPUCellularAutomataCanvas {
+    class WebGPUHeaderCellularAutomata extends WebGPUAutomataScene {
         constructor(canvasId = 'header-cellular-automata') {
+            const breathingEffect = new BreathingEffect();
             super(canvasId, 3, {
                 animationSpeed: 200,
                 parentElement: true,
-                resizeDebounce: 250
-            });
-
-            if (!this.canvas) {
-                return;
-            }
-
-            // Use shared utilities
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule();
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-            this.stateManager = new AnimationStateManager(this.cols, this.rows);
-            this.breathingEffect = new BreathingEffect();
-            // Guard timer to prevent multiple queued rule changes
-            this.nextRuleTimer = null;
-            this.animatingGPU = false; // Prevent concurrent GPU animations
-
-            // Update global rule name for indicator
-            window.headerRuleName = this.currentRuleNumber.toString();
-            window.RuleIndicators?.update('header', this.currentRuleNumber);
-
-            // Wait for WebGPU initialization before starting
-            this.initializationPromise.then(() => {
-                this.initializeForRule(this.currentRuleNumber);
-                this.startAnimation();
-            }).catch(error => {
-                console.error('WebGPU header initialization failed:', error);
-            });
-        }
-
-        // Preserve state and rebuild GPU buffers on resize
-        updateCanvasDimensions() {
-            super.updateCanvasDimensions();
-            if (this.stateManager) {
-                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
-            }
-            if (this.useWebGPU) {
-                this.cleanupStorageBuffers();
-                this.ensureGPUBuffers();
-                if (this.uniformBuffer) this.updateGPUUniforms(this.currentRuleNumber);
-                if (this.inputBuffer) this.uploadGridToGPU(this.stateManager.grid);
-            }
-        }
-
-        initializeForRule(ruleNumber) {
-            this.currentRuleNumber = ruleNumber;
-            this.ensureGPUBuffers();
-            this.updateGPUUniforms(ruleNumber);
-        }
-
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
-        }
-
-        async cycleToNextRule() {
-            // Use shared utility to get different random rule
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-
-            // Update UI with VFX
-            window.headerRuleName = this.currentRuleNumber.toString();
-            if (window.APP?.CellularAutomata?.updateHeaderRuleIndicatorWithVFX) {
-                window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(this.currentRuleNumber.toString());
-            } else if (window.RuleIndicators) {
-                window.RuleIndicators.update('header', this.currentRuleNumber);
-            }
-
-            // Reset animation state using shared utilities
-            this.initAnimation();
-            this.stateManager.reset();
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-            // Re-initialize GPU resources for new rule
-            await this.webgpuDevice.queue.onSubmittedWorkDone();
-            this.ensureGPUBuffers();
-            this.updateGPUUniforms(this.currentRuleNumber);
-        }
-
-        async animate() {
-            const startTime = performance.now();
-            this.breathingEffect.update();
-            if (this._justResized) {
-                this._justResized = false;
-                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
-            }
-            await this.animateWithGPU();
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
-        }
-
-        async animateWithGPU() {
-            if (this.animatingGPU) return;
-            this.animatingGPU = true;
-
-            try {
-                // If animation has reached the end, cycle to the next rule
-                if (this.stateManager.isAnimationComplete()) {
-                    await new Promise(resolve => setTimeout(resolve, 1800)); // Preserve delay
-                    await this.cycleToNextRule();
+                renderFrame: ({ ctx, drawnRows, cols, currentRow, cellSize, offsetX, offsetY, alpha }) => {
+                    CellularAutomataRenderer.renderHeaderRows(
+                        ctx,
+                        drawnRows,
+                        cols,
+                        currentRow,
+                        cellSize,
+                        alpha,
+                        offsetX,
+                        offsetY
+                    );
+                },
+                getAlpha: () => breathingEffect.update(),
+                getInitialRule: () => CellularAutomataRules.getRandomRule(),
+                onRuleChange: (_, ruleNumber, isInitial) => {
+                    const ruleName = ruleNumber.toString();
+                    window.headerRuleName = ruleName;
+                    if (isInitial) {
+                        if (window.APP?.CellularAutomata?.updateHeaderRuleIndicator) {
+                            window.APP.CellularAutomata.updateHeaderRuleIndicator(ruleName);
+                        } else {
+                            window.RuleIndicators?.update('header', ruleNumber);
+                        }
+                    } else {
+                        breathingEffect.reset();
+                        if (window.APP?.CellularAutomata?.updateHeaderRuleIndicatorWithVFX) {
+                            window.APP.CellularAutomata.updateHeaderRuleIndicatorWithVFX(ruleName);
+                        } else {
+                            window.RuleIndicators?.update('header', ruleNumber);
+                        }
+                    }
+                },
+                onFrameStart: () => {},
+                onComplete: async (instance) => {
+                    await new Promise(resolve => setTimeout(resolve, 1800));
+                    const nextRule = CellularAutomataRules.getRandomRule(instance.currentRuleNumber);
+                    instance.restartForRule(nextRule);
                 }
-
-
-                // On the first row of a new animation, clear canvas and upload initial grid
-                if (this.stateManager.currentRow === 0) {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.stateManager.drawnRows.length = 0;
-                    this.uploadGridToGPU(this.stateManager.grid);
-                }
-
-                // Store current row for rendering
-                this.stateManager.storeCurrentGeneration();
-
-                // Use shared renderer with breathing effect
-                const currentAlpha = this.breathingEffect.getCurrentAlpha();
-                CellularAutomataRenderer.renderHeaderRows(
-                    this.ctx,
-                    this.stateManager.drawnRows,
-                    this.cols,
-                    this.stateManager.currentRow,
-                    this.cellSize,
-                    currentAlpha,
-                    this.offsetX,
-                    this.offsetY
-                );
-
-                // Calculate next generation using GPU
-                const nextGrid = await this.computeNextGenerationGPU();
-                this.stateManager.grid = Array.from(nextGrid);
-                this.stateManager.currentRow++;
-                
-                // Keep compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-
-            } catch (error) {
-                console.error('GPU animation failed:', error);
-                throw error; // Don't fallback to CPU
-            } finally {
-                this.animatingGPU = false;
-            }
-        }
-
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            this.stateManager?.updateDimensions(this.cols, this.rows);
+            });
         }
     }
 
@@ -601,6 +545,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // Expose to APP namespace
     APP.WebGPUCellularAutomata = {
         WebGPUCellularAutomataCanvas,
+        WebGPUAutomataScene,
         WebGPUBackgroundCellularAutomata,
         WebGPUHeaderCellularAutomata,
         initWebGPUCellularAutomataBackground,
@@ -609,6 +554,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     // Backward compatibility - expose to global scope
     window.WebGPUCellularAutomataCanvas = WebGPUCellularAutomataCanvas;
+    window.WebGPUAutomataScene = WebGPUAutomataScene;
     window.initWebGPUCellularAutomataBackground = initWebGPUCellularAutomataBackground;
     window.initWebGPUHeaderCellularAutomata = initWebGPUHeaderCellularAutomata;
 

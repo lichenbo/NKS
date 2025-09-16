@@ -807,8 +807,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             
             super(canvasId, 2, {
                 animationSpeed: 150,
-                parentElement: !isTestCanvas, // Use parent sizing only if not a test canvas
-                resizeDebounce: 250
+                parentElement: !isTestCanvas // Use parent sizing only if not a test canvas
             });
             
             if (!this.canvas) {

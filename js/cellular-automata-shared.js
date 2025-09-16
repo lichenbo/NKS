@@ -79,12 +79,7 @@ window.APP = window.APP || {};
          * @returns {Uint32Array} Rule array for WebGPU compute shaders
          */
         static toWebGPUFormat(ruleNumber) {
-            const rule = CellularAutomataRules.getRule(ruleNumber);
-            const gpuRule = new Uint32Array(8);
-            for (let i = 0; i < 8; i++) {
-                gpuRule[i] = rule[i];
-            }
-            return gpuRule;
+            return Uint32Array.from(CellularAutomataRules.getRule(ruleNumber));
         }
 
         /**
@@ -93,18 +88,19 @@ window.APP = window.APP || {};
          * @returns {number} Different random rule number
          */
         static getRandomRule(currentRuleNumber = null) {
-            if (currentRuleNumber === null) {
-                const randomIndex = Math.floor(Math.random() * CellularAutomataRules.RULE_KEYS.length);
-                return parseInt(CellularAutomataRules.RULE_KEYS[randomIndex]);
+            const keys = CellularAutomataRules.RULE_KEYS;
+            if (!keys.length) return 30;
+
+            const pick = () => parseInt(keys[Math.floor(Math.random() * keys.length)], 10);
+            if (currentRuleNumber === null || keys.length === 1) {
+                return pick();
             }
 
-            let newRule;
-            do {
-                const randomIndex = Math.floor(Math.random() * CellularAutomataRules.RULE_KEYS.length);
-                newRule = parseInt(CellularAutomataRules.RULE_KEYS[randomIndex]);
-            } while (newRule === currentRuleNumber && CellularAutomataRules.RULE_KEYS.length > 1);
-            
-            return newRule;
+            let candidate = pick();
+            while (candidate === currentRuleNumber) {
+                candidate = pick();
+            }
+            return candidate;
         }
 
         /**

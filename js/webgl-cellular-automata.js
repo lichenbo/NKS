@@ -465,8 +465,7 @@ window.APP = window.APP || {};
         constructor() {
             super('header-cellular-automata', 2, {
                 animationSpeed: 150,
-                parentElement: true,
-                resizeDebounce: 250
+                parentElement: true
             });
             if (!this.canvas) return;
 
@@ -506,10 +505,6 @@ window.APP = window.APP || {};
         async animate() {
             const startTime = performance.now();
             this.breathingEffect.update();
-            if (this._justResized) {
-                this._justResized = false;
-                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
-            }
             await this.animateWithWebGL();
             const endTime = performance.now();
             this.performanceMonitor.measureFrame(endTime - startTime);

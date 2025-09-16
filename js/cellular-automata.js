@@ -62,7 +62,6 @@ window.APP = window.APP || {};
 
             // Options
             this.animationSpeed = options.animationSpeed || 200;
-            this.resizeDebounce = options.resizeDebounce || 250;
             this.parentElement = options.parentElement || null;
             this.skipInitialAnimation = options.skipInitialAnimation || false;
 
@@ -77,8 +76,7 @@ window.APP = window.APP || {};
          */
         init() {
             this.setupCanvas();
-            this.setupResizeListener();
-            
+
             // Allow subclasses to skip initial animation (e.g., for WebGL timing)
             if (!this.skipInitialAnimation) {
                 this.initAnimation();
@@ -129,36 +127,6 @@ window.APP = window.APP || {};
             return this.applyCanvasSize(width, height);
         }
 
-        setupResizeListener() {
-            let resizeTimeout;
-            const handleResize = () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
-                    const { width, height } = this.calculateCanvasSize();
-                    const widthChanged = this.canvas.width !== width;
-
-                    if (widthChanged) {
-                        this.stopAnimation();
-                    }
-
-                    const { heightChanged } = this.applyCanvasSize(width, height);
-                    this.updateCanvasDimensions();
-
-                    if (widthChanged) {
-                        // Mark that we just resized so subclasses can adjust visuals
-                        this._justResized = true;
-                        this.startAnimation();
-                    } else if (heightChanged) {
-                        // Height-only changes keep animation running without restart
-                        this._justResized = false;
-                    }
-                }, this.resizeDebounce);
-            };
-
-            window.addEventListener('resize', handleResize);
-            this.handleResize = handleResize; // Store reference for cleanup
-        }
-
         updateCanvasDimensions() {
             this.cols = Math.floor(this.canvas.width / this.cellSize);
             this.rows = Math.floor(this.canvas.height / this.cellSize);
@@ -207,295 +175,253 @@ window.APP = window.APP || {};
 
         cleanup() {
             this.stopAnimation();
-            if (this.handleResize) {
-                window.removeEventListener('resize', this.handleResize);
+        }
+    }
+
+    /**
+     * Shared CPU Cellular Automata controller
+     * Handles generation stepping, rendering, and rule changes
+     */
+    class CPUCellularAutomata extends CellularAutomataCanvas {
+        constructor(canvasId, cellSize, config = {}) {
+            super(canvasId, cellSize, config);
+            if (!this.canvas) return;
+
+            const {
+                renderFrame,
+                getAlpha,
+                onFrameStart,
+                onFrameEnd,
+                onComplete,
+                onRuleChange,
+                initialRule,
+                getInitialRule,
+                clearOnRestart = true
+            } = config;
+
+            this.stateManager = new AnimationStateManager(this.cols, this.rows);
+            this.renderFrame = typeof renderFrame === 'function'
+                ? (frame) => renderFrame({ ...frame, instance: this })
+                : () => {};
+            this.getAlpha = typeof getAlpha === 'function'
+                ? () => getAlpha(this)
+                : () => 1;
+            this.onFrameStart = typeof onFrameStart === 'function'
+                ? () => onFrameStart(this)
+                : () => {};
+            this.onFrameEnd = typeof onFrameEnd === 'function'
+                ? () => onFrameEnd(this)
+                : () => {};
+            this.onComplete = typeof onComplete === 'function'
+                ? () => onComplete(this)
+                : () => {};
+            this._onRuleChange = typeof onRuleChange === 'function'
+                ? (ruleNumber, isInitial) => onRuleChange(this, ruleNumber, isInitial)
+                : () => {};
+            this.clearOnRestart = clearOnRestart !== false;
+
+            const initialRuleNumber = initialRule ?? (typeof getInitialRule === 'function'
+                ? getInitialRule(this)
+                : 30);
+            this.changeRule(initialRuleNumber, true);
+
+            // Keep base grid references aligned with state manager
+            this.grid = this.stateManager.grid;
+            this.currentRow = this.stateManager.currentRow;
+        }
+
+        changeRule(ruleNumber, isInitial = false) {
+            this.currentRuleNumber = parseInt(ruleNumber, 10);
+            this.rule = CellularAutomataRules.getRule(this.currentRuleNumber);
+            this._onRuleChange(this.currentRuleNumber, isInitial);
+        }
+
+        restartForRule(ruleNumber, isInitial = false) {
+            this.changeRule(ruleNumber, isInitial);
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
+            }
+            this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        initAnimation() {
+            super.initAnimation();
+            if (this.stateManager) {
+                this.stateManager.updateDimensions(this.cols, this.rows);
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
+            }
+        }
+
+        animate() {
+            if (!this.stateManager) return;
+
+            this.onFrameStart();
+
+            if (this.clearOnRestart && this.stateManager.currentRow === 0) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.stateManager.drawnRows.length = 0;
+            }
+
+            this.stateManager.storeCurrentGeneration();
+
+            this.renderFrame({
+                ctx: this.ctx,
+                drawnRows: this.stateManager.drawnRows,
+                cols: this.cols,
+                currentRow: this.stateManager.currentRow,
+                cellSize: this.cellSize,
+                offsetX: this.offsetX,
+                offsetY: this.offsetY,
+                alpha: this.getAlpha()
+            });
+
+            if (!this.stateManager.isAnimationComplete()) {
+                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
+                this.stateManager.advanceGeneration(nextGrid);
+                this.grid = this.stateManager.grid;
+                this.currentRow = this.stateManager.currentRow;
+                this.onFrameEnd();
+            } else {
+                this.onComplete();
             }
         }
     }
 
     /**
      * Background Cellular Automata - Static Rule 30 implementation
-     * Provides continuous Rule 30 evolution for background visual effect
-     * Uses shared utilities for rendering and state management
      */
-    class BackgroundCellularAutomata extends CellularAutomataCanvas {
+    class BackgroundCellularAutomata extends CPUCellularAutomata {
         constructor() {
-            super('cellular-automata-bg', 3, { animationSpeed: 200 });
-            if (!this.canvas) return;
+            super('cellular-automata-bg', 3, {
+                animationSpeed: 200,
+                renderFrame: ({ ctx, drawnRows, cols, currentRow, cellSize, offsetX, offsetY }) => {
+                    CellularAutomataRenderer.renderBackgroundRows(
+                        ctx,
+                        drawnRows,
+                        cols,
+                        currentRow,
+                        cellSize,
+                        offsetX,
+                        offsetY
+                    );
+                },
+                initialRule: 30,
+                onRuleChange: (_, ruleNumber) => {
+                    updateBackgroundRuleIndicator(ruleNumber);
+                }
+            });
 
-            // Use shared utilities
-            this.ruleNumber = 30;
-            this.rule = CellularAutomataRules.getRule(this.ruleNumber);
-            this.stateManager = new AnimationStateManager(this.cols, this.rows);
-
-            // Initialize background rule indicator
-            updateBackgroundRuleIndicator();
-
-            // Start animation
-            this.startAnimation();
-        }
-
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.rule);
-        }
-
-        animate() {
-            // Only clear if starting over
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store current row for rendering
-            this.stateManager.storeCurrentGeneration();
-
-            // Use shared renderer with background settings
-            CellularAutomataRenderer.renderBackgroundRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared utilities
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.rule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep grid in sync for compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            }
-            // Background animation stops when complete - pattern stays static
-        }
-
-        // Override updateCanvasDimensions to update state manager
-        updateCanvasDimensions() {
-            super.updateCanvasDimensions();
-            if (this.stateManager) {
-                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
-            }
-        }
-
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
+            if (this.canvas) {
+                this.startAnimation();
             }
         }
     }
 
     /**
-     * Header Cellular Automata - Cycling through multiple rules
-     * Implements multiple Elementary CA rules with automatic cycling
-     * Uses shared utilities for rule management, rendering, and breathing animation
+     * Header Cellular Automata - Cycling through multiple rules with breathing effect
      */
-    class HeaderCellularAutomata extends CellularAutomataCanvas {
+    class HeaderCellularAutomata extends CPUCellularAutomata {
         constructor() {
+            const breathingEffect = new BreathingEffect();
             super('header-cellular-automata', 3, {
                 animationSpeed: 200,
                 parentElement: true,
-                resizeDebounce: 250
+                renderFrame: ({ ctx, drawnRows, cols, currentRow, cellSize, offsetX, offsetY, alpha }) => {
+                    CellularAutomataRenderer.renderHeaderRows(
+                        ctx,
+                        drawnRows,
+                        cols,
+                        currentRow,
+                        cellSize,
+                        alpha,
+                        offsetX,
+                        offsetY
+                    );
+                },
+                getAlpha: () => breathingEffect.update(),
+                getInitialRule: () => CellularAutomataRules.getRandomRule(),
+                onRuleChange: (_, ruleNumber, isInitial) => {
+                    const ruleName = ruleNumber.toString();
+                    headerRuleName = ruleName;
+                    if (isInitial) {
+                        updateHeaderRuleIndicator(ruleName);
+                    } else {
+                        breathingEffect.reset();
+                        updateHeaderRuleIndicatorWithVFX(ruleName);
+                    }
+                },
+                onComplete: (instance) => instance.scheduleNextRule()
             });
+
             if (!this.canvas) return;
-
-            // Use shared utilities
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule();
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-            this.stateManager = new AnimationStateManager(this.cols, this.rows);
-            this.breathingEffect = new BreathingEffect();
-
-            // Guard to prevent multiple queued rule changes
             this.nextRuleTimer = null;
-
-            // Update global rule name for indicator
-            headerRuleName = this.currentRuleNumber.toString();
-
-            // Initialize header rule indicator
-            updateHeaderRuleIndicator();
-
-            // Start animation
             this.startAnimation();
         }
 
-        applyRule(left, center, right) {
-            return CellularAutomataRules.applyRule(left, center, right, this.currentRule);
-        }
-
-        cycleToNextRule() {
-            // Get a different random rule
-            this.currentRuleNumber = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
-            this.currentRule = CellularAutomataRules.getRule(this.currentRuleNumber);
-            const newRuleName = this.currentRuleNumber.toString();
-            headerRuleName = newRuleName; // Update global variable
-
-            // Update header rule indicator with VFX - pass rule directly
-            updateHeaderRuleIndicatorWithVFX(newRuleName);
-
-            // Reset animation state for new rule
-            this.initAnimation();
-            this.stateManager.reset();
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-
-        animate() {
-            // Update breathing effect; normalize after resize to avoid sudden dark flash
-            let currentAlpha = this.breathingEffect.update();
-            if (this._justResized) {
-                this._justResized = false;
-                this.breathingEffect.globalAlpha = (this.breathingEffect.minAlpha + this.breathingEffect.maxAlpha) / 2;
-                currentAlpha = this.breathingEffect.getCurrentAlpha();
-            }
-
-            // Only clear if starting over
-            if (this.stateManager.currentRow === 0) {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.stateManager.drawnRows.length = 0;
-            }
-
-            // Store current row for rendering
-            this.stateManager.storeCurrentGeneration();
-
-            // Use shared renderer with header settings and breathing effect
-            CellularAutomataRenderer.renderHeaderRows(
-                this.ctx,
-                this.stateManager.drawnRows,
-                this.cols,
-                this.stateManager.currentRow,
-                this.cellSize,
-                currentAlpha,
-                this.offsetX,
-                this.offsetY
-            );
-
-            // Calculate next generation using shared utilities
-            if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = this.stateManager.computeNextGenerationCPU(this.currentRule);
-                this.stateManager.advanceGeneration(nextGrid);
-                
-                // Keep grid in sync for compatibility
-                this.grid = this.stateManager.grid;
-                this.currentRow = this.stateManager.currentRow;
-            } else {
-                // Schedule next rule exactly once
-                if (!this.nextRuleTimer) {
-                    this.nextRuleTimer = setTimeout(() => {
-                        this.nextRuleTimer = null;
-                        this.cycleToNextRule();
-                    }, 1800);
-                }
-            }
-        }
-
-        // Override updateCanvasDimensions to update state manager
-        updateCanvasDimensions() {
-            super.updateCanvasDimensions();
-            if (this.stateManager) {
-                this.stateManager.updateDimensionsPreserveState(this.cols, this.rows);
-            }
-        }
-
-        // Override initAnimation to update state manager
-        initAnimation() {
-            super.initAnimation();
-            if (this.stateManager) {
-                this.stateManager.updateDimensions(this.cols, this.rows);
-            }
+        scheduleNextRule() {
+            if (this.nextRuleTimer) return;
+            this.nextRuleTimer = setTimeout(() => {
+                this.nextRuleTimer = null;
+                const nextRule = CellularAutomataRules.getRandomRule(this.currentRuleNumber);
+                this.restartForRule(nextRule);
+            }, 1800);
         }
     }
 
     // Rule indicator update functions (consolidated)
     const RuleIndicators = {
-        update: function (type, ruleNumber) {
+        update(type, ruleNumber) {
             const elementId = type === 'background' ? 'bg-rule-text' : 'header-rule-text';
             const element = document.getElementById(elementId);
+            if (!element) return;
 
-            console.log(`RuleIndicators.update called:`, {
-                type: type,
-                ruleNumber: ruleNumber,
-                elementId: elementId,
-                elementExists: !!element,
-                hasTranslations: !!window.translations,
-                currentLanguage: window.currentLanguage,
-                elementText: element ? element.textContent : 'N/A'
-            });
-
-            if (element && window.translations && window.currentLanguage) {
-                const currentLanguage = window.currentLanguage;
+            const translations = window.translations?.[window.currentLanguage];
+            if (translations) {
                 const typeKey = type === 'background' ? 'rule-bg' : 'rule-header';
-                const typeText = window.translations[currentLanguage][typeKey] || 'Rule';
-                const ruleText = window.translations[currentLanguage]['rule'] || 'Rule';
-                const finalText = `${typeText}: ${ruleText} ${ruleNumber}`;
-                element.textContent = finalText;
-                console.log(`RuleIndicators.update: Set text to "${finalText}"`);
+                const typeText = translations[typeKey] || translations.rule || 'Rule';
+                const ruleText = translations.rule || 'Rule';
+                element.textContent = `${typeText}: ${ruleText} ${ruleNumber}`;
             } else {
-                console.log(`RuleIndicators.update: Conditions not met for update`);
+                element.textContent = `Rule ${ruleNumber}`;
             }
         }
     };
 
-    function updateBackgroundRuleIndicator() {
-        RuleIndicators.update('background', '30');
+    function updateBackgroundRuleIndicator(ruleNumber = 30) {
+        RuleIndicators.update('background', ruleNumber);
     }
 
-    function updateHeaderRuleIndicator() {
-        RuleIndicators.update('header', headerRuleName);
+    function updateHeaderRuleIndicator(ruleNumber = headerRuleName) {
+        RuleIndicators.update('header', ruleNumber);
     }
 
     function updateHeaderRuleIndicatorWithVFX(ruleName) {
         const element = document.getElementById('header-rule-text');
-        const ruleToUse = ruleName || headerRuleName; // Use parameter or fallback to global
-
-        console.log('VFX Debug:', {
-            element: !!element,
-            APP: !!window.APP,
-            VFX: !!(window.APP && window.APP.RuleIndicatorVFX),
-            parameterRule: ruleName,
-            globalRule: headerRuleName,
-            usingRule: ruleToUse,
-            currentText: element ? element.textContent : 'N/A'
-        });
+        const ruleToUse = ruleName || headerRuleName;
 
         if (element && window.APP && window.APP.RuleIndicatorVFX) {
-            // Apply random VFX effect with the correct rule
-            window.APP.RuleIndicatorVFX.applyRandomEffect(element, ruleToUse, () => {
-                console.log(`VFX complete for Rule ${ruleToUse}`);
-            });
+            window.APP.RuleIndicatorVFX.applyRandomEffect(element, ruleToUse);
         } else {
-            console.log('VFX fallback - using regular update');
-            // Fallback to regular update if VFX not available
-            updateHeaderRuleIndicator();
+            updateHeaderRuleIndicator(ruleToUse);
         }
     }
 
     function updateGPUStatusIndicator(status = null) {
         const element = document.getElementById('gpu-status-text');
-        if (element) {
-            if (status === null) {
-                // Detect current status
-                if (gpuManager && gpuManager.getAccelerationStatus) {
-                    const accelerationStatus = gpuManager.getAccelerationStatus();
-                    if (accelerationStatus && accelerationStatus.capabilities) {
-                        const path = accelerationStatus.capabilities.selectedPath;
-                        element.textContent = path.toUpperCase();
-                        element.style.color = ''; // Use CSS color
-                    } else {
-                        element.textContent = 'Detecting...';
-                        element.style.color = ''; // Use CSS color
-                    }
-                } else {
-                    element.textContent = 'Detecting...';
-                    element.style.color = ''; // Use CSS color
-                }
-            } else {
-                element.textContent = status;
-                element.style.color = ''; // Use CSS color
-            }
-        }
+        if (!element) return;
+
+        const text = status || (() => {
+            if (!gpuManager || !gpuManager.getAccelerationStatus) return 'Detecting...';
+            const accelerationStatus = gpuManager.getAccelerationStatus();
+            const path = accelerationStatus?.capabilities?.selectedPath || gpuManager.capabilities?.selectedPath;
+            return path ? path.toUpperCase() : 'Detecting...';
+        })();
+
+        element.textContent = text;
+        element.style.color = '';
     }
 
     function updateRuleIndicators() {
@@ -510,55 +436,50 @@ window.APP = window.APP || {};
     // GPU Manager for acceleration
     let gpuManager = null;
 
-    // Initialization functions
-    async function initCellularAutomataBackground() {
-        if (window.APP && window.APP.GPUCellularAutomata) {
-            try {
-                // Initialize GPU manager if not already done
-                if (!gpuManager) {
-                    gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
-                    await gpuManager.initialize();
-                }
+    async function ensureGPUManager() {
+        if (gpuManager) return gpuManager;
+        if (!window.APP || !window.APP.GPUCellularAutomata) return null;
 
-                const gpuBackground = await gpuManager.createBackgroundCellularAutomata();
-                console.log(`Background: Using ${gpuManager.capabilities.selectedPath.toUpperCase()} acceleration`);
+        const manager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
+        await manager.initialize();
+        gpuManager = manager;
+        return gpuManager;
+    }
+
+    async function initAutomaton(label, gpuFactory, cpuFactory) {
+        const manager = await ensureGPUManager();
+        if (manager) {
+            try {
+                const instance = await gpuFactory(manager);
+                const selected = manager.capabilities?.selectedPath || 'gpu';
+                console.log(`${label}: Using ${selected.toUpperCase()} acceleration`);
                 updateGPUStatusIndicator();
-                return gpuBackground;
+                return instance;
             } catch (error) {
-                console.warn('GPU background initialization failed, falling back to CPU:', error);
-                // Fall through to CPU implementation
+                console.warn(`${label} GPU initialization failed, falling back to CPU:`, error);
             }
         }
 
-        // CPU fallback
-        console.log('Background: Using CPU implementation');
+        console.log(`${label}: Using CPU implementation`);
         updateGPUStatusIndicator('CPU');
-        return new BackgroundCellularAutomata();
+        return cpuFactory();
+    }
+
+    // Initialization functions
+    async function initCellularAutomataBackground() {
+        return initAutomaton(
+            'Background',
+            (manager) => manager.createBackgroundCellularAutomata(),
+            () => new BackgroundCellularAutomata()
+        );
     }
 
     async function initHeaderCellularAutomata() {
-        if (window.APP && window.APP.GPUCellularAutomata) {
-            try {
-                // Initialize GPU manager if not already done
-                if (!gpuManager) {
-                    gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
-                    await gpuManager.initialize();
-                }
-
-                const gpuHeader = await gpuManager.createHeaderCellularAutomata();
-                console.log(`Header: Using ${gpuManager.capabilities.selectedPath.toUpperCase()} acceleration`);
-                updateGPUStatusIndicator();
-                return gpuHeader;
-            } catch (error) {
-                console.warn('GPU header initialization failed, falling back to CPU:', error);
-                // Fall through to CPU implementation
-            }
-        }
-
-        // CPU fallback
-        console.log('Header: Using CPU implementation');
-        updateGPUStatusIndicator('CPU');
-        return new HeaderCellularAutomata();
+        return initAutomaton(
+            'Header',
+            (manager) => manager.createHeaderCellularAutomata(),
+            () => new HeaderCellularAutomata()
+        );
     }
 
     // GPU acceleration control functions
@@ -584,21 +505,19 @@ window.APP = window.APP || {};
     }
 
     async function getGPUCapabilities() {
-        if (!gpuManager) {
-            try {
-                gpuManager = new window.APP.GPUCellularAutomata.GPUCellularAutomataManager();
-                await gpuManager.initialize();
-            } catch (error) {
-                console.warn('Failed to initialize GPU manager:', error);
-                return null;
-            }
+        try {
+            const manager = await ensureGPUManager();
+            return manager ? manager.getAccelerationStatus() : null;
+        } catch (error) {
+            console.warn('Failed to initialize GPU manager:', error);
+            return null;
         }
-        return gpuManager.getAccelerationStatus();
     }
 
     // Expose to APP namespace
     APP.CellularAutomata = {
         CellularAutomataCanvas,
+        CPUCellularAutomata,
         BackgroundCellularAutomata,
         HeaderCellularAutomata,
         initCellularAutomataBackground,
