@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Elementary Cellular Automata Snapshot</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 2rem;
+            background: var(--page-bg, #f7f7f7);
+            color: var(--page-fg, #222);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            padding: 0.4rem 0.5rem;
+            min-width: 8rem;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: #3c6df0;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2f55c6;
+        }
+
+        #error-message {
+            color: #b30021;
+            margin-bottom: 1rem;
+            min-height: 1.2rem;
+        }
+
+        canvas {
+            display: block;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background: #fff;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Elementary Cellular Automata Snapshot</h1>
+    <form id="controls">
+        <label>
+            Rule number (0 – 255)
+            <input id="rule-input" type="number" min="0" max="255" value="30" required>
+        </label>
+        <label>
+            Row count (iterations)
+            <input id="rows-input" type="number" min="0" value="100" required>
+        </label>
+        <label>
+            Zoom (%)
+            <input id="zoom-input" type="number" min="10" max="800" step="10" value="100">
+        </label>
+        <button type="submit">Render</button>
+    </form>
+
+    <div id="error-message"></div>
+    <canvas id="ca-canvas" width="400" height="400" role="img" aria-label="Cellular automata rendering"></canvas>
+
+    <script>
+        const controlsForm = document.getElementById('controls');
+        const ruleInput = document.getElementById('rule-input');
+        const rowsInput = document.getElementById('rows-input');
+        const zoomInput = document.getElementById('zoom-input');
+        const canvas = document.getElementById('ca-canvas');
+        const ctx = canvas.getContext('2d');
+        const errorMessageEl = document.getElementById('error-message');
+
+        const MAX_PATTERN_WIDTH = 1200; // keep the canvas manageable
+        const MIN_ZOOM_PERCENT = 10;
+        const MAX_ZOOM_PERCENT = 800;
+
+        function buildRuleArray(ruleNumber) {
+            const ruleBits = new Array(8);
+            for (let i = 0; i < 8; i++) {
+                ruleBits[i] = (ruleNumber >> i) & 1;
+            }
+            return ruleBits;
+        }
+
+        function applyZoom(targetPercent = Number(zoomInput.value)) {
+            let percent = Number.isFinite(targetPercent) ? targetPercent : 100;
+            percent = Math.max(MIN_ZOOM_PERCENT, Math.min(MAX_ZOOM_PERCENT, percent));
+            if (Number(zoomInput.value) !== percent) {
+                zoomInput.value = String(percent);
+            }
+            const scale = percent / 100;
+            canvas.style.width = `${canvas.width * scale}px`;
+            canvas.style.height = `${canvas.height * scale}px`;
+        }
+
+        function runAutomaton(ruleBits, width, iterations) {
+            const rows = [];
+            let currentRow = new Array(width).fill(0);
+            currentRow[Math.floor(width / 2)] = 1;
+            rows.push([...currentRow]);
+
+            for (let r = 0; r < iterations; r++) {
+                const nextRow = new Array(width).fill(0);
+                for (let c = 0; c < width; c++) {
+                    const left = c > 0 ? currentRow[c - 1] : 0;
+                    const center = currentRow[c];
+                    const right = c < width - 1 ? currentRow[c + 1] : 0;
+                    const patternIndex = (left << 2) | (center << 1) | right;
+                    nextRow[c] = ruleBits[patternIndex];
+                }
+                rows.push(nextRow);
+                currentRow = nextRow;
+            }
+
+            return rows;
+        }
+
+        function render(ruleNumber, iterations) {
+            const rowsToDraw = iterations + 1;
+            const width = iterations * 2 + 1;
+            const ruleBits = buildRuleArray(ruleNumber);
+            const generations = runAutomaton(ruleBits, width, iterations);
+
+            const cellSize = Math.max(1, Math.floor(Math.min(8, MAX_PATTERN_WIDTH / width)));
+            const canvasWidth = width * cellSize;
+            const canvasHeight = rowsToDraw * cellSize;
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            for (let rowIndex = 0; rowIndex < generations.length; rowIndex++) {
+                const row = generations[rowIndex];
+                const y = rowIndex * cellSize;
+
+                ctx.fillStyle = '#000000';
+                for (let col = 0; col < row.length; col++) {
+                    if (!row[col]) continue;
+                    const x = col * cellSize;
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                }
+            }
+            applyZoom();
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            const ruleNumber = Number(ruleInput.value);
+            const iterations = Number(rowsInput.value);
+
+            if (!Number.isInteger(ruleNumber) || ruleNumber < 0 || ruleNumber > 255) {
+                errorMessageEl.textContent = 'Please enter a rule number between 0 and 255.';
+                return;
+            }
+
+            if (!Number.isInteger(iterations) || iterations < 0) {
+                errorMessageEl.textContent = 'Please enter a non-negative row count.';
+                return;
+            }
+
+            errorMessageEl.textContent = '';
+            render(ruleNumber, iterations);
+        }
+
+        zoomInput.addEventListener('input', () => applyZoom(Number(zoomInput.value)));
+        controlsForm.addEventListener('submit', handleSubmit);
+        window.addEventListener('load', () => {
+            render(Number(ruleInput.value), Number(rowsInput.value));
+        });
+    </script>
+</body>
+
+</html>
