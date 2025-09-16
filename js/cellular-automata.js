@@ -1,53 +1,14 @@
 // js/cellular-automata.js
 
-/**
- * Cellular Automata Animation System for NKS Project
- * Provides dual cellular automata animations for background and header elements
- * Includes Elementary Cellular Automata rules implementation and visual effects
- * 
- * Features:
- * - Background canvas: Static Rule 30 with golden fade effect
- * - Header canvas: Cycling through multiple CA rules with breathing animation
- * - Rule indicators with trilingual support (EN/ZH/JA)
- * - Responsive canvas handling and resize support
- * - Performance optimized animation loops
- * 
- * Usage: Access via window.APP.CellularAutomata namespace
- * Dependencies: Requires translations system for rule indicator text
- */
-
 window.APP = window.APP || {};
 
 (function (APP) {
     'use strict';
 
-    // Global variables for cellular automata
     let headerRuleName = '110'; // Default value
 
-    /**
-     * Base class for cellular automata canvas rendering and animation
-     * Provides common functionality for cellular automata visualization including
-     * canvas management, resize handling, animation control, and rule-based evolution
-     * 
-     * Key Features:
-     * - Canvas initialization and responsive resizing
-     * - Rule-based cellular automata evolution (Elementary CA rules)
-     * - Golden color scheme with gradient effects and age-based fading
-     * - Configurable animation speed and grid dimensions
-     * - Memory management for grid arrays
-     * 
-     * Time Complexity: O(n) per generation where n is grid width
-     * Space Complexity: O(n) for current and next generation grids
-     * 
-     * @class CellularAutomataCanvas
-     */
+    // Base class for CA canvas rendering/animation
     class CellularAutomataCanvas {
-        /**
-         * Initialize cellular automata canvas with configuration
-         * @param {string} canvasId - HTML canvas element ID
-         * @param {number} cellSize - Size of each cell in pixels
-         * @param {Object} options - Configuration options including animationSpeed
-         */
         constructor(canvasId, cellSize, options = {}) {
             this.canvas = document.getElementById(canvasId);
             if (!this.canvas) return null;
@@ -66,12 +27,6 @@ window.APP = window.APP || {};
             this.init();
         }
 
-        /**
-         * Initialize canvas setup and event listeners
-         * Time Complexity: O(1)
-         * @returns {void}
-         * @private
-         */
         init() {
             this.setupCanvas();
 
@@ -147,7 +102,7 @@ window.APP = window.APP || {};
             console.warn('animate() method should be overridden in subclass');
         }
 
-        // Override this method in subclasses  
+        // Override this method in subclasses
         applyRule(left, center, right) {
             // Parameters are used by subclasses - suppress unused warning
             void left; void center; void right;
@@ -160,10 +115,7 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * Shared CPU Cellular Automata controller
-     * Handles generation stepping, rendering, and rule changes
-     */
+    // Shared CPU controller used for background/header variants
     class CPUCellularAutomata extends CellularAutomataCanvas {
         constructor(canvasId, cellSize, config = {}) {
             super(canvasId, cellSize, config);
@@ -265,9 +217,7 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * Background Cellular Automata - Static Rule 30 implementation
-     */
+    // Background Cellular Automata - Static Rule 30 implementation
     class BackgroundCellularAutomata extends CPUCellularAutomata {
         constructor() {
             super('cellular-automata-bg', 3, {
@@ -295,9 +245,7 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * Header Cellular Automata - Cycling through multiple rules with breathing effect
-     */
+    // Header Cellular Automata - Cycling through multiple rules with breathing effect
     class HeaderCellularAutomata extends CPUCellularAutomata {
         constructor() {
             const breathingEffect = new BreathingEffect();
@@ -346,7 +294,7 @@ window.APP = window.APP || {};
         }
     }
 
-    // Rule indicator update functions (consolidated)
+    // Rule indicator helpers
     const RuleIndicators = {
         update(type, ruleNumber) {
             const elementId = type === 'background' ? 'bg-rule-text' : 'header-rule-text';

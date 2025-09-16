@@ -1,32 +1,10 @@
 // gpu/webgpu-cellular-automata.js
 
-/**
- * WebGPU Cellular Automata Implementation for NKS Project
- * High-performance GPU-accelerated cellular automata using WebGPU compute shaders
- * 
- * Features:
- * - Compute shader-based cellular automata evolution
- * - Storage buffer ping-pong for efficient memory management
- * - Support for multiple Elementary CA rules (30, 90, 110, 54, 150, 126)
- * - High-performance GPU-only implementation (no CPU fallback)
- * - Performance monitoring and quality optimization
- * 
- * Browser Support: Chrome 113+, Edge 113+, Firefox 141+, Safari 26+
- * Performance: 10-50x improvement over CPU for large grids
- * 
- * Usage: Extends existing CellularAutomataCanvas with GPU acceleration
- */
-
 window.APP = window.APP || {};
 
 (function (APP) {
     'use strict';
 
-    /**
-     * WebGPU-accelerated Cellular Automata Canvas
-     * Extends base CellularAutomataCanvas with WebGPU compute shader acceleration
-     * GPU-only implementation - requires WebGPU support or will fail
-     */
     class WebGPUCellularAutomataCanvas extends APP.CellularAutomata.CellularAutomataCanvas {
         constructor(canvasId, cellSize, options = {}) {
             super(canvasId, cellSize, options);
@@ -47,9 +25,6 @@ window.APP = window.APP || {};
             this.initializationPromise = this.initializeWebGPU();
         }
 
-        /**
-         * Initialize WebGPU adapter and device
-         */
         async initializeWebGPU() {
             if (!navigator.gpu) {
                 throw new Error('WebGPU not supported');
@@ -69,9 +44,6 @@ window.APP = window.APP || {};
             await this.setupWebGPUCompute();
         }
 
-        /**
-         * Setup WebGPU compute pipeline
-         */
         async setupWebGPUCompute() {
             const computeShaderModule = this.webgpuDevice.createShaderModule({
                 code: this.generateComputeShader()
@@ -86,10 +58,6 @@ window.APP = window.APP || {};
             });
         }
 
-        /**
-         * Generate WGSL compute shader for cellular automata evolution
-         * @returns {string} WGSL compute shader source code
-         */
         generateComputeShader() {
             return `
 struct Params {
@@ -141,9 +109,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             `;
         }
 
-        /**
-         * Setup storage buffers for input/output cellular automata grids
-         */
         setupStorageBuffers() {
             this.cleanupStorageBuffers();
 
@@ -165,9 +130,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             });
         }
 
-        /**
-         * Setup bind group for compute shader resources
-         */
         setupBindGroup() {
             this.bindGroup = this.webgpuDevice.createBindGroup({
                 layout: this.computePipeline.getBindGroupLayout(0),
@@ -188,10 +150,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             });
         }
 
-        /**
-         * Update GPU uniforms with current rule and grid size
-         * @param {number} ruleNumber - Elementary CA rule number
-         */
         updateGPUUniforms(ruleNumber) {
             if (!this.webgpuDevice || !this.uniformBuffer) return; // Not ready yet
             const rule = CellularAutomataRules.toWebGPUFormat(ruleNumber);
@@ -201,20 +159,12 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.webgpuDevice.queue?.writeBuffer(this.uniformBuffer, 0, uniformData);
         }
 
-        /**
-         * Upload cellular automata grid data to GPU
-         * @param {Array} gridData - Current generation grid data
-         */
         uploadGridToGPU(gridData) {
             if (!this.webgpuDevice || !this.inputBuffer) return;
             const gpuData = new Uint32Array(gridData);
             this.webgpuDevice.queue?.writeBuffer(this.inputBuffer, 0, gpuData);
         }
 
-        /**
-         * Execute compute shader to calculate next generation
-         * @returns {Promise<Uint32Array>} Next generation grid data
-         */
         async computeNextGenerationGPU() {
             this.ensureGPUBuffers();
 
@@ -252,9 +202,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             }
         }
 
-        /**
-         * Clean up storage buffers
-         */
         cleanupStorageBuffers() {
             if (this.readBuffer && this.readBuffer.mapState !== 'unmapped') {
                 this.readBuffer.unmap();
@@ -272,34 +219,22 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
             this.bindGroup = null;
         }
 
-        /**
-         * Clean up WebGPU resources
-         */
         cleanupWebGPU() {
             this.cleanupStorageBuffers();
             this.computePipeline = null;
             this.webgpuDevice = null;
         }
 
-        /**
-         * Override cleanup to include WebGPU resource cleanup
-         */
         cleanup() {
             super.cleanup();
             this.cleanupWebGPU();
         }
 
-        /**
-         * Override initAnimation to setup GPU buffers
-         */
         initAnimation() {
             super.initAnimation();
             this.ensureGPUBuffers();
         }
 
-        /**
-         * Ensure GPU buffers are created when needed
-         */
         ensureGPUBuffers() {
             if (!this.inputBuffer && this.useWebGPU && this.cols > 0) {
                 this.setupStorageBuffers();
@@ -309,10 +244,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
     }
 
-    /**
-     * Shared controller for WebGPU cellular automata scenes.
-     * Manages rule changes, rendering hooks, and GPU buffer lifecycle.
-     */
     class WebGPUAutomataScene extends WebGPUCellularAutomataCanvas {
         constructor(canvasId, cellSize, config = {}) {
             super(canvasId, cellSize, config);
@@ -437,9 +368,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
     }
 
-    /**
-     * WebGPU Background Cellular Automata - Rule 30 with GPU acceleration
-     */
     class WebGPUBackgroundCellularAutomata extends WebGPUAutomataScene {
         constructor(canvasId = 'cellular-automata-bg') {
             super(canvasId, 3, {
@@ -467,9 +395,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
     }
 
-    /**
-     * WebGPU Header Cellular Automata - Multiple rules with GPU acceleration
-     */
     class WebGPUHeaderCellularAutomata extends WebGPUAutomataScene {
         constructor(canvasId = 'header-cellular-automata') {
             const breathingEffect = new BreathingEffect();

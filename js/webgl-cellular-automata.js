@@ -1,32 +1,10 @@
 // gpu/webgl-cellular-automata.js
 
-/**
- * WebGL Cellular Automata Implementation for NKS Project
- * High-performance GPU-accelerated cellular automata using WebGL 2.0 fragment shaders
- * 
- * Features:
- * - Fragment shader-based cellular automata evolution using ping-pong textures
- * - Support for multiple Elementary CA rules (30, 90, 110, 54, 150, 126)
- * - High-performance GPU-only implementation (no CPU fallback)
- * - Performance monitoring and quality optimization
- * - Memory-efficient texture management
- * 
- * Browser Support: Chrome 56+, Firefox 51+, Safari 15+, Edge 79+ (93% coverage)
- * Performance: 5-20x improvement over CPU for large grids
- * 
- * Usage: Extends existing CellularAutomataCanvas with WebGL acceleration
- */
-
 window.APP = window.APP || {};
 
 (function(APP) {
     'use strict';
 
-    /**
-     * WebGL-accelerated Cellular Automata Canvas
-     * Extends base CellularAutomataCanvas with WebGL 2.0 fragment shader acceleration
-     * Uses texture ping-pong for efficient GPU-based cellular automata computation
-     */
     class WebGLCellularAutomataCanvas extends APP.CellularAutomata.CellularAutomataCanvas {
         constructor(canvasId, cellSize, options = {}) {
             super(canvasId, cellSize, options);
@@ -50,9 +28,6 @@ window.APP = window.APP || {};
             this.initializeWebGL();
         }
 
-        /**
-         * Initialize WebGL 2.0 context and setup GPU resources
-         */
         initializeWebGL() {
             this.gl = this.canvas.getContext('webgl2', {
                 alpha: false,
@@ -80,9 +55,6 @@ window.APP = window.APP || {};
             this.useWebGL = true;
         }
 
-        /**
-         * Setup vertex and fragment shaders for cellular automata computation
-         */
         setupShaders() {
             const vertexShaderSource = `#version 300 es
                 precision highp float;
@@ -164,12 +136,6 @@ window.APP = window.APP || {};
             this.gl.deleteShader(fragmentShader);
         }
 
-        /**
-         * Compile a single shader
-         * @param {string} source - Shader source code
-         * @param {number} type - Shader type (VERTEX_SHADER or FRAGMENT_SHADER)
-         * @returns {WebGLShader} Compiled shader
-         */
         compileShader(source, type) {
             const shader = this.gl.createShader(type);
             this.gl.shaderSource(shader, source);
@@ -183,9 +149,6 @@ window.APP = window.APP || {};
             return shader;
         }
 
-        /**
-         * Setup geometry for full-screen quad rendering
-         */
         setupGeometry() {
             // Create full-screen quad vertices
             const vertices = new Float32Array([
@@ -218,9 +181,6 @@ window.APP = window.APP || {};
             this.gl.bindVertexArray(null);
         }
 
-        /**
-         * Setup textures for ping-pong rendering
-         */
         setupTextures() {
             this.textures = [];
             
@@ -247,9 +207,6 @@ window.APP = window.APP || {};
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         }
 
-        /**
-         * Setup framebuffers for render-to-texture
-         */
         setupFramebuffers() {
             this.frameBuffers = [];
 
@@ -266,10 +223,6 @@ window.APP = window.APP || {};
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         }
 
-        /**
-         * Upload cellular automata grid data to GPU texture
-         * @param {Array} gridData - Current generation grid data
-         */
         uploadGridToTexture(gridData) {
             const textureData = new Uint8Array(gridData.map(cell => cell * 255));
             
@@ -281,11 +234,6 @@ window.APP = window.APP || {};
             );
         }
 
-        /**
-         * Execute fragment shader to calculate next generation
-         * @param {number} ruleNumber - Elementary CA rule number
-         * @returns {Promise<Uint8Array>} Next generation grid data
-         */
         computeNextGenerationWebGL(ruleNumber) {
             const inputTextureIndex = this.currentTextureIndex;
             const outputTextureIndex = 1 - this.currentTextureIndex;
@@ -328,9 +276,6 @@ window.APP = window.APP || {};
             return Array.from(resultData, value => (value > 127 ? 1 : 0));
         }
 
-        /**
-         * Clean up WebGL resources
-         */
         cleanupWebGL() {
             if (!this.gl) return;
 
@@ -349,17 +294,11 @@ window.APP = window.APP || {};
             this.gl = null;
         }
 
-        /**
-         * Override cleanup to include WebGL resource cleanup
-         */
         cleanup() {
             super.cleanup();
             this.cleanupWebGL();
         }
 
-        /**
-         * Override initAnimation to setup WebGL textures
-         */
         initAnimation() {
             super.initAnimation();
             this.stateManager?.updateDimensions(this.cols, this.rows);
@@ -371,9 +310,6 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * WebGL Background Cellular Automata - Rule 30 with WebGL acceleration
-     */
     class WebGLBackgroundCellularAutomata extends WebGLCellularAutomataCanvas {
         constructor() {
             super('cellular-automata-bg', 3, { animationSpeed: 200 });
@@ -428,9 +364,6 @@ window.APP = window.APP || {};
         }
     }
 
-    /**
-     * WebGL Header Cellular Automata - Multiple rules with WebGL acceleration
-     */
     class WebGLHeaderCellularAutomata extends WebGLCellularAutomataCanvas {
         constructor() {
             super('header-cellular-automata', 2, {
@@ -450,7 +383,6 @@ window.APP = window.APP || {};
 
             this.startAnimation();
         }
-
 
         cycleToNextRule() {
             // Use shared utility to get different random rule

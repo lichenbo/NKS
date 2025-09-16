@@ -10,6 +10,8 @@ In the early 1980s, Wolfram conducted what he calls "the crucial experiment" - a
 
 The most significant discovery was **[Rule 30](annotation:rule-30)**, a cellular automaton that defied all expectations. Despite having an extremely simple rule - each cell's next state depends only on itself and its two immediate neighbors according to a basic lookup table - Rule 30 produces patterns that appear completely random and unpredictable.
 
+![Rule 30 Cellular Automaton Pattern](../images/chapter2-p43.jpg)
+
 Key characteristics of Rule 30:
 - **Simple local rule**: Only three cells determine the next state
 - **Complex global behavior**: Generates seemingly random patterns  
