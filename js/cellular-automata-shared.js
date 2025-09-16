@@ -146,9 +146,8 @@ window.APP = window.APP || {};
             } = options;
 
             const halfCols = cols / 2;
-            const halfRows = rows / 2;
             const rowCenter = currentRow / 2;
-            const maxDistance = Math.hypot(halfCols, halfRows);
+            const maxDistance = Math.hypot(halfCols, rows / 2);
 
             for (let row = 0; row < drawnRows.length; row++) {
                 const rowData = drawnRows[row];
@@ -307,19 +306,6 @@ window.APP = window.APP || {};
             return this.currentRow >= this.rows - 1;
         }
 
-        /**
-         * Get current animation state
-         * @returns {Object} Current state information
-         */
-        getState() {
-            return {
-                currentRow: this.currentRow,
-                totalRows: this.rows,
-                cols: this.cols,
-                hasGrid: Array.isArray(this.grid) && this.grid.length === this.cols,
-                drawnRowsCount: this.drawnRows.length
-            };
-        }
     }
 
     /**

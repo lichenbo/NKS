@@ -764,6 +764,39 @@ header {
     opacity: 0.8;
 }
 
+/* Sub-chapter list styling */
+.sub-chapter-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+}
+
+.sub-chapter-list li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.sub-chapter-list .chapter-link {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-left: 2px solid transparent;
+}
+
+.sub-chapter-list .chapter-link:hover {
+    color: var(--text-secondary);
+    background: rgba(26, 26, 26, 0.5);
+    border-left-color: var(--accent-gold);
+}
+
+.sub-chapter-list .chapter-link.active {
+    color: var(--text-secondary);
+    background: rgba(26, 26, 26, 0.5);
+    border-left-color: var(--accent-gold);
+    font-weight: 400;
+}
+
 /* ================================
    MIDDLE COLUMN: NOTES
    ================================ */
@@ -2047,7 +2080,7 @@ header {
     transition: all 0.3s ease;
     color: #1a1a1a;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
@@ -2353,7 +2386,6 @@ header {
     font-weight: bold;
     font-size: 1.2rem;
     flex-shrink: 0;
-    /* Prevent button from shrinking */
 }
 
 .chat-send-btn:hover {

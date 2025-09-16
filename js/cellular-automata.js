@@ -97,29 +97,16 @@ window.APP = window.APP || {};
         }
 
         applyCanvasSize(width, height) {
-            const widthChanged = this.canvas.width !== width;
-            const heightChanged = this.canvas.height !== height;
-
-            if (widthChanged) {
-                this.canvas.width = width;
-            }
-            if (heightChanged) {
-                this.canvas.height = height;
-            }
-
-            // Keep CSS dimensions synchronized for crisp pixels
+            if (this.canvas.width !== width) this.canvas.width = width;
+            if (this.canvas.height !== height) this.canvas.height = height;
             this.canvas.style.width = width + 'px';
             this.canvas.style.height = height + 'px';
-
-            // Ensure no image smoothing for crisp pixels
             this.ctx.imageSmoothingEnabled = false;
-
-            return { widthChanged, heightChanged };
         }
 
         setupCanvas() {
             const { width, height } = this.calculateCanvasSize();
-            return this.applyCanvasSize(width, height);
+            this.applyCanvasSize(width, height);
         }
 
         updateCanvasDimensions() {
@@ -186,12 +173,10 @@ window.APP = window.APP || {};
                 renderFrame,
                 getAlpha,
                 onFrameStart,
-                onFrameEnd,
                 onComplete,
                 onRuleChange,
                 initialRule,
                 getInitialRule,
-                clearOnRestart = true
             } = config;
 
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
@@ -204,16 +189,12 @@ window.APP = window.APP || {};
             this.onFrameStart = typeof onFrameStart === 'function'
                 ? () => onFrameStart(this)
                 : () => {};
-            this.onFrameEnd = typeof onFrameEnd === 'function'
-                ? () => onFrameEnd(this)
-                : () => {};
             this.onComplete = typeof onComplete === 'function'
                 ? () => onComplete(this)
                 : () => {};
             this._onRuleChange = typeof onRuleChange === 'function'
                 ? (ruleNumber, isInitial) => onRuleChange(this, ruleNumber, isInitial)
                 : () => {};
-            this.clearOnRestart = clearOnRestart !== false;
 
             const initialRuleNumber = initialRule ?? (typeof getInitialRule === 'function'
                 ? getInitialRule(this)
@@ -255,7 +236,7 @@ window.APP = window.APP || {};
 
             this.onFrameStart();
 
-            if (this.clearOnRestart && this.stateManager.currentRow === 0) {
+            if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.stateManager.drawnRows.length = 0;
             }
@@ -278,7 +259,6 @@ window.APP = window.APP || {};
                 this.stateManager.advanceGeneration(nextGrid);
                 this.grid = this.stateManager.grid;
                 this.currentRow = this.stateManager.currentRow;
-                this.onFrameEnd();
             } else {
                 this.onComplete();
             }
