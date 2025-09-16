@@ -145,38 +145,40 @@ window.APP = window.APP || {};
                 rows = drawnRows.length
             } = options;
 
-            // Pre-calculate maximum distance for normalization
-            const maxDistance = Math.sqrt(cols * cols / 4 + rows * rows / 4);
+            const halfCols = cols / 2;
+            const halfRows = rows / 2;
+            const rowCenter = currentRow / 2;
+            const maxDistance = Math.hypot(halfCols, halfRows);
 
             for (let row = 0; row < drawnRows.length; row++) {
-                if (!drawnRows[row]) continue;
+                const rowData = drawnRows[row];
+                if (!rowData) continue;
 
+                const dy = row - rowCenter;
                 for (let col = 0; col < cols; col++) {
-                    if (drawnRows[row][col] === 1) {
-                        // Calculate gradient effect based on position
-                        const distance = Math.sqrt(
-                            Math.pow(col - cols / 2, 2) + Math.pow(row - currentRow / 2, 2)
-                        );
-                        const intensity = Math.max(minIntensity, 1 - distance / maxDistance);
+                    if (!rowData[col]) continue;
 
-                        // Calculate age effect - older rows fade
-                        const age = currentRow - row;
-                        const ageFactor = Math.max(minAgeFactor, 1 - age / (rows * ageFadeFactor));
+                    // Position based gradient
+                    const dx = col - halfCols;
+                    const intensity = Math.max(minIntensity, 1 - Math.hypot(dx, dy) / maxDistance);
 
-                        // Golden color with breathing/global alpha effect
-                        const alpha = intensity * ageFactor * baseAlpha * globalAlpha;
-                        const red = Math.floor(212 * intensity * ageFactor);
-                        const green = Math.floor(175 * intensity * ageFactor);
-                        const blue = Math.floor(55 * intensity * ageFactor);
+                    // Age fade keeps older rows subtle
+                    const age = currentRow - row;
+                    const ageFactor = Math.max(minAgeFactor, 1 - age / (rows * ageFadeFactor));
 
-                        ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-                        ctx.fillRect(
-                            col * cellSize + offsetX,
-                            row * cellSize + offsetY,
-                            cellSize - 0.5,
-                            cellSize - 0.5
-                        );
-                    }
+                    const colorStrength = intensity * ageFactor;
+                    const alpha = colorStrength * baseAlpha * globalAlpha;
+                    const red = Math.floor(212 * colorStrength);
+                    const green = Math.floor(175 * colorStrength);
+                    const blue = Math.floor(55 * colorStrength);
+
+                    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                    ctx.fillRect(
+                        col * cellSize + offsetX,
+                        row * cellSize + offsetY,
+                        cellSize - 0.5,
+                        cellSize - 0.5
+                    );
                 }
             }
         }
@@ -266,67 +268,6 @@ window.APP = window.APP || {};
         }
 
         /**
-         * Update dimensions while preserving current animation state
-         * @param {number} cols - New column count
-         * @param {number} rows - New row count
-         */
-        updateDimensionsPreserveState(cols, rows) {
-            const oldCols = this.cols;
-            const oldGrid = [...this.grid];
-            const oldCurrentRow = this.currentRow;
-            
-            this.cols = cols;
-            this.rows = rows;
-            
-            // Preserve existing grid state, adjusting for new width if needed
-            if (cols !== oldCols) {
-                this.grid = new Array(cols).fill(0);
-                
-                // Copy existing grid, centering it in the new width
-                if (oldGrid.length > 0) {
-                    const oldCenter = Math.floor(oldCols / 2);
-                    const newCenter = Math.floor(cols / 2);
-                    const offset = newCenter - oldCenter;
-                    
-                    for (let i = 0; i < oldGrid.length; i++) {
-                        const newIndex = i + offset;
-                        if (newIndex >= 0 && newIndex < cols) {
-                            this.grid[newIndex] = oldGrid[i];
-                        }
-                    }
-                }
-
-                // Also re-center previously drawn rows to the new width
-                if (Array.isArray(this.drawnRows) && this.drawnRows.length) {
-                    const oldDrawn = this.drawnRows;
-                    const newDrawn = new Array(oldDrawn.length);
-                    const oldCenter = Math.floor(oldCols / 2);
-                    const newCenter = Math.floor(cols / 2);
-                    const offset = newCenter - oldCenter;
-                    for (let r = 0; r < oldDrawn.length; r++) {
-                        const rowData = oldDrawn[r];
-                        if (!Array.isArray(rowData)) { newDrawn[r] = rowData; continue; }
-                        const newRow = new Array(cols).fill(0);
-                        for (let c = 0; c < rowData.length; c++) {
-                            const nc = c + offset;
-                            if (nc >= 0 && nc < cols) newRow[nc] = rowData[c];
-                        }
-                        newDrawn[r] = newRow;
-                    }
-                    this.drawnRows = newDrawn;
-                }
-            }
-            
-            // Keep the same current row if it's still valid
-            this.currentRow = Math.min(oldCurrentRow, this.rows - 1);
-            
-            // Preserve drawn rows that are still valid
-            if (this.drawnRows.length > this.rows) {
-                this.drawnRows = this.drawnRows.slice(0, this.rows);
-            }
-        }
-
-        /**
          * Store current generation for rendering
          */
         storeCurrentGeneration() {
@@ -382,182 +323,6 @@ window.APP = window.APP || {};
     }
 
     /**
-     * Unified Performance Monitor
-     * Tracks FPS, performance metrics, and handles automatic fallbacks
-     * 
-     * Features:
-     * - Frame rate monitoring
-     * - Rolling average calculations
-     * - Automatic performance-based fallbacks
-     * - Configurable thresholds and sampling
-     */
-    class CAPerformanceMonitor {
-        constructor(options = {}) {
-            this.frameCount = 0;
-            this.lastTime = performance.now();
-            this.fps = 60;
-            this.averageFPS = 60;
-            this.measurements = [];
-            
-            // Configuration options
-            this.maxMeasurements = options.maxMeasurements || 60;
-            this.fallbackThreshold = options.fallbackThreshold || 25;
-            this.checkInterval = options.checkInterval || 30; // frames
-            this.onFallback = options.onFallback || null;
-            
-            this.isMonitoring = false;
-            this.lastRenderTime = 0;
-        }
-
-        /**
-         * Start performance monitoring
-         */
-        startMonitoring() {
-            this.isMonitoring = true;
-            this.lastTime = performance.now();
-            this.frameCount = 0;
-            this.measurements = [];
-        }
-
-        /**
-         * Stop performance monitoring
-         */
-        stopMonitoring() {
-            this.isMonitoring = false;
-        }
-
-        /**
-         * Measure frame performance
-         * @param {number} renderTime - Time spent rendering this frame (optional)
-         */
-        measureFrame(renderTime = 0) {
-            if (!this.isMonitoring) return;
-
-            const now = performance.now();
-            const frameTime = now - this.lastTime;
-            this.lastTime = now;
-            this.lastRenderTime = renderTime;
-
-            // Calculate current FPS
-            this.fps = 1000 / frameTime;
-
-            // Store measurement
-            this.measurements.push(this.fps);
-            if (this.measurements.length > this.maxMeasurements) {
-                this.measurements.shift();
-            }
-
-            // Calculate rolling average FPS
-            this.averageFPS = this.measurements.reduce((sum, fps) => sum + fps, 0) / this.measurements.length;
-
-            // Check for performance issues periodically
-            this.frameCount++;
-            if (this.frameCount % this.checkInterval === 0) {
-                if (this.averageFPS < this.fallbackThreshold && this.onFallback) {
-                    console.warn(`Performance insufficient (${this.averageFPS.toFixed(1)} FPS), triggering fallback`);
-                    this.onFallback();
-                }
-            }
-        }
-
-        /**
-         * Get current performance statistics
-         * @returns {Object} Performance stats
-         */
-        getStats() {
-            return {
-                currentFPS: Math.round(this.fps * 10) / 10,
-                averageFPS: Math.round(this.averageFPS * 10) / 10,
-                lastRenderTime: Math.round(this.lastRenderTime * 100) / 100,
-                frameCount: this.frameCount,
-                sampleCount: this.measurements.length,
-                isMonitoring: this.isMonitoring
-            };
-        }
-
-        /**
-         * Reset all measurements
-         */
-        reset() {
-            this.frameCount = 0;
-            this.measurements = [];
-            this.fps = 60;
-            this.averageFPS = 60;
-            this.lastTime = performance.now();
-        }
-
-        /**
-         * Clean up resources
-         */
-        cleanup() {
-            this.stopMonitoring();
-            this.measurements = [];
-            this.onFallback = null;
-        }
-    }
-
-    /**
-     * GPU Resource Manager Utilities
-     * Common utilities for managing GPU resources across WebGL and WebGPU
-     */
-    class GPUResourceManager {
-        /**
-         * Check WebGL 2.0 support
-         * @returns {boolean} True if WebGL 2.0 is supported
-         */
-        static isWebGL2Supported() {
-            try {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl2') || canvas.getContext('experimental-webgl2');
-                return !!gl;
-            } catch (e) {
-                return false;
-            }
-        }
-
-        /**
-         * Check WebGPU support
-         * @returns {boolean} True if WebGPU is supported
-         */
-        static isWebGPUSupported() {
-            return 'gpu' in navigator;
-        }
-
-        /**
-         * Get best available GPU acceleration method
-         * @returns {string} 'webgpu', 'webgl', or 'cpu'
-         */
-        static getBestAcceleration() {
-            if (GPUResourceManager.isWebGPUSupported()) return 'webgpu';
-            if (GPUResourceManager.isWebGL2Supported()) return 'webgl';
-            return 'cpu';
-        }
-
-        /**
-         * Safe GPU resource cleanup with error handling
-         * @param {Function} cleanupFn - Cleanup function to execute
-         * @param {string} resourceName - Name for logging purposes
-         */
-        static safeCleanup(cleanupFn, resourceName = 'resource') {
-            try {
-                cleanupFn();
-            } catch (error) {
-                console.warn(`Failed to cleanup ${resourceName}:`, error.message);
-            }
-        }
-
-        /**
-         * Calculate optimal workgroup size for compute shaders
-         * @param {number} dataSize - Size of data to process
-         * @param {number} maxWorkgroupSize - Maximum workgroup size (default 64)
-         * @returns {number} Optimal workgroup count
-         */
-        static calculateWorkgroups(dataSize, maxWorkgroupSize = 64) {
-            return Math.ceil(dataSize / maxWorkgroupSize);
-        }
-    }
-
-    /**
      * Breathing Effect Manager
      * Manages the breathing alpha animation for header cellular automata
      */
@@ -608,8 +373,6 @@ window.APP = window.APP || {};
         CellularAutomataRules,
         CellularAutomataRenderer,
         AnimationStateManager,
-        CAPerformanceMonitor,
-        GPUResourceManager,
         BreathingEffect
     };
 
@@ -617,8 +380,6 @@ window.APP = window.APP || {};
     window.CellularAutomataRules = CellularAutomataRules;
     window.CellularAutomataRenderer = CellularAutomataRenderer;
     window.AnimationStateManager = AnimationStateManager;
-    window.CAPerformanceMonitor = CAPerformanceMonitor;
-    window.GPUResourceManager = GPUResourceManager;
     window.BreathingEffect = BreathingEffect;
 
 })(window.APP);

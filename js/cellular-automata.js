@@ -63,8 +63,6 @@ window.APP = window.APP || {};
             // Options
             this.animationSpeed = options.animationSpeed || 200;
             this.parentElement = options.parentElement || null;
-            this.skipInitialAnimation = options.skipInitialAnimation || false;
-
             this.init();
         }
 
@@ -77,10 +75,7 @@ window.APP = window.APP || {};
         init() {
             this.setupCanvas();
 
-            // Allow subclasses to skip initial animation (e.g., for WebGL timing)
-            if (!this.skipInitialAnimation) {
-                this.initAnimation();
-            }
+            this.initAnimation();
         }
 
         calculateCanvasSize() {

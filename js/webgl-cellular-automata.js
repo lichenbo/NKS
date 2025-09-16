@@ -46,13 +46,6 @@ window.APP = window.APP || {};
             // GPU state
             this.useWebGL = false;
             
-            // Performance monitoring using shared utility
-            // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
-            this.performanceMonitor = new CAPerformanceMonitor({
-                fallbackThreshold: 0.1
-                // No fallback callback - WebGL should work or fail completely
-            });
-            
             // Initialize WebGL acceleration
             this.initializeWebGL();
         }
@@ -274,19 +267,6 @@ window.APP = window.APP || {};
         }
 
         /**
-         * Convert rule number to WebGL uniform array
-         * @param {number} ruleNumber - Elementary CA rule number (0-255)
-         * @returns {Float32Array} Rule lookup table for WebGL
-         */
-        convertRuleToWebGLFormat(ruleNumber) {
-            const rule = new Float32Array(8);
-            for (let i = 0; i < 8; i++) {
-                rule[i] = (ruleNumber >> i) & 1;
-            }
-            return rule;
-        }
-
-        /**
          * Upload cellular automata grid data to GPU texture
          * @param {Array} gridData - Current generation grid data
          */
@@ -306,7 +286,7 @@ window.APP = window.APP || {};
          * @param {number} ruleNumber - Elementary CA rule number
          * @returns {Promise<Uint8Array>} Next generation grid data
          */
-        async computeNextGenerationWebGL(ruleNumber) {
+        computeNextGenerationWebGL(ruleNumber) {
             const inputTextureIndex = this.currentTextureIndex;
             const outputTextureIndex = 1 - this.currentTextureIndex;
 
@@ -324,9 +304,10 @@ window.APP = window.APP || {};
 
             // Set uniforms
             this.gl.uniform2f(this.uniformLocations.textureSize, this.cols, 1);
-            
-            const rule = this.convertRuleToWebGLFormat(ruleNumber);
-            this.gl.uniform1fv(this.uniformLocations.rule, rule);
+            this.gl.uniform1fv(
+                this.uniformLocations.rule,
+                CellularAutomataRules.toWebGLFormat(ruleNumber)
+            );
 
             // Bind VAO and draw
             this.gl.bindVertexArray(this.vao);
@@ -344,7 +325,7 @@ window.APP = window.APP || {};
             this.gl.bindVertexArray(null);
 
             // Convert back to 0/1 values
-            return resultData.map(value => value > 127 ? 1 : 0);
+            return Array.from(resultData, value => (value > 127 ? 1 : 0));
         }
 
         /**
@@ -374,7 +355,6 @@ window.APP = window.APP || {};
         cleanup() {
             super.cleanup();
             this.cleanupWebGL();
-            this.performanceMonitor?.cleanup();
         }
 
         /**
@@ -402,20 +382,14 @@ window.APP = window.APP || {};
             // Use shared utilities
             this.ruleNumber = 30;
             this.stateManager = new AnimationStateManager(this.cols, this.rows);
-
-            this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
 
-
-        async animate() {
-            const startTime = performance.now();
-            await this.animateWithWebGL();
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
+        animate() {
+            this.animateWithWebGL();
         }
 
-        async animateWithWebGL() {
+        animateWithWebGL() {
             // Only clear if starting over
             if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -441,7 +415,7 @@ window.APP = window.APP || {};
 
             // Calculate next generation using WebGL
             if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = await this.computeNextGenerationWebGL(this.ruleNumber);
+                const nextGrid = this.computeNextGenerationWebGL(this.ruleNumber);
                 this.stateManager.grid = Array.from(nextGrid);
                 this.stateManager.currentRow++;
                 
@@ -478,7 +452,6 @@ window.APP = window.APP || {};
             // Guard to avoid multiple queued rule changes after completion
             this.nextRuleTimer = null;
 
-            this.performanceMonitor.startMonitoring();
             this.startAnimation();
         }
 
@@ -502,15 +475,12 @@ window.APP = window.APP || {};
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
 
-        async animate() {
-            const startTime = performance.now();
+        animate() {
             this.breathingEffect.update();
-            await this.animateWithWebGL();
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
+            this.animateWithWebGL();
         }
 
-        async animateWithWebGL() {
+        animateWithWebGL() {
             // Only clear if starting over
             if (this.stateManager.currentRow === 0) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -538,7 +508,7 @@ window.APP = window.APP || {};
 
             // Calculate next generation using WebGL
             if (!this.stateManager.isAnimationComplete()) {
-                const nextGrid = await this.computeNextGenerationWebGL(this.currentRuleNumber);
+                const nextGrid = this.computeNextGenerationWebGL(this.currentRuleNumber);
                 this.stateManager.grid = Array.from(nextGrid);
                 this.stateManager.currentRow++;
                 

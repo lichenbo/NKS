@@ -43,13 +43,6 @@ window.APP = window.APP || {};
             // GPU state
             this.useWebGPU = false;
 
-            // Performance monitoring using shared utility
-            // Note: Cellular automata runs at ~5 FPS by design (200ms intervals)
-            this.performanceMonitor = new CAPerformanceMonitor({
-                fallbackThreshold: 0.1
-                // No fallback callback - WebGPU should work or fail completely
-            });
-
             // Initialize WebGPU
             this.initializationPromise = this.initializeWebGPU();
         }
@@ -294,7 +287,6 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         cleanup() {
             super.cleanup();
             this.cleanupWebGPU();
-            this.performanceMonitor?.cleanup();
         }
 
         /**
@@ -403,10 +395,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
         async animate() {
-            const startTime = performance.now();
             await this.animateWithGPU();
-            const endTime = performance.now();
-            this.performanceMonitor.measureFrame(endTime - startTime);
         }
 
         async animateWithGPU() {
