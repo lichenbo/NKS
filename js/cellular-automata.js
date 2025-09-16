@@ -85,25 +85,48 @@ window.APP = window.APP || {};
             }
         }
 
-        setupCanvas() {
+        calculateCanvasSize() {
+            let width;
+            let height;
+
             if (this.parentElement) {
-                // Use parent element dimensions (for header)
+                // Use parent element height for header canvas, but align width with window
                 const parent = this.canvas.parentElement;
-                // Use window width for alignment with background, but parent height
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = parent.clientHeight;
+                width = window.innerWidth;
+                const fallbackHeight = this.canvas.height || window.innerHeight;
+                height = parent ? parent.clientHeight : fallbackHeight;
             } else {
-                // Use window dimensions (for background)  
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
+                width = window.innerWidth;
+                height = window.innerHeight;
             }
 
-            // Set CSS dimensions to match canvas dimensions for 1:1 pixel ratio
-            this.canvas.style.width = this.canvas.width + 'px';
-            this.canvas.style.height = this.canvas.height + 'px';
+            return { width, height };
+        }
+
+        applyCanvasSize(width, height) {
+            const widthChanged = this.canvas.width !== width;
+            const heightChanged = this.canvas.height !== height;
+
+            if (widthChanged) {
+                this.canvas.width = width;
+            }
+            if (heightChanged) {
+                this.canvas.height = height;
+            }
+
+            // Keep CSS dimensions synchronized for crisp pixels
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
 
             // Ensure no image smoothing for crisp pixels
             this.ctx.imageSmoothingEnabled = false;
+
+            return { widthChanged, heightChanged };
+        }
+
+        setupCanvas() {
+            const { width, height } = this.calculateCanvasSize();
+            return this.applyCanvasSize(width, height);
         }
 
         setupResizeListener() {
@@ -111,12 +134,24 @@ window.APP = window.APP || {};
             const handleResize = () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    this.stopAnimation();
-                    this.setupCanvas();
+                    const { width, height } = this.calculateCanvasSize();
+                    const widthChanged = this.canvas.width !== width;
+
+                    if (widthChanged) {
+                        this.stopAnimation();
+                    }
+
+                    const { heightChanged } = this.applyCanvasSize(width, height);
                     this.updateCanvasDimensions();
-                    // Mark that we just resized so subclasses can adjust visuals
-                    this._justResized = true;
-                    this.startAnimation();
+
+                    if (widthChanged) {
+                        // Mark that we just resized so subclasses can adjust visuals
+                        this._justResized = true;
+                        this.startAnimation();
+                    } else if (heightChanged) {
+                        // Height-only changes keep animation running without restart
+                        this._justResized = false;
+                    }
                 }, this.resizeDebounce);
             };
 
