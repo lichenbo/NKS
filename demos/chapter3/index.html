@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.6;
@@ -18,65 +20,75 @@
             min-height: 100vh;
             padding: 0;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
+
         .back-link {
             display: inline-block;
             margin-bottom: 2rem;
             padding: 0.5rem 1rem;
             color: #ffd700;
             text-decoration: none;
-            border: 1px solid rgba(255,215,0,0.3);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 6px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
         }
+
         .back-link:hover {
-            background: rgba(255,215,0,0.1);
+            background: rgba(255, 215, 0, 0.1);
             border-color: #ffd700;
             transform: translateY(-1px);
         }
+
         .header {
             text-align: center;
             margin-bottom: 3rem;
             padding: 2rem;
-            border: 1px solid rgba(255,215,0,0.25);
+            border: 1px solid rgba(255, 215, 0, 0.25);
             border-radius: 12px;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
         }
+
         .header h1 {
             margin: 0 0 1rem;
             color: #ffd700;
             font-weight: 700;
             font-size: 2.4rem;
         }
+
         .header p {
             margin: 0;
             color: #b8b8b8;
             font-size: 1.05rem;
         }
+
         .category-section {
             margin-bottom: 2.5rem;
         }
+
         .category-title {
             color: #ffd700;
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(255,215,0,0.3);
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
         }
+
         .demo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
         }
+
         .demo-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,215,0,0.2);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 12px;
             padding: 1.5rem;
             transition: all 0.3s ease;
@@ -84,66 +96,77 @@
             flex-direction: column;
             gap: 0.75rem;
         }
+
         .demo-card:hover {
-            border-color: rgba(255,215,0,0.6);
-            background: rgba(255,255,255,0.08);
+            border-color: rgba(255, 215, 0, 0.6);
+            background: rgba(255, 255, 255, 0.08);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
+
         .demo-title {
             color: #ffd700;
             font-size: 1.2rem;
             font-weight: 600;
         }
+
         .demo-description {
             color: #c8c8c8;
             font-size: 0.95rem;
             flex: 1 1 auto;
         }
+
         .demo-link {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
             padding: 0.5rem 1rem;
-            background: linear-gradient(45deg, rgba(255,215,0,0.15), rgba(255,215,0,0.25));
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.25));
             color: #f7e49a;
             text-decoration: none;
-            border: 1px solid rgba(255,215,0,0.35);
+            border: 1px solid rgba(255, 215, 0, 0.35);
             border-radius: 6px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .demo-link:hover {
-            background: linear-gradient(45deg, rgba(255,215,0,0.25), rgba(255,215,0,0.35));
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.35));
             transform: translateY(-1px);
         }
+
         .footer {
             text-align: center;
             margin-top: 3rem;
             padding: 1.5rem;
-            border-top: 1px solid rgba(255,215,0,0.2);
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
             color: #888;
         }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
             }
+
             .header h1 {
                 font-size: 2rem;
             }
+
             .demo-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
+
             .demo-card {
                 padding: 1.25rem;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <a href="../index.html" class="back-link">← 返回演示总览</a>
+        <a href="/index.html" class="back-link">← 返回演示总览</a>
 
         <div class="header">
             <h1>第3章：简单程序的世界 · 演示合集</h1>
@@ -156,17 +179,18 @@
                 <div class="demo-card">
                     <h3 class="demo-title">三色元胞自动机探索器</h3>
                     <p class="demo-description">交互式探索三色元胞自动机，观察不同规则下的复杂纹理、嵌套结构与随机行为。</p>
-                    <a href="three-color-ca-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="three-color-ca-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">三色元胞自动机（独立版）</h3>
                     <p class="demo-description">性能优化的独立版本，适合在移动设备或离线环境中体验三色元胞自动机。</p>
-                    <a href="three-color-ca-demo-standalone.html" class="demo-link">立即打开 →</a>
+                    <a href="three-color-ca-demo-standalone.html" class="demo-link" target="_blank" rel="noopener">立即打开
+                        →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">移动自动机演示</h3>
                     <p class="demo-description">展示移动自动机的局部更新机制，感受并行度变化对复杂性出现频率的影响。</p>
-                    <a href="mobile-automata-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="mobile-automata-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
             </div>
         </div>
@@ -177,12 +201,12 @@
                 <div class="demo-card">
                     <h3 class="demo-title">图灵机模拟器</h3>
                     <p class="demo-description">交互式图灵机模拟器，支持多状态程序与逐步执行，直观理解复杂行为的阈值。</p>
-                    <a href="turing-machine-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="turing-machine-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">寄存器机演示</h3>
                     <p class="demo-description">使用最简指令集模拟 CPU 级寄存器机，体验指令数量达到阈值后出现的复杂行为。</p>
-                    <a href="register-machine-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="register-machine-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
             </div>
         </div>
@@ -193,22 +217,23 @@
                 <div class="demo-card">
                     <h3 class="demo-title">替换系统演示</h3>
                     <p class="demo-description">观察近邻独立替换规则带来的嵌套分形，并探索允许创造与毁灭后的随机扩散。</p>
-                    <a href="substitution-system-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="substitution-system-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">顺序替换系统</h3>
                     <p class="demo-description">模拟“查找-替换”式的顺序规则，体验字符串在局部修改下如何涌现复杂模式。</p>
-                    <a href="sequential-substitution-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="sequential-substitution-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开
+                        →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">标签系统探索器</h3>
                     <p class="demo-description">交互探索标签系统的删除与附加规则，直观观察序列演化的规律与不可预测性。</p>
-                    <a href="tag-system-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="tag-system-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">NKS 风格标签系统</h3>
                     <p class="demo-description">仿照《一种新科学》图示的标签系统演示，配备可视化演化历史与详细步骤记录。</p>
-                    <a href="tag-system-nks-demo.html" class="demo-link">立即打开 →</a>
+                    <a href="tag-system-nks-demo.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
             </div>
         </div>
@@ -219,17 +244,17 @@
                 <div class="demo-card">
                     <h3 class="demo-title">第3章交互式读者</h3>
                     <p class="demo-description">伴随章节文本的交互式略读器，整合动画、图像与关键概念的快速复习。</p>
-                    <a href="chapter3-interactive.html" class="demo-link">立即打开 →</a>
+                    <a href="chapter3-interactive.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">第3章实验室</h3>
                     <p class="demo-description">整合章节中的多个实验，提供统一的实验室界面，便于集中探索。</p>
-                    <a href="chapter3-lab.html" class="demo-link">立即打开 →</a>
+                    <a href="chapter3-lab.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
                 <div class="demo-card">
                     <h3 class="demo-title">第3章阅读器</h3>
                     <p class="demo-description">章节内容的可视化阅读界面，集中展示要点与配图，适合课堂或演示使用。</p>
-                    <a href="chapter3-reader.html" class="demo-link">立即打开 →</a>
+                    <a href="chapter3-reader.html" class="demo-link" target="_blank" rel="noopener">立即打开 →</a>
                 </div>
             </div>
         </div>
@@ -239,4 +264,5 @@
         </div>
     </div>
 </body>
+
 </html>

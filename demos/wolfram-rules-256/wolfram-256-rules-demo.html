@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wolfram 初等元胞自动机 256 规则总览</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="wolfram-256-rules-demo.css">
 </head>
+
 <body>
     <header class="header">
         <div class="header-content">
             <h1>Wolfram 初等元胞自动机 256 规则总览</h1>
             <p class="subtitle">完整展示斯蒂芬·沃尔夫拉姆对初等元胞自动机的分类与行为</p>
             <nav class="header-nav">
-                <a href="../index.html" class="nav-link">← 返回 NKS 演示主页</a>
-                <a href="../wolfram-rules-explorer/wolfram-rules-explorer.html" class="nav-link">前往交互式规则浏览器 →</a>
+                <a href="/index.html" class="nav-link" target="_blank" rel="noopener">← 返回 NKS 演示主页</a>
+                <a href="../wolfram-rules-explorer/wolfram-rules-explorer.html" class="nav-link" target="_blank"
+                    rel="noopener">前往交互式规则浏览器 →</a>
             </nav>
         </div>
     </header>
@@ -28,7 +33,7 @@
                 <p>初等元胞自动机是一维元胞自动机中最简单的类别。每个元胞只有两种状态（0 或 1），其更新规则仅依赖于自身以及左右各一个邻居的状态组合。</p>
                 <p>由于元胞与邻居共有 2³ = 8 种状态组合，而每种组合都可以映射到 0 或 1，因此共有 2⁸ = 256 种初等规则，并以 0 到 255 编号。</p>
             </div>
-            
+
             <div class="controls-section">
                 <div class="control-group">
                     <label for="generations-slider">演化步数：<span id="generations-value">50</span></label>
@@ -65,7 +70,7 @@
                 </div>
                 <button id="modal-close-btn" class="modal-close-btn" title="关闭">&times;</button>
             </div>
-            
+
             <div class="modal-body">
                 <div class="modal-controls">
                     <div class="modal-control-group">
@@ -82,11 +87,11 @@
                         <button id="modal-restart-btn" class="btn btn-secondary">重置</button>
                     </div>
                 </div>
-                
+
                 <div class="modal-canvas-container">
                     <canvas id="modal-canvas" class="modal-canvas"></canvas>
                 </div>
-                
+
                 <div class="modal-stats">
                     <div class="stat-item">
                         <span class="stat-label">当前步：</span>
@@ -107,4 +112,5 @@
 
     <script src="wolfram-256-rules-demo.js"></script>
 </body>
+
 </html>
