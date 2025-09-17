@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章演示集合 | NKS</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+            background: #0b0b0f;
+            color: #e6e6f0;
+            line-height: 1.6;
+            padding: 2.5rem 1.5rem 3rem;
+        }
+        .layout {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 2.5rem;
+        }
+        h1 {
+            font-size: clamp(1.9rem, 3vw, 2.6rem);
+            font-weight: 700;
+            color: #f8d65b;
+            margin-bottom: 0.75rem;
+        }
+        p.lead {
+            color: #bfc4d6;
+            margin-bottom: 1.5rem;
+        }
+        a.back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #f8d65b;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        a.back-link:hover {
+            text-decoration: underline;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+        .demo-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(248, 214, 91, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .demo-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(248, 214, 91, 0.55);
+        }
+        .demo-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f8d65b;
+        }
+        .demo-desc {
+            font-size: 0.95rem;
+            color: #cbd0de;
+            flex: 1 1 auto;
+        }
+        .demo-link {
+            align-self: flex-start;
+            padding: 0.5rem 0.85rem;
+            border-radius: 8px;
+            background: rgba(248, 214, 91, 0.15);
+            border: 1px solid rgba(248, 214, 91, 0.35);
+            color: #ffe68a;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .demo-link:hover {
+            background: rgba(248, 214, 91, 0.25);
+            transform: translateY(-1px);
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 2rem 1rem 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <a class="back-link" href="../index.html">← 返回演示总览</a>
+        <header>
+            <h1>第3章：简单程序的世界 · 演示</h1>
+            <p class="lead">以下演示展示了《新科学中的新种类》第三章讨论的核心系统——从多色元胞自动机到移动自动机、替换系统与寄存器机。</p>
+        </header>
+
+        <section class="demo-grid">
+            <article class="demo-card">
+                <h2 class="demo-title">三色元胞自动机探索器</h2>
+                <p class="demo-desc">交互式探索三色元胞自动机，观察不同规则下的复杂纹理、嵌套结构与随机行为。</p>
+                <a class="demo-link" href="three-color-ca-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">三色元胞自动机（独立版）</h2>
+                <p class="demo-desc">性能优化的独立版本，适合在移动设备或离线环境中体验三色元胞自动机。</p>
+                <a class="demo-link" href="three-color-ca-demo-standalone.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">移动自动机演示</h2>
+                <p class="demo-desc">展示移动自动机的局部更新机制，感受并行度变化对复杂性出现频率的影响。</p>
+                <a class="demo-link" href="mobile-automata-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">图灵机模拟器</h2>
+                <p class="demo-desc">交互式图灵机模拟器，支持多状态程序与逐步执行，直观理解复杂行为的阈值。</p>
+                <a class="demo-link" href="turing-machine-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">替换系统演示</h2>
+                <p class="demo-desc">观察近邻独立替换规则带来的嵌套分形，并探索允许创造/毁灭后的随机扩散。</p>
+                <a class="demo-link" href="substitution-system-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">顺序替换系统</h2>
+                <p class="demo-desc">模拟“查找-替换”式的顺序规则，体验字符串在局部修改下如何涌现复杂模式。</p>
+                <a class="demo-link" href="sequential-substitution-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">标记系统探索器</h2>
+                <p class="demo-desc">交互探索标签系统的删除与附加规则，直观观察序列演化的规律与不可预测性。</p>
+                <a class="demo-link" href="tag-system-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">NKS 风格标记系统</h2>
+                <p class="demo-desc">仿照《新科学》图示的标签系统演示，配备可视化演化历史与详细的步骤记录。</p>
+                <a class="demo-link" href="tag-system-nks-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">寄存器机演示</h2>
+                <p class="demo-desc">使用最简指令集模拟 CPU 级寄存器机，体验指令数量达到阈值后出现的复杂行为。</p>
+                <a class="demo-link" href="register-machine-demo.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">第3章交互式读者</h2>
+                <p class="demo-desc">伴随章节文本的交互式略读器，整合动画、图像与关键概念的快速复习。</p>
+                <a class="demo-link" href="chapter3-interactive.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">第3章实验室</h2>
+                <p class="demo-desc">整合多个实验的实验室界面，方便一次性体验章节内提到的计算系统。</p>
+                <a class="demo-link" href="chapter3-lab.html">打开演示</a>
+            </article>
+
+            <article class="demo-card">
+                <h2 class="demo-title">第3章阅读器</h2>
+                <p class="demo-desc">章节内容的可视化阅读界面，集中展示要点与配图，适合演示或课堂使用。</p>
+                <a class="demo-link" href="chapter3-reader.html">打开演示</a>
+            </article>
+        </section>
+    </div>
+</body>
+</html>

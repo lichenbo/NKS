@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All 256 Wolfram Elementary Cellular Automaton Rules</title>
+    <title>Wolfram 初等元胞自动机 256 规则总览</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,11 +12,11 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>All 256 Wolfram Elementary Cellular Automaton Rules</h1>
-            <p class="subtitle">Complete visualization of Stephen Wolfram's elementary cellular automata classification</p>
+            <h1>Wolfram 初等元胞自动机 256 规则总览</h1>
+            <p class="subtitle">完整展示斯蒂芬·沃尔夫拉姆对初等元胞自动机的分类与行为</p>
             <nav class="header-nav">
-                <a href="index.html" class="nav-link">← Back to NKS Explorer</a>
-                <a href="wolfram-rules-explorer.html" class="nav-link">Interactive Rule Explorer →</a>
+                <a href="index.html" class="nav-link">← 返回 NKS 演示主页</a>
+                <a href="wolfram-rules-explorer.html" class="nav-link">前往交互式规则浏览器 →</a>
             </nav>
         </div>
     </header>
@@ -24,22 +24,22 @@
     <main class="main-content">
         <div class="intro-section">
             <div class="intro-text">
-                <h2>Elementary Cellular Automata</h2>
-                <p>Elementary cellular automata are the simplest class of one-dimensional cellular automata. Each cell has two possible states (0 or 1), and the rule for updating the state of a cell depends only on the current state of the cell and its two neighbors.</p>
-                <p>Since there are 2³ = 8 possible configurations for a cell and its neighbors, and each configuration can map to either 0 or 1, there are 2⁸ = 256 possible elementary cellular automaton rules, numbered from 0 to 255.</p>
+                <h2>初等元胞自动机概览</h2>
+                <p>初等元胞自动机是一维元胞自动机中最简单的类别。每个元胞只有两种状态（0 或 1），其更新规则仅依赖于自身以及左右各一个邻居的状态组合。</p>
+                <p>由于元胞与邻居共有 2³ = 8 种状态组合，而每种组合都可以映射到 0 或 1，因此共有 2⁸ = 256 种初等规则，并以 0 到 255 编号。</p>
             </div>
             
             <div class="controls-section">
                 <div class="control-group">
-                    <label for="generations-slider">Generations: <span id="generations-value">50</span></label>
+                    <label for="generations-slider">演化步数：<span id="generations-value">50</span></label>
                     <input type="range" id="generations-slider" min="20" max="100" value="50">
                 </div>
                 <div class="control-group">
-                    <label for="width-slider">Width: <span id="width-value">100</span></label>
+                    <label for="width-slider">宽度：<span id="width-value">100</span></label>
                     <input type="range" id="width-slider" min="50" max="200" value="100">
                 </div>
-                <button id="regenerate-btn" class="btn btn-primary">Regenerate All</button>
-                <button id="toggle-numbers-btn" class="btn btn-secondary">Hide Rule Numbers</button>
+                <button id="regenerate-btn" class="btn btn-primary">重新生成全部图像</button>
+                <button id="toggle-numbers-btn" class="btn btn-secondary">隐藏规则编号</button>
             </div>
         </div>
 
@@ -49,7 +49,7 @@
     </main>
 
     <footer class="footer">
-        <p>&copy; 2024 NKS Explorer. Inspired by Stephen Wolfram's "A New Kind of Science".</p>
+        <p>&copy; 2024 NKS Explorer. 灵感来源：斯蒂芬·沃尔夫拉姆《一种新科学》</p>
     </footer>
 
     <!-- Modal for detailed rule view -->
@@ -57,29 +57,29 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title-section">
-                    <h2 id="modal-rule-title">Rule 30</h2>
+                    <h2 id="modal-rule-title">规则 30</h2>
                     <div class="modal-rule-info">
                         <span id="modal-rule-binary" class="rule-binary">00011110</span>
-                        <span id="modal-rule-classification" class="rule-classification">Chaotic (Class III)</span>
+                        <span id="modal-rule-classification" class="rule-classification">混沌（III 类）</span>
                     </div>
                 </div>
-                <button id="modal-close-btn" class="modal-close-btn" title="Close">&times;</button>
+                <button id="modal-close-btn" class="modal-close-btn" title="关闭">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div class="modal-controls">
                     <div class="modal-control-group">
-                        <label for="modal-speed-slider">Animation Speed: <span id="modal-speed-value">5</span></label>
+                        <label for="modal-speed-slider">动画速度：<span id="modal-speed-value">5</span></label>
                         <input type="range" id="modal-speed-slider" min="1" max="10" value="5">
                     </div>
                     <div class="modal-control-group">
-                        <label for="modal-size-slider">Cell Size: <span id="modal-size-value">3</span></label>
+                        <label for="modal-size-slider">元胞尺寸：<span id="modal-size-value">3</span></label>
                         <input type="range" id="modal-size-slider" min="1" max="6" value="3">
                     </div>
                     <div class="modal-control-buttons">
-                        <button id="modal-play-btn" class="btn btn-primary">Play</button>
-                        <button id="modal-pause-btn" class="btn btn-secondary">Pause</button>
-                        <button id="modal-restart-btn" class="btn btn-secondary">Restart</button>
+                        <button id="modal-play-btn" class="btn btn-primary">播放</button>
+                        <button id="modal-pause-btn" class="btn btn-secondary">暂停</button>
+                        <button id="modal-restart-btn" class="btn btn-secondary">重置</button>
                     </div>
                 </div>
                 
@@ -89,15 +89,15 @@
                 
                 <div class="modal-stats">
                     <div class="stat-item">
-                        <span class="stat-label">Generation:</span>
+                        <span class="stat-label">当前步：</span>
                         <span id="modal-current-generation" class="stat-value">0</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Active Cells:</span>
+                        <span class="stat-label">活跃元胞：</span>
                         <span id="modal-active-cells" class="stat-value">1</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Density:</span>
+                        <span class="stat-label">密度：</span>
                         <span id="modal-density" class="stat-value">0.5%</span>
                     </div>
                 </div>

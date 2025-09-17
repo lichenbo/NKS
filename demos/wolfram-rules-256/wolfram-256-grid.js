@@ -78,10 +78,10 @@
     header.className = "tile-header";
     const title = document.createElement("div");
     title.className = "rule-number";
-    title.textContent = `Rule ${ruleNumber}`;
+    title.textContent = `规则 ${ruleNumber}`;
     const bits = document.createElement("div");
     bits.className = "bits";
-    bits.title = "Binary (MSB→LSB)";
+    bits.title = "二进制（从最高位到最低位）";
     bits.textContent = toBinary8(ruleNumber);
     header.appendChild(title);
     header.appendChild(bits);
@@ -168,4 +168,3 @@
     bootstrap();
   }
 })();
-

@@ -50,4 +50,4 @@
 - 通用计算能力是规则空间中的"典型"特性，而非例外
 - 这解释了为什么自然界普遍表现出复杂性和"智能"行为
 
-- 相关演示：[256 规则演化](demos/wolfram-rules-256/wolfram-256-rules-demo.html)、[规则浏览器](demos/wolfram-rules-explorer/wolfram-rules-explorer.html)、[图灵机演示](demos/turing-machine-demo.html)、[标签系统演示](demos/tag-system-demo.html)、[顺序替换系统演示](demos/sequential-substitution-demo.html)、[寄存器机演示](demos/register-machine-demo.html)、[移动自动机演示](demos/mobile-automata-demo.html)。
+- 相关演示：[256 规则演化](demos/wolfram-rules-256/wolfram-256-rules-demo.html)、[规则浏览器](demos/wolfram-rules-explorer/wolfram-rules-explorer.html)、[图灵机演示](demos/chapter3/turing-machine-demo.html)、[标签系统演示](demos/chapter3/tag-system-demo.html)、[顺序替换系统演示](demos/chapter3/sequential-substitution-demo.html)、[寄存器机演示](demos/chapter3/register-machine-demo.html)、[移动自动机演示](demos/chapter3/mobile-automata-demo.html)。

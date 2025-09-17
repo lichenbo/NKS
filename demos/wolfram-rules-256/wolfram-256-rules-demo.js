@@ -80,7 +80,7 @@ class Wolfram256RulesDemo {
         
         this.toggleNumbersBtn.addEventListener('click', () => {
             this.showRuleNumbers = !this.showRuleNumbers;
-            this.toggleNumbersBtn.textContent = this.showRuleNumbers ? 'Hide Rule Numbers' : 'Show Rule Numbers';
+            this.toggleNumbersBtn.textContent = this.showRuleNumbers ? '隐藏规则编号' : '显示规则编号';
             this.updateRuleNumbersVisibility();
         });
         
@@ -259,7 +259,7 @@ class Wolfram256RulesDemo {
         
         const title = document.createElement('h3');
         title.className = 'rule-title';
-        title.textContent = `Rule ${ruleNumber}`;
+        title.textContent = `规则 ${ruleNumber}`;
         
         const binary = document.createElement('span');
         binary.className = 'rule-binary';
@@ -287,7 +287,7 @@ class Wolfram256RulesDemo {
         // Show loading message
         const loading = document.createElement('div');
         loading.className = 'loading-message';
-        loading.textContent = 'Generating all 256 rules...';
+        loading.textContent = '正在生成全部 256 条规则…';
         this.rulesGrid.appendChild(loading);
         
         // Generate rules in batches to avoid blocking UI
@@ -364,17 +364,17 @@ class Wolfram256RulesDemo {
     getRuleClassification(ruleNumber) {
         // Some well-known classifications
         const classifications = {
-            0: 'Uniform (Class I)',
-            30: 'Chaotic (Class III)', 
-            54: 'Complex (Class IV)',
-            90: 'Fractal (Class II)',
-            110: 'Complex (Class IV)',
-            150: 'Fractal (Class II)',
-            184: 'Complex (Class IV)',
-            255: 'Uniform (Class I)'
+            0: '均匀（I 类）',
+            30: '混沌（III 类）',
+            54: '复杂（IV 类）',
+            90: '分形（II 类）',
+            110: '复杂（IV 类）',
+            150: '分形（II 类）',
+            184: '复杂（IV 类）',
+            255: '均匀（I 类）'
         };
         
-        return classifications[ruleNumber] || 'Unknown';
+        return classifications[ruleNumber] || '未知分类';
     }
     
     // ================================
@@ -390,7 +390,7 @@ class Wolfram256RulesDemo {
         this.modal.style.display = 'flex';
         
         // Update modal content
-        this.modalTitle.textContent = `Rule ${ruleNumber}`;
+        this.modalTitle.textContent = `规则 ${ruleNumber}`;
         this.modalBinary.textContent = ruleNumber.toString(2).padStart(8, '0');
         this.modalClassification.textContent = this.getRuleClassification(ruleNumber);
         

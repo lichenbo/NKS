@@ -42,7 +42,7 @@
 ![规则110 详细演化](images/cellular-automata/rule-110-p33.png)
 
 ![规则110 结构相互作用](images/cellular-automata/rule-110-p34.png)
-<!-- 交互式 Demo 可链接到 demos/turing-machine-demo.html 或 images/computational-art/rule-110-pattern.png -->
+<!-- 交互式 Demo 可链接到 demos/chapter3/turing-machine-demo.html 或 images/computational-art/rule-110-pattern.png -->
 
 这让我不禁思考：这些结构最终会全部消失，只留下规律的背景吗？还是会产生越来越多的结构，让整个系统变得完全随机？为了找到答案，我只能让计算机一直运行下去。最终，在近三千步之后，一个稳定的结构存活了下来，并与背景产生了周期性的互动。
 
