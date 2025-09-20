@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 4: Systems Based on Numbers - Interactive Demos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #050505 0%, #111111 100%);
+            color: #e6e6e6;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            padding: 2.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+        }
+
+        .header h1 {
+            font-size: clamp(2.4rem, 5vw, 3.4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .demo-section {
+            margin: 3.5rem 0;
+            padding: 2.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            backdrop-filter: blur(8px);
+        }
+
+        .demo-title {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .demo-title span.icon {
+            font-size: 2.2rem;
+        }
+
+        .demo-description {
+            font-size: 1.05rem;
+            margin-bottom: 1.75rem;
+            opacity: 0.85;
+            line-height: 1.7;
+        }
+
+        .demo-container {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 18px;
+            padding: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            min-width: 160px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.75;
+        }
+
+        select,
+        input[type="range"],
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #ffd700;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        input[type="range"] {
+            accent-color: #ffd700;
+            width: 220px;
+        }
+
+        .btn {
+            padding: 0.7rem 1.4rem;
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+            color: #ffd700;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 215, 0, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .btn.secondary {
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        canvas {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background: #050505;
+            max-width: 100%;
+        }
+
+        .info-panel {
+            background: rgba(255, 215, 0, 0.07);
+            border-left: 4px solid #ffd700;
+            padding: 1rem 1.25rem;
+            border-radius: 0 14px 14px 0;
+            margin-top: 1.5rem;
+        }
+
+        .info-panel h3 {
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.6rem;
+            opacity: 0.85;
+        }
+
+        .info-panel p {
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-card h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+            color: #ffdd57;
+        }
+
+        .stat-card p {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #f5f5f5;
+        }
+
+        .bar-chart {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .bar-label {
+            font-size: 0.9rem;
+            opacity: 0.75;
+        }
+
+        .bar-track {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+        }
+
+        .digit-stream {
+            margin-top: 1rem;
+            font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.95rem;
+            color: #ffef9f;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            max-height: 180px;
+            overflow: auto;
+            word-break: break-all;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            opacity: 0.75;
+        }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .legend .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+            padding: 0.8rem 1.4rem;
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.25s ease;
+            z-index: 10;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 215, 0, 0.24);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1.2rem 3rem;
+            }
+
+            .demo-container {
+                padding: 1.25rem;
+            }
+
+            input[type="range"] {
+                width: 160px;
+            }
+
+            canvas {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="./index.html" class="back-link">← Interactive Demo Hub</a>
+
+    <div class="container">
+        <header class="header">
+            <h1>Chapter 4 Interactive Experiments</h1>
+            <p>
+                Systems based on numbers reveal that even familiar arithmetic processes can behave like complex programs. Explore
+                five laboratories that turn digit sequences into living patterns, from binary counting tapes to chaotic logistic maps.
+            </p>
+        </header>
+
+        <section class="demo-section" id="binary-explorer">
+            <h2 class="demo-title"><span class="icon">①</span>Binary Expansion Pattern Explorer</h2>
+            <p class="demo-description">
+                Stack the digit expansions of counting numbers and exponential sequences to expose nested regularities or apparent
+                randomness. Change the base, watch the tape extend, and quantify how structured the columns remain.
+            </p>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="binary-sequence">Sequence</label>
+                        <select id="binary-sequence">
+                            <option value="count">Counting (n)</option>
+                            <option value="powers3">Powers of 3 (3ⁿ)</option>
+                            <option value="powers5">Powers of 5 (5ⁿ)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="binary-base">Base <span id="binary-base-display">2</span></label>
+                        <input type="range" id="binary-base" min="2" max="10" step="1" value="2">
+                    </div>
+                    <div class="control-group">
+                        <label for="binary-rows">Rows <span id="binary-rows-display">32</span></label>
+                        <input type="range" id="binary-rows" min="8" max="96" step="1" value="32">
+                    </div>
+                    <div class="control-group">
+                        <label for="binary-width">Digits Shown <span id="binary-width-display">16</span></label>
+                        <input type="range" id="binary-width" min="4" max="32" step="1" value="16">
+                    </div>
+                    <button class="btn" id="binary-play">Play</button>
+                    <button class="btn secondary" id="binary-step">Step</button>
+                    <button class="btn secondary" id="binary-reset">Reset</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="binary-canvas" width="900" height="420"></canvas>
+                    <div class="legend" id="binary-legend"></div>
+                </div>
+                <div class="info-panel">
+                    <h3>Digit Diagnostics</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <h4>Entropy</h4>
+                            <p id="binary-entropy">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Column Transition Rate</h4>
+                            <p id="binary-transitions">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Distinct Column Patterns</h4>
+                            <p id="binary-patterns">–</p>
+                        </div>
+                    </div>
+                    <p>
+                        Transition rate measures how often digits flip between adjacent rows, while entropy captures the diversity of
+                        digits across the tape. Powers with large exponents typically resemble random sources, unlike the nested
+                        structure visible when counting in base 2.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="recurrence-lab">
+            <h2 class="demo-title"><span class="icon">②</span>Recurrence Sequence Dynamics</h2>
+            <p class="demo-description">
+                Iterate classical and fast-growing recurrences, then view their digit tapes in any base. Compare linear growth to
+                explosive Ackermann-style behavior and nonlinear modular dynamics.
+            </p>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="recurrence-sequence">Recurrence</label>
+                        <select id="recurrence-sequence">
+                            <option value="fibonacci">Fibonacci</option>
+                            <option value="sylvester">Sylvester (aₙ₊₁ = aₙ(aₙ−1)+1)</option>
+                            <option value="nonlinear">Nonlinear Modular</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="recurrence-base">Base <span id="recurrence-base-display">10</span></label>
+                        <input type="range" id="recurrence-base" min="2" max="12" step="1" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label for="recurrence-terms">Terms <span id="recurrence-terms-display">24</span></label>
+                        <input type="range" id="recurrence-terms" min="6" max="48" step="1" value="24">
+                    </div>
+                    <div class="control-group">
+                        <label for="recurrence-width">Digits Shown <span id="recurrence-width-display">20</span></label>
+                        <input type="range" id="recurrence-width" min="4" max="36" step="1" value="20">
+                    </div>
+                    <button class="btn" id="recurrence-play">Play</button>
+                    <button class="btn secondary" id="recurrence-reset">Reset</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="recurrence-canvas" width="900" height="420"></canvas>
+                    <div class="legend" id="recurrence-legend"></div>
+                </div>
+                <div class="info-panel">
+                    <h3>Sequence Metrics</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <h4>Average Digit Entropy</h4>
+                            <p id="recurrence-entropy">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Growth per Step</h4>
+                            <p id="recurrence-growth">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Last Term (Approx.)</h4>
+                            <p id="recurrence-last">–</p>
+                        </div>
+                    </div>
+                    <p>
+                        The Sylvester recurrence produces astronomically large values after only a few steps, while the nonlinear
+                        modular system settles into complex but bounded digit patterns. Entropy approximates how evenly digits are
+                        distributed in the rendered tape.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="prime-sieve">
+            <h2 class="demo-title"><span class="icon">③</span>Prime Sieve Cellular Automaton</h2>
+            <p class="demo-description">
+                Watch a sieve-like automaton discover the primes. Each iteration marks multiples of the current base prime, revealing
+                the seemingly erratic spacing of primes within a regular scanning procedure.
+            </p>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="prime-limit">Limit <span id="prime-limit-display">120</span></label>
+                        <input type="range" id="prime-limit" min="40" max="360" step="10" value="120">
+                    </div>
+                    <button class="btn" id="prime-play">Play</button>
+                    <button class="btn secondary" id="prime-step">Step</button>
+                    <button class="btn secondary" id="prime-reset">Reset</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="prime-canvas" width="900" height="360"></canvas>
+                </div>
+                <div class="info-panel">
+                    <h3>Sieve Status</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <h4>Primes Found</h4>
+                            <p id="prime-count">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Prime Density</h4>
+                            <p id="prime-density">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Latest Prime</h4>
+                            <p id="prime-latest">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Last Prime Gap</h4>
+                            <p id="prime-gap">–</p>
+                        </div>
+                    </div>
+                    <p>
+                        The automaton follows Eratosthenes' logic: sweep left to right, elevate a new prime, then eliminate its
+                        multiples. The prime density converges slowly toward 0 as the limit increases, illustrating the erratic yet
+                        structured spacing of primes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="constant-randomness">
+            <h2 class="demo-title"><span class="icon">④</span>Digits-of-Constants Randomness Lab</h2>
+            <p class="demo-description">
+                Sample digits from π, e, or √2 and run quick uniformity checks. Slide across the stream, measure entropy, and inspect
+                frequency histograms that hint at built-in randomness.
+            </p>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="constants-constant">Constant</label>
+                        <select id="constants-constant">
+                            <option value="pi">π</option>
+                            <option value="e">e</option>
+                            <option value="sqrt2">√2</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="constants-start">Start Offset <span id="constants-start-display">0</span></label>
+                        <input type="range" id="constants-start" min="0" max="300" step="5" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label for="constants-count">Digits Sampled <span id="constants-count-display">120</span></label>
+                        <input type="range" id="constants-count" min="40" max="360" step="10" value="120">
+                    </div>
+                </div>
+                <div class="bar-chart" id="constants-bars"></div>
+                <div class="digit-stream" id="constants-stream"></div>
+                <div class="info-panel">
+                    <h3>Randomness Indicators</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <h4>Normalized Entropy</h4>
+                            <p id="constants-entropy">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Chi-Squared vs Uniform</h4>
+                            <p id="constants-chi">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Max Digit Deviation</h4>
+                            <p id="constants-deviation">–</p>
+                        </div>
+                    </div>
+                    <p>
+                        For a perfectly random source each digit would appear 10% of the time. π, e, and √2 pass basic frequency tests
+                        across modest windows, though deeper randomness questions remain unsolved.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="chaotic-map">
+            <h2 class="demo-title"><span class="icon">⑤</span>Chaotic Map Digit Tracker</h2>
+            <p class="demo-description">
+                Iterate the logistic map and follow both its real-valued trajectory and the evolving digit stream. Estimate the
+                Lyapunov exponent and see how sensitive parameters feed apparent randomness in the digits.
+            </p>
+            <div class="demo-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="chaos-r">Growth Rate r <span id="chaos-r-display">3.80</span></label>
+                        <input type="range" id="chaos-r" min="3.0" max="4.0" step="0.01" value="3.8">
+                    </div>
+                    <div class="control-group">
+                        <label for="chaos-x0">Initial x₀</label>
+                        <input type="number" id="chaos-x0" min="0.001" max="0.999" step="0.001" value="0.215">
+                    </div>
+                    <div class="control-group">
+                        <label for="chaos-steps">Iterations <span id="chaos-steps-display">120</span></label>
+                        <input type="range" id="chaos-steps" min="30" max="240" step="10" value="120">
+                    </div>
+                    <button class="btn" id="chaos-run">Recompute</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="chaos-time-canvas" width="900" height="220"></canvas>
+                    <canvas id="chaos-digit-canvas" width="900" height="360"></canvas>
+                </div>
+                <div class="info-panel">
+                    <h3>Chaos Metrics</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <h4>Lyapunov Estimate</h4>
+                            <p id="chaos-lyapunov">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Value Spread (σ)</h4>
+                            <p id="chaos-spread">–</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Digit Entropy</h4>
+                            <p id="chaos-entropy">–</p>
+                        </div>
+                    </div>
+                    <p>
+                        Positive Lyapunov exponents indicate sensitive dependence on initial conditions. The digit plot shows why
+                        chaotic maps look random even though the underlying iteration is entirely deterministic.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="chapter4-demos.js"></script>
+</body>
+</html>
