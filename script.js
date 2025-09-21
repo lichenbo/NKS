@@ -6,10 +6,19 @@ document.addEventListener('DOMContentLoaded', function () {
     clearAnnotationContent();
     initScrollToTop();
     initImageLightbox();
-    loadChapter('site-guide');
+
+    const initialChapter = getChapterFromHash();
+    if (initialChapter) {
+        if (!navigateToChapter(initialChapter, { updateHash: false })) {
+            navigateToChapter(DEFAULT_CHAPTER, { updateHash: true });
+        }
+    } else {
+        navigateToChapter(DEFAULT_CHAPTER, { updateHash: false });
+    }
 });
 
 const annotationCache = {};
+const DEFAULT_CHAPTER = 'site-guide';
 
 function initMarkdownRenderer() {
     marked.setOptions({
@@ -24,11 +33,14 @@ function initChapterNavigation() {
         if (!link) return;
         if (link.classList.contains('external-demo-link')) return; // let normal nav happen
         e.preventDefault();
-        document.querySelectorAll('.chapter-link.active').forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-        loadChapter(link.getAttribute('data-chapter'));
-        clearAnnotationContent();
+
+        const chapterId = link.getAttribute('data-chapter');
+        if (!chapterId) return;
+
+        navigateToChapter(chapterId);
     });
+
+    window.addEventListener('hashchange', handleChapterHashChange);
 }
 
 async function loadChapter(chapterId) {
@@ -57,6 +69,45 @@ async function loadChapter(chapterId) {
         console.error('Error loading chapter:', error);
         notesContent.innerHTML = `<div class="error"><h2>Error Loading Chapter</h2><p>Could not load <code>${chapterId}.md</code></p><p>Please make sure the file exists in the <code>chapters/</code> directory.</p></div>`;
     }
+}
+
+function getChapterFromHash() {
+    if (!window.location.hash) return null;
+    const chapterId = decodeURIComponent(window.location.hash.substring(1));
+    return chapterId || null;
+}
+
+function handleChapterHashChange() {
+    const chapterId = getChapterFromHash();
+    if (chapterId) {
+        if (!navigateToChapter(chapterId, { updateHash: false })) {
+            navigateToChapter(DEFAULT_CHAPTER, { updateHash: true });
+        }
+    } else {
+        navigateToChapter(DEFAULT_CHAPTER, { updateHash: false });
+    }
+}
+
+function navigateToChapter(chapterId, { updateHash = true } = {}) {
+    if (!chapterId) return false;
+
+    const targetHash = `#${chapterId}`;
+    if (updateHash && window.location.hash !== targetHash) {
+        window.location.hash = chapterId;
+        return true;
+    }
+
+    const link = document.querySelector(`.chapter-link[data-chapter="${chapterId}"]`);
+    if (!link) {
+        return false;
+    }
+
+    document.querySelectorAll('.chapter-link.active').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+
+    clearAnnotationContent();
+    loadChapter(chapterId);
+    return true;
 }
 
 // Annotation system: click delegation + loaders
