@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>递归序列探索器 | 第4章演示</title>
+    <link rel="stylesheet" href="chapter4-shared.css">
+    <style>
+        .hero {
+            margin-bottom: clamp(1.8rem, 5vw, 3rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.1rem, 5vw, 3.1rem);
+            margin-bottom: 0.9rem;
+        }
+
+        .hero p {
+            max-width: 780px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1.05rem;
+        }
+
+        .sequence-readout {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 1.1rem 1.3rem;
+            margin-top: 1.6rem;
+            font-family: 'Fira Code', 'SFMono-Regular', monospace;
+            font-size: 0.95rem;
+            color: #f2f2f2;
+            line-height: 1.7;
+        }
+
+        .sequence-readout span {
+            color: var(--nks-accent);
+        }
+
+        .sequence-readout strong {
+            color: #ff9b3c;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
+
+        <section class="hero">
+            <h1>递归序列探索器</h1>
+            <p>
+                递归公式不仅决定增长速度，还会在数字展开中留下特征纹理。对比斐波那契、Sylvester 和一个非线性模序列，
+                观察数字分布、相邻比率与最后一项的量级变化。
+            </p>
+        </section>
+
+        <section class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="rec-sequence">递归规则</label>
+                    <select id="rec-sequence">
+                        <option value="fibonacci">斐波那契：Fₙ = Fₙ₋₁ + Fₙ₋₂</option>
+                        <option value="sylvester">Sylvester：aₙ = (∏aᵢ)+1</option>
+                        <option value="nonlinear">非线性模：aₙ = (aₙ₋₁·aₙ₋₂ + n²) mod 997</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="rec-base">进制 <span id="rec-base-display">10</span></label>
+                    <input type="range" id="rec-base" min="2" max="16" value="10">
+                </div>
+                <div class="control-group">
+                    <label for="rec-width">保留位数 <span id="rec-width-display">20</span></label>
+                    <input type="range" id="rec-width" min="8" max="36" step="2" value="20">
+                </div>
+                <div class="control-group">
+                    <label for="rec-terms">项数 <span id="rec-terms-display">24</span></label>
+                    <input type="range" id="rec-terms" min="6" max="60" value="24">
+                </div>
+            </div>
+            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <button id="rec-play">逐步展开</button>
+                <button id="rec-reset" class="secondary">重置</button>
+            </div>
+        </section>
+
+        <section class="canvas-panel">
+            <canvas id="rec-canvas" width="960" height="420"></canvas>
+            <div class="legend-card">
+                <h3>数字配色</h3>
+                <div id="rec-legend" class="legend"></div>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h4>数字熵</h4>
+                    <p id="rec-entropy">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>相邻比率</h4>
+                    <p id="rec-growth">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>末项规模</h4>
+                    <p id="rec-last">–</p>
+                </div>
+            </div>
+            <div id="rec-readout" class="sequence-readout"></div>
+        </section>
+    </main>
+
+    <script src="../../js/chapter4-number-systems.js"></script>
+    <script>
+        (() => {
+            const api = window.Chapter4Demos;
+            if (!api) return;
+            const { RecurrenceSequenceExplorer } = api;
+            const ready = () => {
+                const explorer = new RecurrenceSequenceExplorer({
+                    canvas: document.getElementById('rec-canvas'),
+                    sequenceSelect: document.getElementById('rec-sequence'),
+                    baseSlider: document.getElementById('rec-base'),
+                    baseDisplay: document.getElementById('rec-base-display'),
+                    termsSlider: document.getElementById('rec-terms'),
+                    termsDisplay: document.getElementById('rec-terms-display'),
+                    widthSlider: document.getElementById('rec-width'),
+                    widthDisplay: document.getElementById('rec-width-display'),
+                    playBtn: document.getElementById('rec-play'),
+                    resetBtn: document.getElementById('rec-reset'),
+                    legend: document.getElementById('rec-legend'),
+                    entropyDisplay: document.getElementById('rec-entropy'),
+                    growthDisplay: document.getElementById('rec-growth'),
+                    lastDisplay: document.getElementById('rec-last')
+                });
+
+                const readout = document.getElementById('rec-readout');
+                const updateReadout = () => {
+                    const values = explorer?.values || [];
+                    if (!values.length) {
+                        readout.textContent = '';
+                        return;
+                    }
+                    const pieces = values.map((value, index) => {
+                        const label = index === values.length - 1 ? '<strong>最新</strong>' : `<span>第${index}项</span>`;
+                        return `${label}: ${value.toString()}`;
+                    });
+                    readout.innerHTML = pieces.join('<br>');
+                };
+
+                const renderWithReadout = explorer.render.bind(explorer);
+                explorer.render = () => {
+                    renderWithReadout();
+                    updateReadout();
+                };
+                explorer.render();
+
+                ['input', 'change'].forEach(eventName => {
+                    document.addEventListener(eventName, event => {
+                        if (event.target && event.target.closest('.control-panel')) {
+                            setTimeout(updateReadout, 0);
+                        }
+                    });
+                });
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', ready);
+            } else {
+                ready();
+            }
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算术数字织锦 | 第4章演示</title>
+    <link rel="stylesheet" href="chapter4-shared.css">
+    <style>
+        .hero {
+            margin-bottom: clamp(1.8rem, 5vw, 3.2rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.1rem, 5vw, 3.1rem);
+            margin-bottom: 0.9rem;
+        }
+
+        .hero p {
+            max-width: 780px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1.05rem;
+        }
+
+        .legend-card {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 1.1rem 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .stat-note {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
+
+        <section class="hero">
+            <h1>算术数字织锦</h1>
+            <p>
+                选择一个算术过程，将其输出在不同进制下的数字堆叠起来。像沃尔夫勒姆在《一种新科学》中展示的那样，
+                你会看到有些序列形成有序的嵌套结构，而另一些则呈现接近随机的纹理。
+            </p>
+        </section>
+
+        <section class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="tapestry-sequence">序列</label>
+                    <select id="tapestry-sequence">
+                        <option value="count">顺序计数：0,1,2,…</option>
+                        <option value="powers3">幂序列：3ⁿ</option>
+                        <option value="powers5">幂序列：5ⁿ</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="tapestry-base">进制 <span id="tapestry-base-display">2</span></label>
+                    <input type="range" id="tapestry-base" min="2" max="16" value="2">
+                </div>
+                <div class="control-group">
+                    <label for="tapestry-width">保留位数 <span id="tapestry-width-display">16</span></label>
+                    <input type="range" id="tapestry-width" min="8" max="48" step="2" value="16">
+                </div>
+                <div class="control-group">
+                    <label for="tapestry-rows">行数 <span id="tapestry-rows-display">32</span></label>
+                    <input type="range" id="tapestry-rows" min="8" max="80" value="32">
+                </div>
+            </div>
+            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <button id="tapestry-play">播放</button>
+                <button id="tapestry-step" class="secondary">单步增加</button>
+                <button id="tapestry-reset" class="secondary">重置</button>
+            </div>
+        </section>
+
+        <section class="canvas-panel">
+            <canvas id="tapestry-canvas" width="960" height="480"></canvas>
+            <div class="legend-card">
+                <h3>数字配色</h3>
+                <div id="tapestry-legend" class="legend"></div>
+                <p class="stat-note">颜色根据数字大小平滑映射，二进制时使用黑 / 金双色。</p>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h4>信息熵</h4>
+                    <p id="tapestry-entropy">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>行间变动</h4>
+                    <p id="tapestry-transitions">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>独特列模式</h4>
+                    <p id="tapestry-patterns">–</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../../js/chapter4-number-systems.js"></script>
+    <script>
+        (() => {
+            const api = window.Chapter4Demos;
+            if (!api) return;
+            const { BinaryExpansionVisualizer } = api;
+            const ready = () => {
+                new BinaryExpansionVisualizer({
+                    canvas: document.getElementById('tapestry-canvas'),
+                    sequenceSelect: document.getElementById('tapestry-sequence'),
+                    baseSlider: document.getElementById('tapestry-base'),
+                    baseDisplay: document.getElementById('tapestry-base-display'),
+                    rowsSlider: document.getElementById('tapestry-rows'),
+                    rowsDisplay: document.getElementById('tapestry-rows-display'),
+                    widthSlider: document.getElementById('tapestry-width'),
+                    widthDisplay: document.getElementById('tapestry-width-display'),
+                    playBtn: document.getElementById('tapestry-play'),
+                    stepBtn: document.getElementById('tapestry-step'),
+                    resetBtn: document.getElementById('tapestry-reset'),
+                    legend: document.getElementById('tapestry-legend'),
+                    entropyDisplay: document.getElementById('tapestry-entropy'),
+                    transitionsDisplay: document.getElementById('tapestry-transitions'),
+                    patternDisplay: document.getElementById('tapestry-patterns')
+                });
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', ready);
+            } else {
+                ready();
+            }
+        })();
+    </script>
+</body>
+
+</html>

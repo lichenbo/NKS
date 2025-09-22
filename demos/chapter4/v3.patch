@@ -1,0 +1,3149 @@
+diff --git a/IMPLEMENTATION_PLAN.md b/IMPLEMENTATION_PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f877cc8f25892789cdb5bcb5ce11d4d44dbb20c9
+--- /dev/null
++++ b/IMPLEMENTATION_PLAN.md
+@@ -0,0 +1,23 @@
++## Stage 1: Chapter 4 demo scaffolding
++**Goal**: Establish a dedicated chapter 4 demos directory and shared styling/script baseline.
++**Success Criteria**: New `demos/chapter4/` folder with index page linking to planned demos; shared CSS ensures consistent look across demos.
++**Tests**: Manual open of HTML to confirm layout renders without errors.
++**Status**: Complete
++
++## Stage 2: Arithmetic digit tapestry demo
++**Goal**: Build an interactive visualizer that stacks binary digits of arithmetic progressions or exponentiation, echoing NKS chapter 4 figures.
++**Success Criteria**: Controls for base sequence choice and range update the canvas/grid display immediately; tooltips/text explain observation targets.
++**Tests**: Manual change of controls in browser; ensure JS console free of errors.
++**Status**: Complete
++
++## Stage 3: Recursive sequence explorer
++**Goal**: Create interactive page to iterate classic recursive definitions (Fibonacci, Hofstadter-Q, Ackermann-inspired growth) with visualization of growth and parity patterns.
++**Success Criteria**: User can select sequence, view first N terms, and toggle mod/highlight views; responsive UI updates with parameter adjustments.
++**Tests**: Manual run verifying sequence outputs vs. known values; console clean.
++**Status**: Complete
++
++## Stage 4: Prime sieve dynamics demo
++**Goal**: Implement Sieve of Eratosthenes visual animation demonstrating prime discovery as computational process.
++**Success Criteria**: Animation cycles through eliminating composites, indicates primes clearly, includes speed control and restart.
++**Tests**: Manual run verifying primes flagged correctly up to limit; console clean.
++**Status**: Complete
+diff --git a/demos/chapter4/arithmetic-digit-tapestry.html b/demos/chapter4/arithmetic-digit-tapestry.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..eb2d0b077479fd00ab79d612a1cb38751c915dff
+--- /dev/null
++++ b/demos/chapter4/arithmetic-digit-tapestry.html
+@@ -0,0 +1,140 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>算术数字织锦 | 第4章演示</title>
++    <link rel="stylesheet" href="chapter4-shared.css">
++    <style>
++        .hero {
++            margin-bottom: clamp(1.8rem, 5vw, 3.2rem);
++        }
++
++        .hero h1 {
++            font-size: clamp(2.1rem, 5vw, 3.1rem);
++            margin-bottom: 0.9rem;
++        }
++
++        .hero p {
++            max-width: 780px;
++            color: rgba(255, 255, 255, 0.78);
++            font-size: 1.05rem;
++        }
++
++        .legend-card {
++            background: rgba(255, 255, 255, 0.07);
++            border-radius: 16px;
++            padding: 1.1rem 1.25rem;
++            border: 1px solid rgba(255, 255, 255, 0.12);
++        }
++
++        .stat-note {
++            font-size: 0.9rem;
++            color: rgba(255, 255, 255, 0.65);
++            margin-top: 0.8rem;
++        }
++    </style>
++</head>
++
++<body>
++    <main>
++        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
++
++        <section class="hero">
++            <h1>算术数字织锦</h1>
++            <p>
++                选择一个算术过程，将其输出在不同进制下的数字堆叠起来。像沃尔夫勒姆在《一种新科学》中展示的那样，
++                你会看到有些序列形成有序的嵌套结构，而另一些则呈现接近随机的纹理。
++            </p>
++        </section>
++
++        <section class="control-panel">
++            <div class="controls">
++                <div class="control-group">
++                    <label for="tapestry-sequence">序列</label>
++                    <select id="tapestry-sequence">
++                        <option value="count">顺序计数：0,1,2,…</option>
++                        <option value="powers3">幂序列：3ⁿ</option>
++                        <option value="powers5">幂序列：5ⁿ</option>
++                    </select>
++                </div>
++                <div class="control-group">
++                    <label for="tapestry-base">进制 <span id="tapestry-base-display">2</span></label>
++                    <input type="range" id="tapestry-base" min="2" max="16" value="2">
++                </div>
++                <div class="control-group">
++                    <label for="tapestry-width">保留位数 <span id="tapestry-width-display">16</span></label>
++                    <input type="range" id="tapestry-width" min="8" max="48" step="2" value="16">
++                </div>
++                <div class="control-group">
++                    <label for="tapestry-rows">行数 <span id="tapestry-rows-display">32</span></label>
++                    <input type="range" id="tapestry-rows" min="8" max="80" value="32">
++                </div>
++            </div>
++            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
++                <button id="tapestry-play">播放</button>
++                <button id="tapestry-step" class="secondary">单步增加</button>
++                <button id="tapestry-reset" class="secondary">重置</button>
++            </div>
++        </section>
++
++        <section class="canvas-panel">
++            <canvas id="tapestry-canvas" width="960" height="480"></canvas>
++            <div class="legend-card">
++                <h3>数字配色</h3>
++                <div id="tapestry-legend" class="legend"></div>
++                <p class="stat-note">颜色根据数字大小平滑映射，二进制时使用黑 / 金双色。</p>
++            </div>
++            <div class="stat-grid">
++                <div class="stat-card">
++                    <h4>信息熵</h4>
++                    <p id="tapestry-entropy">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>行间变动</h4>
++                    <p id="tapestry-transitions">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>独特列模式</h4>
++                    <p id="tapestry-patterns">–</p>
++                </div>
++            </div>
++        </section>
++    </main>
++
++    <script src="../../js/chapter4-number-systems.js"></script>
++    <script>
++        (() => {
++            const api = window.Chapter4Demos;
++            if (!api) return;
++            const { BinaryExpansionVisualizer } = api;
++            const ready = () => {
++                new BinaryExpansionVisualizer({
++                    canvas: document.getElementById('tapestry-canvas'),
++                    sequenceSelect: document.getElementById('tapestry-sequence'),
++                    baseSlider: document.getElementById('tapestry-base'),
++                    baseDisplay: document.getElementById('tapestry-base-display'),
++                    rowsSlider: document.getElementById('tapestry-rows'),
++                    rowsDisplay: document.getElementById('tapestry-rows-display'),
++                    widthSlider: document.getElementById('tapestry-width'),
++                    widthDisplay: document.getElementById('tapestry-width-display'),
++                    playBtn: document.getElementById('tapestry-play'),
++                    stepBtn: document.getElementById('tapestry-step'),
++                    resetBtn: document.getElementById('tapestry-reset'),
++                    legend: document.getElementById('tapestry-legend'),
++                    entropyDisplay: document.getElementById('tapestry-entropy'),
++                    transitionsDisplay: document.getElementById('tapestry-transitions'),
++                    patternDisplay: document.getElementById('tapestry-patterns')
++                });
++            };
++            if (document.readyState === 'loading') {
++                document.addEventListener('DOMContentLoaded', ready);
++            } else {
++                ready();
++            }
++        })();
++    </script>
++</body>
++
++</html>
+diff --git a/demos/chapter4/chapter4-shared.css b/demos/chapter4/chapter4-shared.css
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8654d25922b7190069aed512039f832cf9e92c5
+--- /dev/null
++++ b/demos/chapter4/chapter4-shared.css
+@@ -0,0 +1,227 @@
++:root {
++    --nks-bg-start: #050505;
++    --nks-bg-middle: #101010;
++    --nks-bg-end: #050505;
++    --nks-text: #e6e6e6;
++    --nks-accent: #ffd700;
++    --nks-accent-soft: rgba(255, 215, 0, 0.18);
++    --nks-panel: rgba(255, 255, 255, 0.05);
++    --nks-border: rgba(255, 215, 0, 0.25);
++    --nks-muted: #b8b8b8;
++    --nks-card: rgba(255, 255, 255, 0.07);
++}
++
++* {
++    margin: 0;
++    padding: 0;
++    box-sizing: border-box;
++}
++
++body {
++    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
++    background: linear-gradient(135deg, var(--nks-bg-start) 0%, var(--nks-bg-middle) 50%, var(--nks-bg-end) 100%);
++    color: var(--nks-text);
++    line-height: 1.6;
++    min-height: 100vh;
++    padding: 0;
++}
++
++main {
++    max-width: 1280px;
++    margin: 0 auto;
++    padding: clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 3rem) 4rem;
++}
++
++section + section {
++    margin-top: clamp(2.5rem, 6vw, 4rem);
++}
++
++h1,
++h2,
++h3,
++h4 {
++    color: var(--nks-accent);
++    font-weight: 600;
++}
++
++a {
++    color: var(--nks-accent);
++}
++
++a.back-link {
++    display: inline-flex;
++    align-items: center;
++    gap: 0.35rem;
++    margin-bottom: 1.5rem;
++    text-decoration: none;
++    color: var(--nks-accent);
++    padding: 0.5rem 1.1rem;
++    border: 1px solid var(--nks-border);
++    border-radius: 999px;
++    background: rgba(255, 255, 255, 0.04);
++    transition: all 0.3s ease;
++}
++
++a.back-link:hover {
++    transform: translateY(-1px);
++    background: rgba(255, 215, 0, 0.12);
++}
++
++.control-panel {
++    background: var(--nks-panel);
++    border: 1px solid rgba(255, 255, 255, 0.15);
++    border-radius: 20px;
++    padding: clamp(1.25rem, 3vw, 2rem);
++    display: grid;
++    gap: 1.25rem;
++}
++
++.controls {
++    display: grid;
++    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
++    gap: 1rem 1.5rem;
++}
++
++.control-group {
++    display: flex;
++    flex-direction: column;
++    gap: 0.4rem;
++}
++
++.control-group label {
++    font-size: 0.85rem;
++    text-transform: uppercase;
++    letter-spacing: 0.08em;
++    color: rgba(255, 255, 255, 0.75);
++}
++
++select,
++input[type="range"],
++input[type="number"],
++input[type="text"] {
++    background: rgba(255, 255, 255, 0.08);
++    border: 1px solid rgba(255, 255, 255, 0.16);
++    border-radius: 10px;
++    color: var(--nks-accent);
++    padding: 0.55rem 0.75rem;
++    font-size: 0.95rem;
++    font-family: inherit;
++    outline: none;
++}
++
++input[type="range"] {
++    accent-color: var(--nks-accent);
++}
++
++button {
++    padding: 0.7rem 1.4rem;
++    background: var(--nks-accent-soft);
++    border: 1px solid var(--nks-accent);
++    border-radius: 10px;
++    color: var(--nks-accent);
++    cursor: pointer;
++    font-weight: 500;
++    transition: all 0.25s ease;
++}
++
++button.secondary {
++    border-color: rgba(255, 255, 255, 0.25);
++    color: rgba(255, 255, 255, 0.85);
++    background: rgba(255, 255, 255, 0.08);
++}
++
++button:hover {
++    transform: translateY(-1px);
++    background: rgba(255, 215, 0, 0.22);
++}
++
++button.secondary:hover {
++    background: rgba(255, 255, 255, 0.14);
++}
++
++.canvas-panel {
++    background: rgba(0, 0, 0, 0.4);
++    border: 1px solid rgba(255, 255, 255, 0.12);
++    border-radius: 20px;
++    padding: clamp(1.25rem, 3vw, 2rem);
++    display: grid;
++    gap: 1.25rem;
++}
++
++canvas {
++    width: 100%;
++    max-width: 100%;
++    border-radius: 14px;
++    background: #050505;
++    border: 1px solid rgba(255, 255, 255, 0.1);
++}
++
++.legend-card {
++    background: rgba(255, 255, 255, 0.07);
++    border-radius: 16px;
++    padding: 1.1rem 1.25rem;
++    border: 1px solid rgba(255, 255, 255, 0.12);
++}
++
++.legend {
++    display: flex;
++    flex-wrap: wrap;
++    gap: 0.75rem;
++    margin-top: 0.75rem;
++    font-size: 0.85rem;
++    opacity: 0.75;
++}
++
++.legend span {
++    display: inline-flex;
++    align-items: center;
++    gap: 0.35rem;
++}
++
++.legend .color-box {
++    width: 14px;
++    height: 14px;
++    border-radius: 4px;
++    display: inline-block;
++}
++
++.stat-grid {
++    display: grid;
++    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
++    gap: 1rem;
++    margin-top: 1.5rem;
++}
++
++.stat-card {
++    background: rgba(255, 255, 255, 0.08);
++    border-radius: 14px;
++    padding: 1rem 1.1rem;
++    border: 1px solid rgba(255, 255, 255, 0.12);
++}
++
++.stat-card h4 {
++    font-size: 0.85rem;
++    text-transform: uppercase;
++    letter-spacing: 0.08em;
++    margin-bottom: 0.4rem;
++    color: var(--nks-accent);
++}
++
++.stat-card p {
++    font-size: 1.05rem;
++    font-weight: 500;
++}
++
++@media (max-width: 768px) {
++    main {
++        padding: 1.5rem 1rem 3rem;
++    }
++
++    .control-panel {
++        padding: 1.25rem;
++    }
++
++    .canvas-panel {
++        padding: 1.25rem;
++    }
++}
+diff --git a/demos/chapter4/index.html b/demos/chapter4/index.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..e09a2bbd76de3641cce9f53755ec5ac5952e1ecf
+--- /dev/null
++++ b/demos/chapter4/index.html
+@@ -0,0 +1,220 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>第4章演示合集 | 一种新科学</title>
++    <style>
++        * {
++            margin: 0;
++            padding: 0;
++            box-sizing: border-box;
++        }
++
++        body {
++            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
++            line-height: 1.6;
++            color: #e0e0e0;
++            background: linear-gradient(135deg, #050505 0%, #141414 50%, #050505 100%);
++            min-height: 100vh;
++            padding: 0;
++        }
++
++        .container {
++            max-width: 1200px;
++            margin: 0 auto;
++            padding: 2rem;
++        }
++
++        .back-link {
++            display: inline-block;
++            margin-bottom: 2rem;
++            padding: 0.5rem 1rem;
++            color: #ffd700;
++            text-decoration: none;
++            border: 1px solid rgba(255, 215, 0, 0.3);
++            border-radius: 6px;
++            background: rgba(255, 255, 255, 0.05);
++            transition: all 0.3s ease;
++        }
++
++        .back-link:hover {
++            background: rgba(255, 215, 0, 0.1);
++            border-color: #ffd700;
++            transform: translateY(-1px);
++        }
++
++        .header {
++            text-align: center;
++            margin-bottom: 3rem;
++            padding: 2.4rem;
++            border: 1px solid rgba(255, 215, 0, 0.25);
++            border-radius: 16px;
++            background: rgba(255, 255, 255, 0.04);
++        }
++
++        .header h1 {
++            margin: 0 0 1rem;
++            color: #ffd700;
++            font-weight: 700;
++            font-size: 2.4rem;
++        }
++
++        .header p {
++            margin: 0;
++            color: #b8b8b8;
++            font-size: 1.05rem;
++        }
++
++        .category-section {
++            margin-bottom: 2.5rem;
++        }
++
++        .category-title {
++            color: #ffd700;
++            font-size: 1.5rem;
++            font-weight: 600;
++            margin-bottom: 1rem;
++            padding-bottom: 0.5rem;
++            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
++        }
++
++        .demo-grid {
++            display: grid;
++            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
++            gap: 1.5rem;
++        }
++
++        .demo-card {
++            background: rgba(255, 255, 255, 0.04);
++            border: 1px solid rgba(255, 215, 0, 0.2);
++            border-radius: 14px;
++            padding: 1.6rem;
++            transition: all 0.3s ease;
++            display: flex;
++            flex-direction: column;
++            gap: 0.85rem;
++        }
++
++        .demo-card:hover {
++            border-color: rgba(255, 215, 0, 0.6);
++            background: rgba(255, 255, 255, 0.08);
++            transform: translateY(-2px);
++            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
++        }
++
++        .demo-title {
++            color: #ffd700;
++            font-size: 1.2rem;
++            font-weight: 600;
++        }
++
++        .demo-description {
++            color: #c8c8c8;
++            font-size: 0.95rem;
++            flex: 1 1 auto;
++        }
++
++        .demo-link {
++            display: inline-flex;
++            align-items: center;
++            gap: 0.4rem;
++            padding: 0.55rem 1.1rem;
++            background: linear-gradient(45deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.25));
++            color: #f7e49a;
++            text-decoration: none;
++            border: 1px solid rgba(255, 215, 0, 0.35);
++            border-radius: 6px;
++            font-weight: 600;
++            transition: all 0.3s ease;
++        }
++
++        .demo-link:hover {
++            background: linear-gradient(45deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.35));
++            transform: translateY(-1px);
++        }
++
++        .footer {
++            text-align: center;
++            margin-top: 3rem;
++            padding: 1.5rem;
++            border-top: 1px solid rgba(255, 215, 0, 0.2);
++            color: #888;
++        }
++
++        @media (max-width: 768px) {
++            .container {
++                padding: 1.25rem;
++            }
++
++            .header h1 {
++                font-size: 2rem;
++            }
++
++            .demo-grid {
++                grid-template-columns: 1fr;
++                gap: 1.1rem;
++            }
++
++            .demo-card {
++                padding: 1.25rem;
++            }
++        }
++    </style>
++</head>
++
++<body>
++    <div class="container">
++        <a href="../../interactive/chapter4-demos.html" class="back-link">← 返回章节交互实验室</a>
++
++        <header class="header">
++            <h1>第4章：基于数字的系统</h1>
++            <p>这些演示围绕数字序列展开，突出沃尔夫勒姆在《一种新科学》中展示的几类行为。</p>
++        </header>
++
++        <section class="category-section">
++            <h2 class="category-title">数字展开与模式</h2>
++            <div class="demo-grid">
++                <article class="demo-card">
++                    <h3 class="demo-title">算术数字织锦</h3>
++                    <p class="demo-description">堆叠不同算术过程的进制展开，观察嵌套结构与近似随机的对比。</p>
++                    <a class="demo-link" href="arithmetic-digit-tapestry.html">进入演示 →</a>
++                </article>
++            </div>
++        </section>
++
++        <section class="category-section">
++            <h2 class="category-title">递归与增长</h2>
++            <div class="demo-grid">
++                <article class="demo-card">
++                    <h3 class="demo-title">递归序列探索器</h3>
++                    <p class="demo-description">比较斐波那契、Sylvester 等序列的增长速度与数字模式。</p>
++                    <a class="demo-link" href="recurrence-sequence-explorer.html">进入演示 →</a>
++                </article>
++            </div>
++        </section>
++
++        <section class="category-section">
++            <h2 class="category-title">素数与混沌</h2>
++            <div class="demo-grid">
++                <article class="demo-card">
++                    <h3 class="demo-title">素数筛动态</h3>
++                    <p class="demo-description">通过动画形式的埃拉托色尼筛法，理解素数出现的计算过程。</p>
++                    <a class="demo-link" href="prime-sieve-dynamics.html">进入演示 →</a>
++                </article>
++                <article class="demo-card">
++                    <h3 class="demo-title">逻辑映射混沌实验室</h3>
++                    <p class="demo-description">探索经典混沌映射的时间演化与数字序列统计。</p>
++                    <a class="demo-link" href="logistic-map-lab.html">进入演示 →</a>
++                </article>
++            </div>
++        </section>
++
++        <footer class="footer">
++            <p>更多章节演示正在筹备中，欢迎反馈你的想法。</p>
++        </footer>
++    </div>
++</body>
++
++</html>
+diff --git a/demos/chapter4/logistic-map-lab.html b/demos/chapter4/logistic-map-lab.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..72daef768198d5efcda8e4485b2f0b375a29cc20
+--- /dev/null
++++ b/demos/chapter4/logistic-map-lab.html
+@@ -0,0 +1,131 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>逻辑映射混沌实验室 | 第4章演示</title>
++    <link rel="stylesheet" href="chapter4-shared.css">
++    <style>
++        .hero {
++            margin-bottom: clamp(1.8rem, 5vw, 3.2rem);
++        }
++
++        .hero h1 {
++            font-size: clamp(2.1rem, 5vw, 3.1rem);
++            margin-bottom: 0.9rem;
++        }
++
++        .hero p {
++            max-width: 800px;
++            color: rgba(255, 255, 255, 0.78);
++            font-size: 1.05rem;
++        }
++
++        .canvas-panel {
++            gap: 1.8rem;
++        }
++
++        .canvas-panel canvas {
++            background: #050505;
++        }
++
++        .stat-note {
++            font-size: 0.9rem;
++            color: rgba(255, 255, 255, 0.65);
++            margin-top: 0.6rem;
++        }
++    </style>
++</head>
++
++<body>
++    <main>
++        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
++
++        <section class="hero">
++            <h1>逻辑映射混沌实验室</h1>
++            <p>
++                逻辑映射 x → r·x·(1−x) 是非线性迭代的经典范例。调节参数 r 与初始值 x₀，观察时间序列、十进制数字纹理、
++                以及用信息熵和 Lyapunov 指数衡量的“随机性”。
++            </p>
++        </section>
++
++        <section class="control-panel">
++            <div class="controls">
++                <div class="control-group">
++                    <label for="chaos-r">参数 r <span id="chaos-r-display">3.70</span></label>
++                    <input type="range" id="chaos-r" min="2.8" max="4.0" step="0.01" value="3.7">
++                </div>
++                <div class="control-group">
++                    <label for="chaos-x0">初始值 x₀</label>
++                    <input type="number" id="chaos-x0" min="0.001" max="0.999" step="0.001" value="0.215">
++                </div>
++                <div class="control-group">
++                    <label for="chaos-steps">迭代次数 <span id="chaos-steps-display">120</span></label>
++                    <input type="range" id="chaos-steps" min="30" max="240" step="10" value="120">
++                </div>
++            </div>
++            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
++                <button id="chaos-run">重新计算</button>
++            </div>
++        </section>
++
++        <section class="canvas-panel">
++            <div>
++                <h3>时间序列</h3>
++                <canvas id="chaos-time-canvas" width="960" height="220"></canvas>
++                <p class="stat-note">同一个初值在不同 r 下可能收敛到周期、出现倍周期分岔或彻底进入混沌。</p>
++            </div>
++            <div>
++                <h3>数字纹理</h3>
++                <canvas id="chaos-digit-canvas" width="960" height="360"></canvas>
++                <p class="stat-note">每行显示一次迭代的十进制小数部分。颜色的随机程度对应统计熵。</p>
++            </div>
++            <div class="stat-grid">
++                <div class="stat-card">
++                    <h4>Lyapunov 指数</h4>
++                    <p id="chaos-lyapunov">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>数值标准差</h4>
++                    <p id="chaos-spread">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>数字熵</h4>
++                    <p id="chaos-entropy">–</p>
++                </div>
++            </div>
++        </section>
++    </main>
++
++    <script src="../../js/chapter4-number-systems.js"></script>
++    <script>
++        (() => {
++            const api = window.Chapter4Demos;
++            if (!api) return;
++            const { ChaoticLogisticMapLab } = api;
++            const ready = () => {
++                new ChaoticLogisticMapLab({
++                    rSlider: document.getElementById('chaos-r'),
++                    rDisplay: document.getElementById('chaos-r-display'),
++                    x0Input: document.getElementById('chaos-x0'),
++                    stepsSlider: document.getElementById('chaos-steps'),
++                    stepsDisplay: document.getElementById('chaos-steps-display'),
++                    timeCanvas: document.getElementById('chaos-time-canvas'),
++                    digitCanvas: document.getElementById('chaos-digit-canvas'),
++                    lyapunovDisplay: document.getElementById('chaos-lyapunov'),
++                    spreadDisplay: document.getElementById('chaos-spread'),
++                    entropyDisplay: document.getElementById('chaos-entropy'),
++                    runBtn: document.getElementById('chaos-run')
++                });
++            };
++            if (document.readyState === 'loading') {
++                document.addEventListener('DOMContentLoaded', ready);
++            } else {
++                ready();
++            }
++        })();
++    </script>
++</body>
++
++</html>
+diff --git a/demos/chapter4/prime-sieve-dynamics.html b/demos/chapter4/prime-sieve-dynamics.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..1b25ca1d85e03830f7d200b228dd4a5a50350784
+--- /dev/null
++++ b/demos/chapter4/prime-sieve-dynamics.html
+@@ -0,0 +1,159 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>素数筛动态 | 第4章演示</title>
++    <link rel="stylesheet" href="chapter4-shared.css">
++    <style>
++        .hero {
++            margin-bottom: clamp(1.8rem, 5vw, 3rem);
++        }
++
++        .hero h1 {
++            font-size: clamp(2.1rem, 5vw, 3.1rem);
++            margin-bottom: 0.9rem;
++        }
++
++        .hero p {
++            max-width: 760px;
++            color: rgba(255, 255, 255, 0.78);
++            font-size: 1.05rem;
++        }
++
++        .status-note {
++            font-size: 0.9rem;
++            color: rgba(255, 255, 255, 0.65);
++            margin-top: 0.9rem;
++        }
++
++        .prime-log {
++            margin-top: 1.5rem;
++            background: rgba(255, 255, 255, 0.07);
++            border: 1px solid rgba(255, 255, 255, 0.12);
++            border-radius: 16px;
++            padding: 1rem 1.25rem;
++            font-family: 'Fira Code', 'SFMono-Regular', monospace;
++            font-size: 0.95rem;
++            color: #f2f2f2;
++            max-height: 200px;
++            overflow-y: auto;
++        }
++
++        .prime-log strong {
++            color: var(--nks-accent);
++        }
++    </style>
++</head>
++
++<body>
++    <main>
++        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
++
++        <section class="hero">
++            <h1>素数筛动态</h1>
++            <p>
++                观察埃拉托色尼筛法逐步标记合数与素数。动画把每个整数视作一个元胞：黄色是已确认的素数，
++                橙色是当前正在扩散倍数的基数，深色格子则为已排除的合数。
++            </p>
++        </section>
++
++        <section class="control-panel">
++            <div class="controls">
++                <div class="control-group">
++                    <label for="sieve-limit">上限 <span id="sieve-limit-display">120</span></label>
++                    <input type="range" id="sieve-limit" min="50" max="400" step="10" value="120">
++                </div>
++            </div>
++            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
++                <button id="sieve-play">自动筛选</button>
++                <button id="sieve-step" class="secondary">单步</button>
++                <button id="sieve-reset" class="secondary">重置</button>
++            </div>
++        </section>
++
++        <section class="canvas-panel">
++            <canvas id="sieve-canvas" width="960" height="480"></canvas>
++            <div class="stat-grid">
++                <div class="stat-card">
++                    <h4>素数数量</h4>
++                    <p id="sieve-count">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>密度</h4>
++                    <p id="sieve-density">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>最新素数</h4>
++                    <p id="sieve-latest">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>最近间隔</h4>
++                    <p id="sieve-gap">–</p>
++                </div>
++            </div>
++            <p class="status-note">提示：按单步可以观察筛法如何跳过已标记的合数。</p>
++            <div id="sieve-log" class="prime-log"></div>
++        </section>
++    </main>
++
++    <script src="../../js/chapter4-number-systems.js"></script>
++    <script>
++        (() => {
++            const api = window.Chapter4Demos;
++            if (!api) return;
++            const { PrimeSieveAnimator } = api;
++            const ready = () => {
++                const animator = new PrimeSieveAnimator({
++                    canvas: document.getElementById('sieve-canvas'),
++                    limitSlider: document.getElementById('sieve-limit'),
++                    limitDisplay: document.getElementById('sieve-limit-display'),
++                    playBtn: document.getElementById('sieve-play'),
++                    stepBtn: document.getElementById('sieve-step'),
++                    resetBtn: document.getElementById('sieve-reset'),
++                    countDisplay: document.getElementById('sieve-count'),
++                    densityDisplay: document.getElementById('sieve-density'),
++                    latestDisplay: document.getElementById('sieve-latest'),
++                    gapDisplay: document.getElementById('sieve-gap')
++                });
++
++                const log = document.getElementById('sieve-log');
++                const updateLog = () => {
++                    const primes = animator?.primes || [];
++                    if (!primes.length) {
++                        log.innerHTML = '尚未找到素数。';
++                        return;
++                    }
++                    const chunks = [];
++                    for (let i = 0; i < primes.length; i += 15) {
++                        const slice = primes.slice(i, i + 15).join(', ');
++                        chunks.push(slice);
++                    }
++                    log.innerHTML = `<strong>前 ${primes.length} 个素数：</strong><br>${chunks.join('<br>')}`;
++                };
++
++                const renderWithLog = animator.draw.bind(animator);
++                animator.draw = () => {
++                    renderWithLog();
++                    updateLog();
++                };
++                animator.draw();
++
++                const updateStats = animator.updateStats.bind(animator);
++                animator.updateStats = () => {
++                    updateStats();
++                    updateLog();
++                };
++                animator.updateStats();
++            };
++            if (document.readyState === 'loading') {
++                document.addEventListener('DOMContentLoaded', ready);
++            } else {
++                ready();
++            }
++        })();
++    </script>
++</body>
++
++</html>
+diff --git a/demos/chapter4/recurrence-sequence-explorer.html b/demos/chapter4/recurrence-sequence-explorer.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..17b45c3005579ba2d39ccdbdc19390137eea7e12
+--- /dev/null
++++ b/demos/chapter4/recurrence-sequence-explorer.html
+@@ -0,0 +1,175 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>递归序列探索器 | 第4章演示</title>
++    <link rel="stylesheet" href="chapter4-shared.css">
++    <style>
++        .hero {
++            margin-bottom: clamp(1.8rem, 5vw, 3rem);
++        }
++
++        .hero h1 {
++            font-size: clamp(2.1rem, 5vw, 3.1rem);
++            margin-bottom: 0.9rem;
++        }
++
++        .hero p {
++            max-width: 780px;
++            color: rgba(255, 255, 255, 0.78);
++            font-size: 1.05rem;
++        }
++
++        .sequence-readout {
++            background: rgba(255, 255, 255, 0.07);
++            border: 1px solid rgba(255, 255, 255, 0.12);
++            border-radius: 16px;
++            padding: 1.1rem 1.3rem;
++            margin-top: 1.6rem;
++            font-family: 'Fira Code', 'SFMono-Regular', monospace;
++            font-size: 0.95rem;
++            color: #f2f2f2;
++            line-height: 1.7;
++        }
++
++        .sequence-readout span {
++            color: var(--nks-accent);
++        }
++
++        .sequence-readout strong {
++            color: #ff9b3c;
++            font-weight: 600;
++        }
++    </style>
++</head>
++
++<body>
++    <main>
++        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
++
++        <section class="hero">
++            <h1>递归序列探索器</h1>
++            <p>
++                递归公式不仅决定增长速度，还会在数字展开中留下特征纹理。对比斐波那契、Sylvester 和一个非线性模序列，
++                观察数字分布、相邻比率与最后一项的量级变化。
++            </p>
++        </section>
++
++        <section class="control-panel">
++            <div class="controls">
++                <div class="control-group">
++                    <label for="rec-sequence">递归规则</label>
++                    <select id="rec-sequence">
++                        <option value="fibonacci">斐波那契：Fₙ = Fₙ₋₁ + Fₙ₋₂</option>
++                        <option value="sylvester">Sylvester：aₙ = (∏aᵢ)+1</option>
++                        <option value="nonlinear">非线性模：aₙ = (aₙ₋₁·aₙ₋₂ + n²) mod 997</option>
++                    </select>
++                </div>
++                <div class="control-group">
++                    <label for="rec-base">进制 <span id="rec-base-display">10</span></label>
++                    <input type="range" id="rec-base" min="2" max="16" value="10">
++                </div>
++                <div class="control-group">
++                    <label for="rec-width">保留位数 <span id="rec-width-display">20</span></label>
++                    <input type="range" id="rec-width" min="8" max="36" step="2" value="20">
++                </div>
++                <div class="control-group">
++                    <label for="rec-terms">项数 <span id="rec-terms-display">24</span></label>
++                    <input type="range" id="rec-terms" min="6" max="60" value="24">
++                </div>
++            </div>
++            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
++                <button id="rec-play">逐步展开</button>
++                <button id="rec-reset" class="secondary">重置</button>
++            </div>
++        </section>
++
++        <section class="canvas-panel">
++            <canvas id="rec-canvas" width="960" height="420"></canvas>
++            <div class="legend-card">
++                <h3>数字配色</h3>
++                <div id="rec-legend" class="legend"></div>
++            </div>
++            <div class="stat-grid">
++                <div class="stat-card">
++                    <h4>数字熵</h4>
++                    <p id="rec-entropy">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>相邻比率</h4>
++                    <p id="rec-growth">–</p>
++                </div>
++                <div class="stat-card">
++                    <h4>末项规模</h4>
++                    <p id="rec-last">–</p>
++                </div>
++            </div>
++            <div id="rec-readout" class="sequence-readout"></div>
++        </section>
++    </main>
++
++    <script src="../../js/chapter4-number-systems.js"></script>
++    <script>
++        (() => {
++            const api = window.Chapter4Demos;
++            if (!api) return;
++            const { RecurrenceSequenceExplorer } = api;
++            const ready = () => {
++                const explorer = new RecurrenceSequenceExplorer({
++                    canvas: document.getElementById('rec-canvas'),
++                    sequenceSelect: document.getElementById('rec-sequence'),
++                    baseSlider: document.getElementById('rec-base'),
++                    baseDisplay: document.getElementById('rec-base-display'),
++                    termsSlider: document.getElementById('rec-terms'),
++                    termsDisplay: document.getElementById('rec-terms-display'),
++                    widthSlider: document.getElementById('rec-width'),
++                    widthDisplay: document.getElementById('rec-width-display'),
++                    playBtn: document.getElementById('rec-play'),
++                    resetBtn: document.getElementById('rec-reset'),
++                    legend: document.getElementById('rec-legend'),
++                    entropyDisplay: document.getElementById('rec-entropy'),
++                    growthDisplay: document.getElementById('rec-growth'),
++                    lastDisplay: document.getElementById('rec-last')
++                });
++
++                const readout = document.getElementById('rec-readout');
++                const updateReadout = () => {
++                    const values = explorer?.values || [];
++                    if (!values.length) {
++                        readout.textContent = '';
++                        return;
++                    }
++                    const pieces = values.map((value, index) => {
++                        const label = index === values.length - 1 ? '<strong>最新</strong>' : `<span>第${index}项</span>`;
++                        return `${label}: ${value.toString()}`;
++                    });
++                    readout.innerHTML = pieces.join('<br>');
++                };
++
++                const renderWithReadout = explorer.render.bind(explorer);
++                explorer.render = () => {
++                    renderWithReadout();
++                    updateReadout();
++                };
++                explorer.render();
++
++                ['input', 'change'].forEach(eventName => {
++                    document.addEventListener(eventName, event => {
++                        if (event.target && event.target.closest('.control-panel')) {
++                            setTimeout(updateReadout, 0);
++                        }
++                    });
++                });
++            };
++            if (document.readyState === 'loading') {
++                document.addEventListener('DOMContentLoaded', ready);
++            } else {
++                ready();
++            }
++        })();
++    </script>
++</body>
++
++</html>
+diff --git a/interactive/chapter4-demos.html b/interactive/chapter4-demos.html
+index 82c822d237c5359550602b95df9142f57a7b13bd..c04921a6595d7f2e68bb8a95e4954fdb4073cd1f 100644
+--- a/interactive/chapter4-demos.html
++++ b/interactive/chapter4-demos.html
+@@ -587,28 +587,29 @@
+                 <div class="info-panel">
+                     <h3>Chaos Metrics</h3>
+                     <div class="stat-grid">
+                         <div class="stat-card">
+                             <h4>Lyapunov Estimate</h4>
+                             <p id="chaos-lyapunov">–</p>
+                         </div>
+                         <div class="stat-card">
+                             <h4>Value Spread (σ)</h4>
+                             <p id="chaos-spread">–</p>
+                         </div>
+                         <div class="stat-card">
+                             <h4>Digit Entropy</h4>
+                             <p id="chaos-entropy">–</p>
+                         </div>
+                     </div>
+                     <p>
+                         Positive Lyapunov exponents indicate sensitive dependence on initial conditions. The digit plot shows why
+                         chaotic maps look random even though the underlying iteration is entirely deterministic.
+                     </p>
+                 </div>
+             </div>
+         </section>
+     </div>
+ 
++    <script src="../js/chapter4-number-systems.js"></script>
+     <script src="chapter4-demos.js"></script>
+ </body>
+ </html>
+diff --git a/interactive/chapter4-demos.js b/interactive/chapter4-demos.js
+index f386c10422c30642092114dec7ecfe7c4a25e121..c27e3a811768b8619f0fbfc82f39e3a1f959be17 100644
+--- a/interactive/chapter4-demos.js
++++ b/interactive/chapter4-demos.js
+@@ -1,901 +1,100 @@
+ (() => {
+     'use strict';
+ 
+-    const CONSTANT_DIGITS = {
+-        pi: {
+-            label: 'π',
+-            digits: '314159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195'
+-        },
+-        e: {
+-            label: 'e',
+-            digits: '271828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865'
+-        },
+-        sqrt2: {
+-            label: '√2',
+-            digits: '141421356237309504880168872420969807856967187537694807317667973799073247846210703885038753432764157273501384623091229702492483605585073721264412149709993583141322266592750559275579995050115278206057147010955997160597027453459686201472851741864088919860955232923048430871432145083976260362799525140798968725339654633180882964062061525835239505474575028775996172983557522033753185701135437460340849884716038689997069900481'
+-        }
+-    };
+-
+-    function digitLabel(digit) {
+-        return digit < 10 ? digit.toString() : String.fromCharCode(55 + digit);
+-    }
+-
+-    function bigIntToDigits(value, base, width) {
+-        const digits = new Array(width).fill(0);
+-        const bigBase = BigInt(base);
+-        let index = width - 1;
+-        let working = value < 0n ? -value : value;
+-        while (working > 0n && index >= 0) {
+-            digits[index] = Number(working % bigBase);
+-            working /= bigBase;
+-            index--;
+-        }
+-        return digits;
+-    }
+-
+-    function computeDigitCounts(matrix, base) {
+-        const counts = new Array(base).fill(0);
+-        for (const row of matrix) {
+-            for (const digit of row) {
+-                if (digit >= 0 && digit < base) {
+-                    counts[digit] += 1;
+-                }
+-            }
+-        }
+-        return counts;
+-    }
+-
+-    function computeEntropy(counts, base) {
+-        const total = counts.reduce((a, b) => a + b, 0);
+-        if (!total) {
+-            return 0;
+-        }
+-        let entropy = 0;
+-        for (const count of counts) {
+-            if (count === 0) continue;
+-            const p = count / total;
+-            entropy -= p * Math.log2(p);
+-        }
+-        const maxEntropy = Math.log2(Math.min(base, counts.length));
+-        return entropy / (maxEntropy || 1);
+-    }
+-
+-    function computeTransitionRate(matrix) {
+-        if (matrix.length < 2) return 0;
+-        const rows = matrix.length;
+-        const cols = matrix[0].length;
+-        let changes = 0;
+-        for (let y = 1; y < rows; y++) {
+-            for (let x = 0; x < cols; x++) {
+-                if (matrix[y][x] !== matrix[y - 1][x]) {
+-                    changes += 1;
+-                }
+-            }
+-        }
+-        return changes / ((rows - 1) * cols);
+-    }
+-
+-    function distinctColumnPatterns(matrix) {
+-        const cols = matrix[0]?.length || 0;
+-        const signatures = new Set();
+-        for (let x = 0; x < cols; x++) {
+-            let signature = '';
+-            for (let y = 0; y < matrix.length; y++) {
+-                signature += matrix[y][x];
+-            }
+-            signatures.add(signature);
+-        }
+-        return signatures.size;
+-    }
+-
+-    function getDigitColor(digit, base) {
+-        if (base === 2) {
+-            return digit === 1 ? '#ffd700' : '#111111';
+-        }
+-        const ratio = base > 1 ? digit / (base - 1) : 0;
+-        const hue = 40 + ratio * 220;
+-        const lightness = 25 + ratio * 40;
+-        return `hsl(${hue}, 70%, ${lightness}%)`;
+-    }
+-
+-    function drawDigitMatrix(ctx, matrix, base) {
+-        const rows = matrix.length;
+-        const cols = matrix[0]?.length || 0;
+-        ctx.save();
+-        ctx.fillStyle = '#050505';
+-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+-        if (!rows || !cols) {
+-            ctx.restore();
++    function initializeChapter4Demos() {
++        const api = window.Chapter4Demos;
++        if (!api) {
++            console.warn('Chapter4Demos module not found');
+             return;
+         }
+-        const cellWidth = ctx.canvas.width / cols;
+-        const cellHeight = ctx.canvas.height / rows;
+-        for (let y = 0; y < rows; y++) {
+-            for (let x = 0; x < cols; x++) {
+-                const digit = matrix[y][x];
+-                ctx.fillStyle = getDigitColor(digit, base);
+-                ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth) + 0.5, Math.ceil(cellHeight) + 0.5);
+-            }
+-        }
+-        ctx.globalAlpha = 0.15;
+-        ctx.strokeStyle = '#ffffff';
+-        ctx.lineWidth = 0.5;
+-        for (let x = 0; x <= cols; x++) {
+-            ctx.beginPath();
+-            ctx.moveTo(x * cellWidth, 0);
+-            ctx.lineTo(x * cellWidth, ctx.canvas.height);
+-            ctx.stroke();
+-        }
+-        for (let y = 0; y <= rows; y++) {
+-            ctx.beginPath();
+-            ctx.moveTo(0, y * cellHeight);
+-            ctx.lineTo(ctx.canvas.width, y * cellHeight);
+-            ctx.stroke();
+-        }
+-        ctx.restore();
+-    }
+-
+-    function updateLegend(container, base) {
+-        if (!container) return;
+-        const digitsToShow = Math.min(base, 16);
+-        const pieces = [];
+-        for (let digit = 0; digit < digitsToShow; digit++) {
+-            const color = getDigitColor(digit, base);
+-            pieces.push(`<span><span class="color-box" style="background:${color}"></span>${digitLabel(digit)}</span>`);
+-        }
+-        container.innerHTML = pieces.join('');
+-    }
+-
+-    function formatEntropy(value) {
+-        if (!isFinite(value)) return '–';
+-        return `${value.toFixed(3)}`;
+-    }
+-
+-    function formatPercentage(value) {
+-        return `${(value * 100).toFixed(1)}%`;
+-    }
+-
+-    function formatLargeNumber(value) {
+-        const str = value.toString();
+-        if (str.length <= 12) return str;
+-        return `${str.slice(0, 6)}… (${str.length} digits)`;
+-    }
+-
+-    function chiSquaredStatistic(counts, expected) {
+-        let chi = 0;
+-        for (let i = 0; i < counts.length; i++) {
+-            const diff = counts[i] - expected;
+-            chi += (diff * diff) / (expected || 1);
+-        }
+-        return chi;
+-    }
+-
+-    function standardDeviation(values) {
+-        if (!values.length) return 0;
+-        const mean = values.reduce((a, b) => a + b, 0) / values.length;
+-        const variance = values.reduce((acc, value) => acc + (value - mean) ** 2, 0) / values.length;
+-        return Math.sqrt(variance);
+-    }
+-
+-    class BinaryExpansionDemo {
+-        constructor() {
+-            this.canvas = document.getElementById('binary-canvas');
+-            this.ctx = this.canvas.getContext('2d');
+-            this.sequenceSelect = document.getElementById('binary-sequence');
+-            this.baseSlider = document.getElementById('binary-base');
+-            this.baseDisplay = document.getElementById('binary-base-display');
+-            this.rowsSlider = document.getElementById('binary-rows');
+-            this.rowsDisplay = document.getElementById('binary-rows-display');
+-            this.widthSlider = document.getElementById('binary-width');
+-            this.widthDisplay = document.getElementById('binary-width-display');
+-            this.playBtn = document.getElementById('binary-play');
+-            this.stepBtn = document.getElementById('binary-step');
+-            this.resetBtn = document.getElementById('binary-reset');
+-            this.legend = document.getElementById('binary-legend');
+-            this.entropyDisplay = document.getElementById('binary-entropy');
+-            this.transitionsDisplay = document.getElementById('binary-transitions');
+-            this.patternDisplay = document.getElementById('binary-patterns');
+-            this.isPlaying = false;
+-            this.timer = null;
+-
+-            this.attachListeners();
+-            this.render();
+-        }
+-
+-        attachListeners() {
+-            const scheduleRender = () => this.render();
+-            this.sequenceSelect.addEventListener('change', scheduleRender);
+-            this.baseSlider.addEventListener('input', () => {
+-                this.baseDisplay.textContent = this.baseSlider.value;
+-                scheduleRender();
+-            });
+-            this.rowsSlider.addEventListener('input', () => {
+-                this.rowsDisplay.textContent = this.rowsSlider.value;
+-                if (!this.isPlaying) scheduleRender();
+-            });
+-            this.widthSlider.addEventListener('input', () => {
+-                this.widthDisplay.textContent = this.widthSlider.value;
+-                scheduleRender();
+-            });
+-            this.playBtn.addEventListener('click', () => this.togglePlay());
+-            this.stepBtn.addEventListener('click', () => {
+-                this.stop();
+-                this.incrementRows();
+-            });
+-            this.resetBtn.addEventListener('click', () => this.reset());
+-        }
+-
+-        togglePlay() {
+-            if (this.isPlaying) {
+-                this.stop();
+-            } else {
+-                this.isPlaying = true;
+-                this.playBtn.textContent = 'Pause';
+-                this.loop();
+-            }
+-        }
+-
+-        stop() {
+-            this.isPlaying = false;
+-            this.playBtn.textContent = 'Play';
+-            if (this.timer) {
+-                clearTimeout(this.timer);
+-                this.timer = null;
+-            }
+-        }
+-
+-        incrementRows() {
+-            const maxRows = parseInt(this.rowsSlider.max, 10);
+-            let current = parseInt(this.rowsSlider.value, 10);
+-            if (current < maxRows) {
+-                current += 1;
+-                this.rowsSlider.value = current;
+-                this.rowsDisplay.textContent = current;
+-            }
+-            this.render();
+-        }
+-
+-        loop() {
+-            if (!this.isPlaying) return;
+-            this.incrementRows();
+-            this.timer = setTimeout(() => this.loop(), 600);
+-        }
+-
+-        reset() {
+-            this.stop();
+-            this.baseSlider.value = '2';
+-            this.rowsSlider.value = '32';
+-            this.widthSlider.value = '16';
+-            this.baseDisplay.textContent = '2';
+-            this.rowsDisplay.textContent = '32';
+-            this.widthDisplay.textContent = '16';
+-            this.sequenceSelect.value = 'count';
+-            this.render();
+-        }
+-
+-        generateMatrix() {
+-            const base = parseInt(this.baseSlider.value, 10);
+-            const rows = parseInt(this.rowsSlider.value, 10);
+-            const width = parseInt(this.widthSlider.value, 10);
+-            const sequence = this.sequenceSelect.value;
+-            const matrix = [];
+-            for (let i = 0; i < rows; i++) {
+-                let value = 0n;
+-                switch (sequence) {
+-                    case 'count':
+-                        value = BigInt(i);
+-                        break;
+-                    case 'powers3':
+-                        value = 3n ** BigInt(i);
+-                        break;
+-                    case 'powers5':
+-                        value = 5n ** BigInt(i);
+-                        break;
+-                }
+-                matrix.push(bigIntToDigits(value, base, width));
+-            }
+-            return matrix;
+-        }
+-
+-        render() {
+-            const base = parseInt(this.baseSlider.value, 10);
+-            const matrix = this.generateMatrix();
+-            drawDigitMatrix(this.ctx, matrix, base);
+-            updateLegend(this.legend, base);
+-            const counts = computeDigitCounts(matrix, base);
+-            const entropy = computeEntropy(counts, base);
+-            const transitions = computeTransitionRate(matrix);
+-            const patterns = distinctColumnPatterns(matrix);
+-            this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
+-            this.transitionsDisplay.textContent = formatPercentage(transitions);
+-            this.patternDisplay.textContent = patterns.toString();
+-        }
+-    }
+-
+-    const RECURRENCE_CONFIG = {
+-        fibonacci: {
+-            label: 'Fibonacci',
+-            maxTerms: 60,
+-            defaultTerms: 24
+-        },
+-        sylvester: {
+-            label: 'Sylvester',
+-            maxTerms: 18,
+-            defaultTerms: 10
+-        },
+-        nonlinear: {
+-            label: 'Nonlinear Modular',
+-            maxTerms: 60,
+-            defaultTerms: 30
+-        }
+-    };
+-
+-    class RecurrenceSequenceDemo {
+-        constructor() {
+-            this.canvas = document.getElementById('recurrence-canvas');
+-            this.ctx = this.canvas.getContext('2d');
+-            this.sequenceSelect = document.getElementById('recurrence-sequence');
+-            this.baseSlider = document.getElementById('recurrence-base');
+-            this.baseDisplay = document.getElementById('recurrence-base-display');
+-            this.termsSlider = document.getElementById('recurrence-terms');
+-            this.termsDisplay = document.getElementById('recurrence-terms-display');
+-            this.widthSlider = document.getElementById('recurrence-width');
+-            this.widthDisplay = document.getElementById('recurrence-width-display');
+-            this.playBtn = document.getElementById('recurrence-play');
+-            this.resetBtn = document.getElementById('recurrence-reset');
+-            this.legend = document.getElementById('recurrence-legend');
+-            this.entropyDisplay = document.getElementById('recurrence-entropy');
+-            this.growthDisplay = document.getElementById('recurrence-growth');
+-            this.lastDisplay = document.getElementById('recurrence-last');
+-            this.isPlaying = false;
+-            this.timer = null;
+-            this.values = [];
+-
+-            this.attachListeners();
+-            this.applyConfig();
+-            this.render();
+-        }
+-
+-        attachListeners() {
+-            this.sequenceSelect.addEventListener('change', () => {
+-                this.applyConfig();
+-                this.render();
+-            });
+-            this.baseSlider.addEventListener('input', () => {
+-                this.baseDisplay.textContent = this.baseSlider.value;
+-                this.render();
+-            });
+-            this.termsSlider.addEventListener('input', () => {
+-                this.termsDisplay.textContent = this.termsSlider.value;
+-                if (!this.isPlaying) this.render();
+-            });
+-            this.widthSlider.addEventListener('input', () => {
+-                this.widthDisplay.textContent = this.widthSlider.value;
+-                this.render();
+-            });
+-            this.playBtn.addEventListener('click', () => this.togglePlay());
+-            this.resetBtn.addEventListener('click', () => this.reset());
+-        }
+-
+-        applyConfig() {
+-            const config = RECURRENCE_CONFIG[this.sequenceSelect.value];
+-            this.termsSlider.max = config.maxTerms.toString();
+-            if (parseInt(this.termsSlider.value, 10) > config.maxTerms) {
+-                this.termsSlider.value = config.maxTerms.toString();
+-            }
+-            if (!this.isPlaying) {
+-                this.termsSlider.value = config.defaultTerms.toString();
+-            }
+-            this.termsDisplay.textContent = this.termsSlider.value;
+-        }
+-
+-        togglePlay() {
+-            if (this.isPlaying) {
+-                this.stop();
+-            } else {
+-                this.isPlaying = true;
+-                this.playBtn.textContent = 'Pause';
+-                this.loop();
+-            }
+-        }
+-
+-        stop() {
+-            this.isPlaying = false;
+-            this.playBtn.textContent = 'Play';
+-            if (this.timer) {
+-                clearTimeout(this.timer);
+-                this.timer = null;
+-            }
+-        }
+-
+-        loop() {
+-            if (!this.isPlaying) return;
+-            const maxTerms = parseInt(this.termsSlider.max, 10);
+-            let current = parseInt(this.termsSlider.value, 10);
+-            if (current < maxTerms) {
+-                current += 1;
+-                this.termsSlider.value = current.toString();
+-                this.termsDisplay.textContent = this.termsSlider.value;
+-                this.render();
+-                this.timer = setTimeout(() => this.loop(), 700);
+-            } else {
+-                this.stop();
+-            }
+-        }
+ 
+-        reset() {
+-            this.stop();
+-            this.applyConfig();
+-            this.baseSlider.value = '10';
+-            this.baseDisplay.textContent = '10';
+-            this.widthSlider.value = '20';
+-            this.widthDisplay.textContent = '20';
+-            this.render();
+-        }
+-
+-        generateValues() {
+-            const terms = parseInt(this.termsSlider.value, 10);
+-            const type = this.sequenceSelect.value;
+-            const values = [];
+-            if (type === 'fibonacci') {
+-                values.push(0n, 1n);
+-                for (let i = 2; i < terms; i++) {
+-                    values.push(values[i - 1] + values[i - 2]);
+-                }
+-            } else if (type === 'sylvester') {
+-                values.push(2n);
+-                for (let i = 1; i < terms; i++) {
+-                    const prev = values[i - 1];
+-                    values.push(prev * (prev - 1n) + 1n);
+-                }
+-            } else {
+-                values.push(1n, 3n);
+-                const modulus = 10n ** 12n;
+-                for (let i = 2; i < terms; i++) {
+-                    const next = (values[i - 1] * values[i - 1] + values[i - 2] + BigInt(i)) % modulus;
+-                    values.push(next);
+-                }
+-            }
+-            return values.slice(0, terms);
+-        }
+-
+-        render() {
+-            const base = parseInt(this.baseSlider.value, 10);
+-            const width = parseInt(this.widthSlider.value, 10);
+-            this.values = this.generateValues();
+-            const matrix = this.values.map(value => bigIntToDigits(value, base, width));
+-            drawDigitMatrix(this.ctx, matrix, base);
+-            updateLegend(this.legend, base);
+-            const counts = computeDigitCounts(matrix, base);
+-            const entropy = computeEntropy(counts, base);
+-            this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
+-            if (this.values.length > 1) {
+-                const first = this.values[1] === 0n ? this.values[2] || 1n : this.values[1];
+-                const last = this.values[this.values.length - 1];
+-                const growth = (last.toString().length - first.toString().length) / Math.max(1, this.values.length - 1);
+-                this.growthDisplay.textContent = `${growth.toFixed(2)} digits/step`;
+-                this.lastDisplay.textContent = formatLargeNumber(last);
+-            } else if (this.values.length === 1) {
+-                this.growthDisplay.textContent = '0.00 digits/step';
+-                this.lastDisplay.textContent = formatLargeNumber(this.values[0]);
+-            } else {
+-                this.growthDisplay.textContent = '–';
+-                this.lastDisplay.textContent = '–';
+-            }
+-        }
++        const {
++            BinaryExpansionVisualizer,
++            RecurrenceSequenceExplorer,
++            PrimeSieveAnimator,
++            ConstantRandomnessLab,
++            ChaoticLogisticMapLab
++        } = api;
++
++        new BinaryExpansionVisualizer({
++            canvas: document.getElementById('binary-canvas'),
++            sequenceSelect: document.getElementById('binary-sequence'),
++            baseSlider: document.getElementById('binary-base'),
++            baseDisplay: document.getElementById('binary-base-display'),
++            rowsSlider: document.getElementById('binary-rows'),
++            rowsDisplay: document.getElementById('binary-rows-display'),
++            widthSlider: document.getElementById('binary-width'),
++            widthDisplay: document.getElementById('binary-width-display'),
++            playBtn: document.getElementById('binary-play'),
++            stepBtn: document.getElementById('binary-step'),
++            resetBtn: document.getElementById('binary-reset'),
++            legend: document.getElementById('binary-legend'),
++            entropyDisplay: document.getElementById('binary-entropy'),
++            transitionsDisplay: document.getElementById('binary-transitions'),
++            patternDisplay: document.getElementById('binary-patterns')
++        });
++
++        new RecurrenceSequenceExplorer({
++            canvas: document.getElementById('recurrence-canvas'),
++            sequenceSelect: document.getElementById('recurrence-sequence'),
++            baseSlider: document.getElementById('recurrence-base'),
++            baseDisplay: document.getElementById('recurrence-base-display'),
++            termsSlider: document.getElementById('recurrence-terms'),
++            termsDisplay: document.getElementById('recurrence-terms-display'),
++            widthSlider: document.getElementById('recurrence-width'),
++            widthDisplay: document.getElementById('recurrence-width-display'),
++            playBtn: document.getElementById('recurrence-play'),
++            resetBtn: document.getElementById('recurrence-reset'),
++            legend: document.getElementById('recurrence-legend'),
++            entropyDisplay: document.getElementById('recurrence-entropy'),
++            growthDisplay: document.getElementById('recurrence-growth'),
++            lastDisplay: document.getElementById('recurrence-last')
++        });
++
++        new PrimeSieveAnimator({
++            canvas: document.getElementById('sieve-canvas'),
++            limitSlider: document.getElementById('sieve-limit'),
++            limitDisplay: document.getElementById('sieve-limit-display'),
++            playBtn: document.getElementById('sieve-play'),
++            stepBtn: document.getElementById('sieve-step'),
++            resetBtn: document.getElementById('sieve-reset'),
++            countDisplay: document.getElementById('sieve-count'),
++            densityDisplay: document.getElementById('sieve-density'),
++            latestDisplay: document.getElementById('sieve-latest'),
++            gapDisplay: document.getElementById('sieve-gap')
++        });
++
++        new ConstantRandomnessLab({
++            constantSelect: document.getElementById('constants-constant'),
++            startSlider: document.getElementById('constants-start'),
++            startDisplay: document.getElementById('constants-start-display'),
++            countSlider: document.getElementById('constants-count'),
++            countDisplay: document.getElementById('constants-count-display'),
++            barContainer: document.getElementById('constants-bars'),
++            streamContainer: document.getElementById('constants-stream'),
++            entropyDisplay: document.getElementById('constants-entropy'),
++            chiDisplay: document.getElementById('constants-chi'),
++            deviationDisplay: document.getElementById('constants-deviation')
++        });
++
++        new ChaoticLogisticMapLab({
++            rSlider: document.getElementById('chaos-r'),
++            rDisplay: document.getElementById('chaos-r-display'),
++            x0Input: document.getElementById('chaos-x0'),
++            stepsSlider: document.getElementById('chaos-steps'),
++            stepsDisplay: document.getElementById('chaos-steps-display'),
++            timeCanvas: document.getElementById('chaos-time-canvas'),
++            digitCanvas: document.getElementById('chaos-digit-canvas'),
++            lyapunovDisplay: document.getElementById('chaos-lyapunov'),
++            spreadDisplay: document.getElementById('chaos-spread'),
++            entropyDisplay: document.getElementById('chaos-entropy'),
++            runBtn: document.getElementById('chaos-run')
++        });
+     }
+ 
+-    class PrimeSieveDemo {
+-        constructor() {
+-            this.canvas = document.getElementById('prime-canvas');
+-            this.ctx = this.canvas.getContext('2d');
+-            this.limitSlider = document.getElementById('prime-limit');
+-            this.limitDisplay = document.getElementById('prime-limit-display');
+-            this.playBtn = document.getElementById('prime-play');
+-            this.stepBtn = document.getElementById('prime-step');
+-            this.resetBtn = document.getElementById('prime-reset');
+-            this.countDisplay = document.getElementById('prime-count');
+-            this.densityDisplay = document.getElementById('prime-density');
+-            this.latestDisplay = document.getElementById('prime-latest');
+-            this.gapDisplay = document.getElementById('prime-gap');
+-            this.isRunning = false;
+-            this.timer = null;
+-
+-            this.attachListeners();
+-            this.reset();
+-        }
+-
+-        attachListeners() {
+-            this.limitSlider.addEventListener('input', () => {
+-                this.limitDisplay.textContent = this.limitSlider.value;
+-            });
+-            this.limitSlider.addEventListener('change', () => this.reset());
+-            this.playBtn.addEventListener('click', () => this.togglePlay());
+-            this.stepBtn.addEventListener('click', () => {
+-                this.stop();
+-                this.step();
+-                this.draw();
+-                this.updateStats();
+-            });
+-            this.resetBtn.addEventListener('click', () => this.reset());
+-        }
+-
+-        togglePlay() {
+-            if (this.isRunning) {
+-                this.stop();
+-            } else {
+-                this.isRunning = true;
+-                this.playBtn.textContent = 'Pause';
+-                this.loop();
+-            }
+-        }
+-
+-        stop() {
+-            this.isRunning = false;
+-            this.playBtn.textContent = 'Play';
+-            if (this.timer) {
+-                clearTimeout(this.timer);
+-                this.timer = null;
+-            }
+-        }
+-
+-        reset() {
+-            this.stop();
+-            this.limit = parseInt(this.limitSlider.value, 10);
+-            this.numbers = [];
+-            for (let value = 2; value <= this.limit; value++) {
+-                this.numbers.push({ value, state: 'unknown' });
+-            }
+-            this.primes = [];
+-            this.currentPrimeIndex = null;
+-            this.nextMultiple = null;
+-            this.complete = false;
+-            this.draw();
+-            this.updateStats();
+-        }
+-
+-        loop() {
+-            if (!this.isRunning) return;
+-            const progressed = this.step();
+-            this.draw();
+-            this.updateStats();
+-            if (!progressed || this.complete) {
+-                this.stop();
+-                return;
+-            }
+-            this.timer = setTimeout(() => this.loop(), 320);
+-        }
+-
+-        step() {
+-            if (this.complete) return false;
+-            if (this.currentPrimeIndex === null) {
+-                this.currentPrimeIndex = this.findNextPrimeIndex(-1);
+-                if (this.currentPrimeIndex === null) {
+-                    this.complete = true;
+-                    return false;
+-                }
+-                this.promotePrime(this.currentPrimeIndex);
+-            }
+-            if (this.nextMultiple === null) {
+-                const primeValue = this.numbers[this.currentPrimeIndex].value;
+-                const start = primeValue * primeValue;
+-                this.nextMultiple = start <= this.limit ? start : null;
+-                if (this.nextMultiple === null) {
+-                    this.currentPrimeIndex = this.findNextPrimeIndex(this.currentPrimeIndex);
+-                    if (this.currentPrimeIndex === null) {
+-                        this.complete = true;
+-                        return false;
+-                    }
+-                    this.promotePrime(this.currentPrimeIndex);
+-                    return true;
+-                }
+-            }
+-            const primeValue = this.numbers[this.currentPrimeIndex].value;
+-            while (this.nextMultiple !== null && this.nextMultiple <= this.limit) {
+-                const index = this.nextMultiple - 2;
+-                if (this.numbers[index].state === 'unknown') {
+-                    this.numbers[index].state = 'composite';
+-                    this.nextMultiple += primeValue;
+-                    return true;
+-                }
+-                this.nextMultiple += primeValue;
+-            }
+-            this.nextMultiple = null;
+-            const nextIndex = this.findNextPrimeIndex(this.currentPrimeIndex);
+-            if (nextIndex === null) {
+-                this.complete = true;
+-                return false;
+-            }
+-            this.promotePrime(nextIndex);
+-            return true;
+-        }
+-
+-        promotePrime(index) {
+-            const entry = this.numbers[index];
+-            if (entry.state !== 'prime') {
+-                entry.state = 'prime';
+-                this.primes.push(entry.value);
+-            }
+-            this.currentPrimeIndex = index;
+-            this.nextMultiple = null;
+-        }
+-
+-        findNextPrimeIndex(startIndex) {
+-            for (let i = startIndex + 1; i < this.numbers.length; i++) {
+-                if (this.numbers[i].state === 'unknown') {
+-                    return i;
+-                }
+-            }
+-            return null;
+-        }
+-
+-        draw() {
+-            const ctx = this.ctx;
+-            const width = ctx.canvas.width;
+-            const height = ctx.canvas.height;
+-            ctx.fillStyle = '#050505';
+-            ctx.fillRect(0, 0, width, height);
+-            const count = this.numbers.length;
+-            if (!count) return;
+-            const cols = Math.ceil(Math.sqrt(count));
+-            const rows = Math.ceil(count / cols);
+-            const cellWidth = width / cols;
+-            const cellHeight = height / rows;
+-            for (let i = 0; i < count; i++) {
+-                const { value, state } = this.numbers[i];
+-                const col = i % cols;
+-                const row = Math.floor(i / cols);
+-                const x = col * cellWidth;
+-                const y = row * cellHeight;
+-                let fill = '#3a3a3a';
+-                if (state === 'prime') fill = '#ffd700';
+-                if (state === 'composite') fill = '#1b1b1b';
+-                if (this.currentPrimeIndex === i) fill = '#ff8c00';
+-                ctx.fillStyle = fill;
+-                ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
+-                ctx.fillStyle = '#aaaaaa';
+-                ctx.font = `${Math.max(10, Math.floor(cellHeight * 0.32))}px 'Inter', sans-serif`;
+-                ctx.globalAlpha = 0.6;
+-                ctx.fillText(value.toString(), x + 4, y + cellHeight * 0.6);
+-                ctx.globalAlpha = 1;
+-            }
+-        }
+-
+-        updateStats() {
+-            const count = this.primes.length;
+-            this.countDisplay.textContent = count.toString();
+-            const density = count / Math.max(1, this.numbers.length);
+-            this.densityDisplay.textContent = formatPercentage(density);
+-            const latest = this.primes[count - 1];
+-            this.latestDisplay.textContent = latest ? latest.toString() : '–';
+-            if (count >= 2) {
+-                const gap = this.primes[count - 1] - this.primes[count - 2];
+-                this.gapDisplay.textContent = gap.toString();
+-            } else {
+-                this.gapDisplay.textContent = '–';
+-            }
+-        }
+-    }
+-
+-    class ConstantRandomnessLab {
+-        constructor() {
+-            this.constantSelect = document.getElementById('constants-constant');
+-            this.startSlider = document.getElementById('constants-start');
+-            this.startDisplay = document.getElementById('constants-start-display');
+-            this.countSlider = document.getElementById('constants-count');
+-            this.countDisplay = document.getElementById('constants-count-display');
+-            this.barContainer = document.getElementById('constants-bars');
+-            this.streamContainer = document.getElementById('constants-stream');
+-            this.entropyDisplay = document.getElementById('constants-entropy');
+-            this.chiDisplay = document.getElementById('constants-chi');
+-            this.deviationDisplay = document.getElementById('constants-deviation');
+-
+-            this.attachListeners();
+-            this.render();
+-        }
+-
+-        attachListeners() {
+-            this.constantSelect.addEventListener('change', () => this.render());
+-            this.startSlider.addEventListener('input', () => {
+-                this.startDisplay.textContent = this.startSlider.value;
+-                this.render();
+-            });
+-            this.countSlider.addEventListener('input', () => {
+-                this.countDisplay.textContent = this.countSlider.value;
+-                this.render();
+-            });
+-        }
+-
+-        sampleDigits() {
+-            const constant = this.constantSelect.value;
+-            const data = CONSTANT_DIGITS[constant];
+-            const start = parseInt(this.startSlider.value, 10);
+-            const count = parseInt(this.countSlider.value, 10);
+-            const digits = data.digits.slice(start, start + count);
+-            return digits.split('').map(d => parseInt(d, 10));
+-        }
+-
+-        renderBars(counts, total) {
+-            const pieces = [];
+-            for (let digit = 0; digit < counts.length; digit++) {
+-                const frequency = counts[digit] / (total || 1);
+-                const width = Math.round(frequency * 100);
+-                pieces.push(`
+-                    <div class="bar">
+-                        <div class="bar-label">Digit ${digit}</div>
+-                        <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+-                        <div class="bar-label" style="font-size:0.8rem; opacity:0.65;">${(frequency * 100).toFixed(2)}%</div>
+-                    </div>
+-                `);
+-            }
+-            this.barContainer.innerHTML = pieces.join('');
+-        }
+-
+-        renderStream(digits) {
+-            const chunked = [];
+-            for (let i = 0; i < digits.length; i += 4) {
+-                chunked.push(digits.slice(i, i + 4).join(''));
+-            }
+-            this.streamContainer.textContent = chunked.join(' ');
+-        }
+-
+-        render() {
+-            const digits = this.sampleDigits();
+-            if (!digits.length) {
+-                this.barContainer.innerHTML = '';
+-                this.streamContainer.textContent = '';
+-                this.entropyDisplay.textContent = '–';
+-                this.chiDisplay.textContent = '–';
+-                this.deviationDisplay.textContent = '–';
+-                return;
+-            }
+-            const counts = new Array(10).fill(0);
+-            for (const digit of digits) {
+-                if (!Number.isNaN(digit)) {
+-                    counts[digit] += 1;
+-                }
+-            }
+-            const entropy = computeEntropy(counts, 10);
+-            const expected = digits.length / 10;
+-            const chi = chiSquaredStatistic(counts, expected);
+-            const maxDeviation = counts.reduce((max, count) => Math.max(max, Math.abs(count - expected)), 0);
+-            this.renderBars(counts, digits.length);
+-            this.renderStream(digits);
+-            this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
+-            this.chiDisplay.textContent = chi.toFixed(2);
+-            this.deviationDisplay.textContent = `${maxDeviation.toFixed(1)} digits`;
+-        }
+-    }
+-
+-    class ChaoticMapDemo {
+-        constructor() {
+-            this.rSlider = document.getElementById('chaos-r');
+-            this.rDisplay = document.getElementById('chaos-r-display');
+-            this.x0Input = document.getElementById('chaos-x0');
+-            this.stepsSlider = document.getElementById('chaos-steps');
+-            this.stepsDisplay = document.getElementById('chaos-steps-display');
+-            this.timeCanvas = document.getElementById('chaos-time-canvas');
+-            this.timeCtx = this.timeCanvas.getContext('2d');
+-            this.digitCanvas = document.getElementById('chaos-digit-canvas');
+-            this.digitCtx = this.digitCanvas.getContext('2d');
+-            this.lyapunovDisplay = document.getElementById('chaos-lyapunov');
+-            this.spreadDisplay = document.getElementById('chaos-spread');
+-            this.entropyDisplay = document.getElementById('chaos-entropy');
+-            this.runBtn = document.getElementById('chaos-run');
+-
+-            this.attachListeners();
+-            this.render();
+-        }
+-
+-        attachListeners() {
+-            this.rSlider.addEventListener('input', () => {
+-                this.rDisplay.textContent = parseFloat(this.rSlider.value).toFixed(2);
+-                this.render();
+-            });
+-            this.stepsSlider.addEventListener('input', () => {
+-                this.stepsDisplay.textContent = this.stepsSlider.value;
+-                this.render();
+-            });
+-            this.x0Input.addEventListener('change', () => this.render());
+-            this.runBtn.addEventListener('click', () => this.render());
+-        }
+-
+-        iterate() {
+-            let x = parseFloat(this.x0Input.value);
+-            if (!Number.isFinite(x) || x <= 0 || x >= 1) {
+-                x = 0.215;
+-                this.x0Input.value = '0.215';
+-            }
+-            const r = parseFloat(this.rSlider.value);
+-            const steps = parseInt(this.stepsSlider.value, 10);
+-            const values = [];
+-            for (let i = 0; i < steps; i++) {
+-                x = r * x * (1 - x);
+-                values.push(x);
+-            }
+-            return values;
+-        }
+-
+-        drawTimeSeries(values) {
+-            const ctx = this.timeCtx;
+-            const width = ctx.canvas.width;
+-            const height = ctx.canvas.height;
+-            ctx.fillStyle = '#050505';
+-            ctx.fillRect(0, 0, width, height);
+-            if (!values.length) return;
+-            ctx.strokeStyle = '#ffd700';
+-            ctx.lineWidth = 2;
+-            ctx.beginPath();
+-            values.forEach((value, index) => {
+-                const x = (index / (values.length - 1 || 1)) * width;
+-                const y = height - value * height;
+-                if (index === 0) ctx.moveTo(x, y);
+-                else ctx.lineTo(x, y);
+-            });
+-            ctx.stroke();
+-            ctx.fillStyle = '#777';
+-            ctx.font = "12px 'Inter', sans-serif";
+-            ctx.fillText('0', 6, height - 6);
+-            ctx.fillText('1', 6, 14);
+-        }
+-
+-        drawDigitTiles(values) {
+-            const base = 10;
+-            const width = 16;
+-            const matrix = values.map(value => {
+-                const digits = Math.abs(value).toFixed(16).split('.')[1] || '';
+-                const slice = digits.slice(0, width).padEnd(width, '0');
+-                return slice.split('').map(ch => parseInt(ch, 10));
+-            });
+-            drawDigitMatrix(this.digitCtx, matrix, base);
+-        }
+-
+-        render() {
+-            this.rDisplay.textContent = parseFloat(this.rSlider.value).toFixed(2);
+-            this.stepsDisplay.textContent = this.stepsSlider.value;
+-            const values = this.iterate();
+-            this.drawTimeSeries(values);
+-            this.drawDigitTiles(values);
+-            if (!values.length) {
+-                this.lyapunovDisplay.textContent = '–';
+-                this.spreadDisplay.textContent = '–';
+-                this.entropyDisplay.textContent = '–';
+-                return;
+-            }
+-            const r = parseFloat(this.rSlider.value);
+-            let sumLyapunov = 0;
+-            const digitsMatrix = values.map(value => {
+-                const digits = Math.abs(value).toFixed(16).split('.')[1] || '';
+-                const slice = digits.slice(0, 16).padEnd(16, '0');
+-                return slice.split('').map(ch => parseInt(ch, 10));
+-            });
+-            for (const value of values) {
+-                const term = Math.abs(r * (1 - 2 * value));
+-                if (term > 0) {
+-                    sumLyapunov += Math.log(Math.abs(term));
+-                }
+-            }
+-            const lyapunov = sumLyapunov / values.length;
+-            this.lyapunovDisplay.textContent = lyapunov.toFixed(3);
+-            const spread = standardDeviation(values);
+-            this.spreadDisplay.textContent = spread.toFixed(3);
+-            const counts = computeDigitCounts(digitsMatrix, 10);
+-            const entropy = computeEntropy(counts, 10);
+-            this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
+-        }
+-    }
+-
+-    const initializeDemos = () => {
+-        new BinaryExpansionDemo();
+-        new RecurrenceSequenceDemo();
+-        new PrimeSieveDemo();
+-        new ConstantRandomnessLab();
+-        new ChaoticMapDemo();
+-    };
+-
+     if (document.readyState === 'loading') {
+-        document.addEventListener('DOMContentLoaded', initializeDemos);
++        document.addEventListener('DOMContentLoaded', initializeChapter4Demos);
+     } else {
+-        initializeDemos();
++        initializeChapter4Demos();
+     }
+ })();
+diff --git a/js/chapter4-number-systems.js b/js/chapter4-number-systems.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..106ad9ff3d45bda5620d4c37475fcf4f6eb11058
+--- /dev/null
++++ b/js/chapter4-number-systems.js
+@@ -0,0 +1,998 @@
++(function (global) {
++    'use strict';
++
++    const CONSTANT_DIGITS = {
++        pi: {
++            label: 'π',
++            digits: '314159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195'
++        },
++        e: {
++            label: 'e',
++            digits: '271828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865'
++        },
++        sqrt2: {
++            label: '√2',
++            digits: '141421356237309504880168872420969807856967187537694807317667973799073247846210703885038753432764157273501384623091229702492483605585073721264412149709993583141322266592750559275579995050115278206057147010955997160597027453459686201472851741864088919860955232923048430871432145083976260362799525140798968725339654633180882964062061525835239505474575028775996172983557522033753185701135437460340849884716038689997069900481'
++        }
++    };
++
++    const RECURRENCE_CONFIG = {
++        fibonacci: {
++            label: 'Fibonacci',
++            maxTerms: 60,
++            defaultTerms: 24
++        },
++        sylvester: {
++            label: 'Sylvester',
++            maxTerms: 18,
++            defaultTerms: 10
++        },
++        nonlinear: {
++            label: 'Nonlinear Modular',
++            maxTerms: 60,
++            defaultTerms: 30
++        }
++    };
++
++    function digitLabel(digit) {
++        return digit < 10 ? digit.toString() : String.fromCharCode(55 + digit);
++    }
++
++    function bigIntToDigits(value, base, width) {
++        const digits = new Array(width).fill(0);
++        const bigBase = BigInt(base);
++        let index = width - 1;
++        let working = value < 0n ? -value : value;
++        while (working > 0n && index >= 0) {
++            digits[index] = Number(working % bigBase);
++            working /= bigBase;
++            index--;
++        }
++        return digits;
++    }
++
++    function computeDigitCounts(matrix, base) {
++        const counts = new Array(base).fill(0);
++        for (const row of matrix) {
++            for (const digit of row) {
++                if (digit >= 0 && digit < base) {
++                    counts[digit] += 1;
++                }
++            }
++        }
++        return counts;
++    }
++
++    function computeEntropy(counts, base) {
++        const total = counts.reduce((a, b) => a + b, 0);
++        if (!total) {
++            return 0;
++        }
++        let entropy = 0;
++        for (const count of counts) {
++            if (count === 0) continue;
++            const p = count / total;
++            entropy -= p * Math.log2(p);
++        }
++        const maxEntropy = Math.log2(Math.min(base, counts.length));
++        return entropy / (maxEntropy || 1);
++    }
++
++    function computeTransitionRate(matrix) {
++        if (matrix.length < 2) return 0;
++        const rows = matrix.length;
++        const cols = matrix[0].length;
++        let changes = 0;
++        for (let y = 1; y < rows; y++) {
++            for (let x = 0; x < cols; x++) {
++                if (matrix[y][x] !== matrix[y - 1][x]) {
++                    changes += 1;
++                }
++            }
++        }
++        return changes / ((rows - 1) * cols);
++    }
++
++    function distinctColumnPatterns(matrix) {
++        const cols = matrix[0]?.length || 0;
++        const signatures = new Set();
++        for (let x = 0; x < cols; x++) {
++            let signature = '';
++            for (let y = 0; y < matrix.length; y++) {
++                signature += matrix[y][x];
++            }
++            signatures.add(signature);
++        }
++        return signatures.size;
++    }
++
++    function getDigitColor(digit, base) {
++        if (base === 2) {
++            return digit === 1 ? '#ffd700' : '#111111';
++        }
++        const ratio = base > 1 ? digit / (base - 1) : 0;
++        const hue = 40 + ratio * 220;
++        const lightness = 25 + ratio * 40;
++        return `hsl(${hue}, 70%, ${lightness}%)`;
++    }
++
++    function drawDigitMatrix(ctx, matrix, base) {
++        if (!ctx) return;
++        const rows = matrix.length;
++        const cols = matrix[0]?.length || 0;
++        ctx.save();
++        ctx.fillStyle = '#050505';
++        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
++        if (!rows || !cols) {
++            ctx.restore();
++            return;
++        }
++        const cellWidth = ctx.canvas.width / cols;
++        const cellHeight = ctx.canvas.height / rows;
++        for (let y = 0; y < rows; y++) {
++            for (let x = 0; x < cols; x++) {
++                const digit = matrix[y][x];
++                ctx.fillStyle = getDigitColor(digit, base);
++                ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth) + 0.5, Math.ceil(cellHeight) + 0.5);
++            }
++        }
++        ctx.globalAlpha = 0.15;
++        ctx.strokeStyle = '#ffffff';
++        ctx.lineWidth = 0.5;
++        for (let x = 0; x <= cols; x++) {
++            ctx.beginPath();
++            ctx.moveTo(x * cellWidth, 0);
++            ctx.lineTo(x * cellWidth, ctx.canvas.height);
++            ctx.stroke();
++        }
++        for (let y = 0; y <= rows; y++) {
++            ctx.beginPath();
++            ctx.moveTo(0, y * cellHeight);
++            ctx.lineTo(ctx.canvas.width, y * cellHeight);
++            ctx.stroke();
++        }
++        ctx.restore();
++    }
++
++    function updateLegend(container, base) {
++        if (!container) return;
++        const digitsToShow = Math.min(base, 16);
++        const pieces = [];
++        for (let digit = 0; digit < digitsToShow; digit++) {
++            const color = getDigitColor(digit, base);
++            pieces.push(`<span><span class="color-box" style="background:${color}"></span>${digitLabel(digit)}</span>`);
++        }
++        container.innerHTML = pieces.join('');
++    }
++
++    function formatEntropy(value) {
++        if (!isFinite(value)) return '–';
++        return `${value.toFixed(3)}`;
++    }
++
++    function formatPercentage(value) {
++        return `${(value * 100).toFixed(1)}%`;
++    }
++
++    function formatLargeNumber(value) {
++        const str = value.toString();
++        if (str.length <= 12) return str;
++        return `${str.slice(0, 6)}… (${str.length} digits)`;
++    }
++
++    function chiSquaredStatistic(counts, expected) {
++        let chi = 0;
++        for (let i = 0; i < counts.length; i++) {
++            const diff = counts[i] - expected;
++            chi += (diff * diff) / (expected || 1);
++        }
++        return chi;
++    }
++
++    function standardDeviation(values) {
++        if (!values.length) return 0;
++        const mean = values.reduce((a, b) => a + b, 0) / values.length;
++        const variance = values.reduce((acc, value) => acc + (value - mean) ** 2, 0) / values.length;
++        return Math.sqrt(variance);
++    }
++
++    class BinaryExpansionVisualizer {
++        constructor(elements) {
++            this.canvas = elements?.canvas || null;
++            if (!this.canvas || !this.canvas.getContext) {
++                this.enabled = false;
++                return;
++            }
++            this.ctx = this.canvas.getContext('2d');
++            this.sequenceSelect = elements.sequenceSelect || null;
++            this.baseSlider = elements.baseSlider || null;
++            this.baseDisplay = elements.baseDisplay || null;
++            this.rowsSlider = elements.rowsSlider || null;
++            this.rowsDisplay = elements.rowsDisplay || null;
++            this.widthSlider = elements.widthSlider || null;
++            this.widthDisplay = elements.widthDisplay || null;
++            this.playBtn = elements.playBtn || null;
++            this.stepBtn = elements.stepBtn || null;
++            this.resetBtn = elements.resetBtn || null;
++            this.legend = elements.legend || null;
++            this.entropyDisplay = elements.entropyDisplay || null;
++            this.transitionsDisplay = elements.transitionsDisplay || null;
++            this.patternDisplay = elements.patternDisplay || null;
++            this.isPlaying = false;
++            this.timer = null;
++
++            this.updateDisplays();
++            this.attachListeners();
++            this.render();
++        }
++
++        updateDisplays() {
++            if (this.baseSlider && this.baseDisplay) this.baseDisplay.textContent = this.baseSlider.value;
++            if (this.rowsSlider && this.rowsDisplay) this.rowsDisplay.textContent = this.rowsSlider.value;
++            if (this.widthSlider && this.widthDisplay) this.widthDisplay.textContent = this.widthSlider.value;
++        }
++
++        attachListeners() {
++            const scheduleRender = () => this.render();
++            if (this.sequenceSelect) this.sequenceSelect.addEventListener('change', scheduleRender);
++            if (this.baseSlider) {
++                this.baseSlider.addEventListener('input', () => {
++                    if (this.baseDisplay) this.baseDisplay.textContent = this.baseSlider.value;
++                    scheduleRender();
++                });
++            }
++            if (this.rowsSlider) {
++                this.rowsSlider.addEventListener('input', () => {
++                    if (this.rowsDisplay) this.rowsDisplay.textContent = this.rowsSlider.value;
++                    if (!this.isPlaying) scheduleRender();
++                });
++            }
++            if (this.widthSlider) {
++                this.widthSlider.addEventListener('input', () => {
++                    if (this.widthDisplay) this.widthDisplay.textContent = this.widthSlider.value;
++                    scheduleRender();
++                });
++            }
++            if (this.playBtn) this.playBtn.addEventListener('click', () => this.togglePlay());
++            if (this.stepBtn) this.stepBtn.addEventListener('click', () => {
++                this.stop();
++                this.incrementRows();
++            });
++            if (this.resetBtn) this.resetBtn.addEventListener('click', () => this.reset());
++        }
++
++        togglePlay() {
++            if (this.isPlaying) {
++                this.stop();
++            } else {
++                this.isPlaying = true;
++                if (this.playBtn) this.playBtn.textContent = 'Pause';
++                this.loop();
++            }
++        }
++
++        stop() {
++            this.isPlaying = false;
++            if (this.playBtn) this.playBtn.textContent = 'Play';
++            if (this.timer) {
++                clearTimeout(this.timer);
++                this.timer = null;
++            }
++        }
++
++        incrementRows() {
++            if (!this.rowsSlider || !this.rowsDisplay) return;
++            const maxRows = parseInt(this.rowsSlider.max, 10);
++            let current = parseInt(this.rowsSlider.value, 10);
++            if (current < maxRows) {
++                current += 1;
++                this.rowsSlider.value = current;
++                this.rowsDisplay.textContent = current;
++            }
++            this.render();
++        }
++
++        loop() {
++            if (!this.isPlaying) return;
++            this.incrementRows();
++            this.timer = setTimeout(() => this.loop(), 600);
++        }
++
++        reset() {
++            this.stop();
++            if (this.baseSlider) {
++                this.baseSlider.value = '2';
++                if (this.baseDisplay) this.baseDisplay.textContent = '2';
++            }
++            if (this.rowsSlider) {
++                this.rowsSlider.value = '32';
++                if (this.rowsDisplay) this.rowsDisplay.textContent = '32';
++            }
++            if (this.widthSlider) {
++                this.widthSlider.value = '16';
++                if (this.widthDisplay) this.widthDisplay.textContent = '16';
++            }
++            if (this.sequenceSelect) this.sequenceSelect.value = 'count';
++            this.render();
++        }
++
++        generateMatrix() {
++            const base = this.baseSlider ? parseInt(this.baseSlider.value, 10) : 2;
++            const rows = this.rowsSlider ? parseInt(this.rowsSlider.value, 10) : 0;
++            const width = this.widthSlider ? parseInt(this.widthSlider.value, 10) : 0;
++            const sequence = this.sequenceSelect ? this.sequenceSelect.value : 'count';
++            const matrix = [];
++            for (let i = 0; i < rows; i++) {
++                let value = 0n;
++                switch (sequence) {
++                    case 'count':
++                        value = BigInt(i);
++                        break;
++                    case 'powers3':
++                        value = 3n ** BigInt(i);
++                        break;
++                    case 'powers5':
++                        value = 5n ** BigInt(i);
++                        break;
++                    default:
++                        value = BigInt(i);
++                        break;
++                }
++                matrix.push(bigIntToDigits(value, base, width));
++            }
++            return matrix;
++        }
++
++        render() {
++            if (!this.ctx) return;
++            const base = this.baseSlider ? parseInt(this.baseSlider.value, 10) : 2;
++            const matrix = this.generateMatrix();
++            drawDigitMatrix(this.ctx, matrix, base);
++            updateLegend(this.legend, base);
++            const counts = computeDigitCounts(matrix, base);
++            const entropy = computeEntropy(counts, base);
++            const transitions = computeTransitionRate(matrix);
++            const patterns = distinctColumnPatterns(matrix);
++            if (this.entropyDisplay) this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
++            if (this.transitionsDisplay) this.transitionsDisplay.textContent = formatPercentage(transitions);
++            if (this.patternDisplay) this.patternDisplay.textContent = patterns.toString();
++        }
++    }
++
++    class RecurrenceSequenceExplorer {
++        constructor(elements) {
++            this.canvas = elements?.canvas || null;
++            if (!this.canvas || !this.canvas.getContext) {
++                this.enabled = false;
++                return;
++            }
++            this.ctx = this.canvas.getContext('2d');
++            this.sequenceSelect = elements.sequenceSelect || null;
++            this.baseSlider = elements.baseSlider || null;
++            this.baseDisplay = elements.baseDisplay || null;
++            this.termsSlider = elements.termsSlider || null;
++            this.termsDisplay = elements.termsDisplay || null;
++            this.widthSlider = elements.widthSlider || null;
++            this.widthDisplay = elements.widthDisplay || null;
++            this.playBtn = elements.playBtn || null;
++            this.resetBtn = elements.resetBtn || null;
++            this.legend = elements.legend || null;
++            this.entropyDisplay = elements.entropyDisplay || null;
++            this.growthDisplay = elements.growthDisplay || null;
++            this.lastDisplay = elements.lastDisplay || null;
++            this.isPlaying = false;
++            this.timer = null;
++            this.values = [];
++
++            this.updateDisplays();
++            this.attachListeners();
++            this.applyConfig();
++            this.render();
++        }
++
++        updateDisplays() {
++            if (this.baseSlider && this.baseDisplay) this.baseDisplay.textContent = this.baseSlider.value;
++            if (this.termsSlider && this.termsDisplay) this.termsDisplay.textContent = this.termsSlider.value;
++            if (this.widthSlider && this.widthDisplay) this.widthDisplay.textContent = this.widthSlider.value;
++        }
++
++        attachListeners() {
++            if (this.sequenceSelect) {
++                this.sequenceSelect.addEventListener('change', () => {
++                    this.applyConfig();
++                    this.render();
++                });
++            }
++            if (this.baseSlider) {
++                this.baseSlider.addEventListener('input', () => {
++                    if (this.baseDisplay) this.baseDisplay.textContent = this.baseSlider.value;
++                    this.render();
++                });
++            }
++            if (this.termsSlider) {
++                this.termsSlider.addEventListener('input', () => {
++                    if (this.termsDisplay) this.termsDisplay.textContent = this.termsSlider.value;
++                    if (!this.isPlaying) this.render();
++                });
++            }
++            if (this.widthSlider) {
++                this.widthSlider.addEventListener('input', () => {
++                    if (this.widthDisplay) this.widthDisplay.textContent = this.widthSlider.value;
++                    this.render();
++                });
++            }
++            if (this.playBtn) this.playBtn.addEventListener('click', () => this.togglePlay());
++            if (this.resetBtn) this.resetBtn.addEventListener('click', () => this.reset());
++        }
++
++        applyConfig() {
++            if (!this.sequenceSelect || !this.termsSlider || !this.termsDisplay) return;
++            const config = RECURRENCE_CONFIG[this.sequenceSelect.value] || RECURRENCE_CONFIG.fibonacci;
++            this.termsSlider.max = config.maxTerms.toString();
++            if (parseInt(this.termsSlider.value, 10) > config.maxTerms) {
++                this.termsSlider.value = config.maxTerms.toString();
++            }
++            if (!this.isPlaying) {
++                this.termsSlider.value = config.defaultTerms.toString();
++            }
++            this.termsDisplay.textContent = this.termsSlider.value;
++        }
++
++        togglePlay() {
++            if (this.isPlaying) {
++                this.stop();
++            } else {
++                this.isPlaying = true;
++                if (this.playBtn) this.playBtn.textContent = 'Pause';
++                this.loop();
++            }
++        }
++
++        stop() {
++            this.isPlaying = false;
++            if (this.playBtn) this.playBtn.textContent = 'Play';
++            if (this.timer) {
++                clearTimeout(this.timer);
++                this.timer = null;
++            }
++        }
++
++        loop() {
++            if (!this.isPlaying || !this.termsSlider || !this.termsDisplay) return;
++            const maxTerms = parseInt(this.termsSlider.max, 10);
++            let current = parseInt(this.termsSlider.value, 10);
++            if (current < maxTerms) {
++                current += 1;
++                this.termsSlider.value = current.toString();
++                this.termsDisplay.textContent = this.termsSlider.value;
++                this.render();
++                this.timer = setTimeout(() => this.loop(), 700);
++            } else {
++                this.stop();
++            }
++        }
++
++        reset() {
++            this.stop();
++            this.applyConfig();
++            if (this.baseSlider) {
++                this.baseSlider.value = '10';
++                if (this.baseDisplay) this.baseDisplay.textContent = '10';
++            }
++            if (this.widthSlider) {
++                this.widthSlider.value = '20';
++                if (this.widthDisplay) this.widthDisplay.textContent = '20';
++            }
++            this.render();
++        }
++
++        generateValues() {
++            const terms = this.termsSlider ? parseInt(this.termsSlider.value, 10) : 0;
++            const type = this.sequenceSelect ? this.sequenceSelect.value : 'fibonacci';
++            const values = [];
++            if (type === 'fibonacci') {
++                values.push(0n, 1n);
++                for (let i = 2; i < terms; i++) {
++                    values.push(values[i - 1] + values[i - 2]);
++                }
++            } else if (type === 'sylvester') {
++                values.push(2n);
++                for (let i = 1; i < terms; i++) {
++                    const previousProduct = values.slice(0, i).reduce((acc, value) => acc * value, 1n);
++                    values.push(previousProduct + 1n);
++                }
++            } else {
++                values.push(1n, 1n);
++                for (let i = 2; i < terms; i++) {
++                    const next = (values[i - 1] * values[i - 2] + BigInt(i * i)) % 997n;
++                    values.push(next);
++                }
++            }
++            return values.slice(0, terms);
++        }
++
++        computeGrowth(values) {
++            if (values.length < 2) return '–';
++            const last = values[values.length - 1];
++            const prev = values[values.length - 2];
++            if (prev === 0n) return '–';
++            const ratio = Number(last) / Number(prev);
++            if (!Number.isFinite(ratio)) return '–';
++            return ratio.toFixed(3);
++        }
++
++        draw() {
++            if (!this.ctx) return;
++            const base = this.baseSlider ? parseInt(this.baseSlider.value, 10) : 10;
++            const width = this.widthSlider ? parseInt(this.widthSlider.value, 10) : 10;
++            const matrix = this.values.map(value => bigIntToDigits(value, base, width));
++            drawDigitMatrix(this.ctx, matrix, base);
++            updateLegend(this.legend, base);
++        }
++
++        updateStats() {
++            if (!this.values.length) {
++                if (this.entropyDisplay) this.entropyDisplay.textContent = '–';
++                if (this.growthDisplay) this.growthDisplay.textContent = '–';
++                if (this.lastDisplay) this.lastDisplay.textContent = '–';
++                return;
++            }
++            const base = this.baseSlider ? parseInt(this.baseSlider.value, 10) : 10;
++            const width = this.widthSlider ? parseInt(this.widthSlider.value, 10) : 10;
++            const matrix = this.values.map(value => bigIntToDigits(value, base, width));
++            const counts = computeDigitCounts(matrix, base);
++            const entropy = computeEntropy(counts, base);
++            if (this.entropyDisplay) this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
++            if (this.growthDisplay) this.growthDisplay.textContent = this.computeGrowth(this.values);
++            if (this.lastDisplay) this.lastDisplay.textContent = formatLargeNumber(this.values[this.values.length - 1]);
++        }
++
++        render() {
++            this.values = this.generateValues();
++            this.draw();
++            this.updateStats();
++        }
++    }
++
++    class PrimeSieveAnimator {
++        constructor(elements) {
++            this.canvas = elements?.canvas || null;
++            if (!this.canvas || !this.canvas.getContext) {
++                this.enabled = false;
++                return;
++            }
++            this.ctx = this.canvas.getContext('2d');
++            this.limitSlider = elements.limitSlider || null;
++            this.limitDisplay = elements.limitDisplay || null;
++            this.playBtn = elements.playBtn || null;
++            this.stepBtn = elements.stepBtn || null;
++            this.resetBtn = elements.resetBtn || null;
++            this.countDisplay = elements.countDisplay || null;
++            this.densityDisplay = elements.densityDisplay || null;
++            this.latestDisplay = elements.latestDisplay || null;
++            this.gapDisplay = elements.gapDisplay || null;
++            this.timer = null;
++            this.isRunning = false;
++
++            this.reset();
++            this.attachListeners();
++        }
++
++        attachListeners() {
++            if (this.limitSlider) {
++                this.limitSlider.addEventListener('input', () => {
++                    if (this.limitDisplay) this.limitDisplay.textContent = this.limitSlider.value;
++                    this.reset();
++                });
++            }
++            if (this.playBtn) this.playBtn.addEventListener('click', () => this.togglePlay());
++            if (this.stepBtn) this.stepBtn.addEventListener('click', () => {
++                this.stop();
++                this.step();
++                this.draw();
++                this.updateStats();
++            });
++            if (this.resetBtn) this.resetBtn.addEventListener('click', () => this.reset());
++        }
++
++        togglePlay() {
++            if (this.isRunning) {
++                this.stop();
++            } else {
++                this.isRunning = true;
++                if (this.playBtn) this.playBtn.textContent = 'Pause';
++                this.loop();
++            }
++        }
++
++        stop() {
++            this.isRunning = false;
++            if (this.playBtn) this.playBtn.textContent = 'Play';
++            if (this.timer) {
++                clearTimeout(this.timer);
++                this.timer = null;
++            }
++        }
++
++        reset() {
++            this.stop();
++            this.limit = this.limitSlider ? parseInt(this.limitSlider.value, 10) : 120;
++            this.numbers = [];
++            for (let value = 2; value <= this.limit; value++) {
++                this.numbers.push({ value, state: 'unknown' });
++            }
++            this.primes = [];
++            this.currentPrimeIndex = null;
++            this.nextMultiple = null;
++            this.complete = false;
++            if (this.limitDisplay && this.limitSlider) this.limitDisplay.textContent = this.limitSlider.value;
++            this.draw();
++            this.updateStats();
++        }
++
++        loop() {
++            if (!this.isRunning) return;
++            const progressed = this.step();
++            this.draw();
++            this.updateStats();
++            if (!progressed || this.complete) {
++                this.stop();
++                return;
++            }
++            this.timer = setTimeout(() => this.loop(), 320);
++        }
++
++        step() {
++            if (this.complete) return false;
++            if (this.currentPrimeIndex === null) {
++                this.currentPrimeIndex = this.findNextPrimeIndex(-1);
++                if (this.currentPrimeIndex === null) {
++                    this.complete = true;
++                    return false;
++                }
++                this.promotePrime(this.currentPrimeIndex);
++            }
++            if (this.nextMultiple === null) {
++                const primeValue = this.numbers[this.currentPrimeIndex].value;
++                const start = primeValue * primeValue;
++                this.nextMultiple = start <= this.limit ? start : null;
++                if (this.nextMultiple === null) {
++                    this.currentPrimeIndex = this.findNextPrimeIndex(this.currentPrimeIndex);
++                    if (this.currentPrimeIndex === null) {
++                        this.complete = true;
++                        return false;
++                    }
++                    this.promotePrime(this.currentPrimeIndex);
++                    return true;
++                }
++            }
++            const primeValue = this.numbers[this.currentPrimeIndex].value;
++            while (this.nextMultiple !== null && this.nextMultiple <= this.limit) {
++                const index = this.nextMultiple - 2;
++                if (this.numbers[index].state === 'unknown') {
++                    this.numbers[index].state = 'composite';
++                    this.nextMultiple += primeValue;
++                    return true;
++                }
++                this.nextMultiple += primeValue;
++            }
++            this.nextMultiple = null;
++            const nextIndex = this.findNextPrimeIndex(this.currentPrimeIndex);
++            if (nextIndex === null) {
++                this.complete = true;
++                return false;
++            }
++            this.promotePrime(nextIndex);
++            return true;
++        }
++
++        promotePrime(index) {
++            const entry = this.numbers[index];
++            if (entry.state !== 'prime') {
++                entry.state = 'prime';
++                this.primes.push(entry.value);
++            }
++            this.currentPrimeIndex = index;
++            this.nextMultiple = null;
++        }
++
++        findNextPrimeIndex(startIndex) {
++            for (let i = startIndex + 1; i < this.numbers.length; i++) {
++                if (this.numbers[i].state === 'unknown') {
++                    return i;
++                }
++            }
++            return null;
++        }
++
++        draw() {
++            if (!this.ctx) return;
++            const ctx = this.ctx;
++            const width = ctx.canvas.width;
++            const height = ctx.canvas.height;
++            ctx.fillStyle = '#050505';
++            ctx.fillRect(0, 0, width, height);
++            const count = this.numbers.length;
++            if (!count) return;
++            const cols = Math.ceil(Math.sqrt(count));
++            const rows = Math.ceil(count / cols);
++            const cellWidth = width / cols;
++            const cellHeight = height / rows;
++            for (let i = 0; i < count; i++) {
++                const { value, state } = this.numbers[i];
++                const col = i % cols;
++                const row = Math.floor(i / cols);
++                const x = col * cellWidth;
++                const y = row * cellHeight;
++                let fill = '#3a3a3a';
++                if (state === 'prime') fill = '#ffd700';
++                if (state === 'composite') fill = '#1b1b1b';
++                if (this.currentPrimeIndex === i) fill = '#ff8c00';
++                ctx.fillStyle = fill;
++                ctx.fillRect(x + 1, y + 1, cellWidth - 2, cellHeight - 2);
++                ctx.fillStyle = '#aaaaaa';
++                ctx.font = `${Math.max(10, Math.floor(cellHeight * 0.32))}px 'Inter', sans-serif`;
++                ctx.globalAlpha = 0.6;
++                ctx.fillText(value.toString(), x + 4, y + cellHeight * 0.6);
++                ctx.globalAlpha = 1;
++            }
++        }
++
++        updateStats() {
++            const count = this.primes.length;
++            if (this.countDisplay) this.countDisplay.textContent = count.toString();
++            const density = count / Math.max(1, this.numbers.length);
++            if (this.densityDisplay) this.densityDisplay.textContent = formatPercentage(density);
++            const latest = this.primes[count - 1];
++            if (this.latestDisplay) this.latestDisplay.textContent = latest ? latest.toString() : '–';
++            if (count >= 2) {
++                const gap = this.primes[count - 1] - this.primes[count - 2];
++                if (this.gapDisplay) this.gapDisplay.textContent = gap.toString();
++            } else if (this.gapDisplay) {
++                this.gapDisplay.textContent = '–';
++            }
++        }
++    }
++
++    class ConstantRandomnessLab {
++        constructor(elements) {
++            this.constantSelect = elements?.constantSelect || null;
++            this.startSlider = elements?.startSlider || null;
++            this.startDisplay = elements?.startDisplay || null;
++            this.countSlider = elements?.countSlider || null;
++            this.countDisplay = elements?.countDisplay || null;
++            this.barContainer = elements?.barContainer || null;
++            this.streamContainer = elements?.streamContainer || null;
++            this.entropyDisplay = elements?.entropyDisplay || null;
++            this.chiDisplay = elements?.chiDisplay || null;
++            this.deviationDisplay = elements?.deviationDisplay || null;
++            if (!this.constantSelect) {
++                return;
++            }
++            this.attachListeners();
++            this.render();
++        }
++
++        attachListeners() {
++            if (this.constantSelect) this.constantSelect.addEventListener('change', () => this.render());
++            if (this.startSlider) {
++                this.startSlider.addEventListener('input', () => {
++                    if (this.startDisplay) this.startDisplay.textContent = this.startSlider.value;
++                    this.render();
++                });
++            }
++            if (this.countSlider) {
++                this.countSlider.addEventListener('input', () => {
++                    if (this.countDisplay) this.countDisplay.textContent = this.countSlider.value;
++                    this.render();
++                });
++            }
++        }
++
++        sampleDigits() {
++            const constant = this.constantSelect ? this.constantSelect.value : 'pi';
++            const data = CONSTANT_DIGITS[constant];
++            const start = this.startSlider ? parseInt(this.startSlider.value, 10) : 0;
++            const count = this.countSlider ? parseInt(this.countSlider.value, 10) : 0;
++            const digits = data?.digits?.slice(start, start + count) || '';
++            return digits.split('').map(d => parseInt(d, 10));
++        }
++
++        renderBars(counts, total) {
++            if (!this.barContainer) return;
++            const pieces = [];
++            for (let digit = 0; digit < counts.length; digit++) {
++                const frequency = counts[digit] / (total || 1);
++                const width = Math.round(frequency * 100);
++                pieces.push(`
++                    <div class="bar">
++                        <div class="bar-label">Digit ${digit}</div>
++                        <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
++                        <div class="bar-label" style="font-size:0.8rem; opacity:0.65;">${(frequency * 100).toFixed(2)}%</div>
++                    </div>
++                `);
++            }
++            this.barContainer.innerHTML = pieces.join('');
++        }
++
++        renderStream(digits) {
++            if (!this.streamContainer) return;
++            const chunked = [];
++            for (let i = 0; i < digits.length; i += 4) {
++                chunked.push(digits.slice(i, i + 4).join(''));
++            }
++            this.streamContainer.textContent = chunked.join(' ');
++        }
++
++        render() {
++            const digits = this.sampleDigits();
++            if (!digits.length) {
++                if (this.barContainer) this.barContainer.innerHTML = '';
++                if (this.streamContainer) this.streamContainer.textContent = '';
++                if (this.entropyDisplay) this.entropyDisplay.textContent = '–';
++                if (this.chiDisplay) this.chiDisplay.textContent = '–';
++                if (this.deviationDisplay) this.deviationDisplay.textContent = '–';
++                return;
++            }
++            const counts = new Array(10).fill(0);
++            for (const digit of digits) {
++                if (!Number.isNaN(digit)) {
++                    counts[digit] += 1;
++                }
++            }
++            const entropy = computeEntropy(counts, 10);
++            const expected = digits.length / 10;
++            const chi = chiSquaredStatistic(counts, expected);
++            const maxDeviation = counts.reduce((max, count) => Math.max(max, Math.abs(count - expected)), 0);
++            this.renderBars(counts, digits.length);
++            this.renderStream(digits);
++            if (this.entropyDisplay) this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
++            if (this.chiDisplay) this.chiDisplay.textContent = chi.toFixed(2);
++            if (this.deviationDisplay) this.deviationDisplay.textContent = maxDeviation.toFixed(1);
++        }
++    }
++
++    class ChaoticLogisticMapLab {
++        constructor(elements) {
++            this.rSlider = elements?.rSlider || null;
++            this.rDisplay = elements?.rDisplay || null;
++            this.x0Input = elements?.x0Input || null;
++            this.stepsSlider = elements?.stepsSlider || null;
++            this.stepsDisplay = elements?.stepsDisplay || null;
++            this.timeCanvas = elements?.timeCanvas || null;
++            this.digitCanvas = elements?.digitCanvas || null;
++            this.lyapunovDisplay = elements?.lyapunovDisplay || null;
++            this.spreadDisplay = elements?.spreadDisplay || null;
++            this.entropyDisplay = elements?.entropyDisplay || null;
++            this.runBtn = elements?.runBtn || null;
++            this.timeCtx = this.timeCanvas?.getContext ? this.timeCanvas.getContext('2d') : null;
++            this.digitCtx = this.digitCanvas?.getContext ? this.digitCanvas.getContext('2d') : null;
++
++            if (!this.rSlider || !this.timeCtx || !this.digitCtx) {
++                return;
++            }
++
++            this.attachListeners();
++            this.render();
++        }
++
++        attachListeners() {
++            if (this.rSlider) {
++                this.rSlider.addEventListener('input', () => {
++                    if (this.rDisplay) this.rDisplay.textContent = parseFloat(this.rSlider.value).toFixed(2);
++                    this.render();
++                });
++            }
++            if (this.stepsSlider) {
++                this.stepsSlider.addEventListener('input', () => {
++                    if (this.stepsDisplay) this.stepsDisplay.textContent = this.stepsSlider.value;
++                    this.render();
++                });
++            }
++            if (this.x0Input) this.x0Input.addEventListener('change', () => this.render());
++            if (this.runBtn) this.runBtn.addEventListener('click', () => this.render());
++        }
++
++        iterate() {
++            let x = this.x0Input ? parseFloat(this.x0Input.value) : 0.215;
++            if (!Number.isFinite(x) || x <= 0 || x >= 1) {
++                x = 0.215;
++                if (this.x0Input) this.x0Input.value = '0.215';
++            }
++            const r = this.rSlider ? parseFloat(this.rSlider.value) : 3.7;
++            const steps = this.stepsSlider ? parseInt(this.stepsSlider.value, 10) : 120;
++            const values = [];
++            for (let i = 0; i < steps; i++) {
++                x = r * x * (1 - x);
++                values.push(x);
++            }
++            return values;
++        }
++
++        drawTimeSeries(values) {
++            const ctx = this.timeCtx;
++            if (!ctx) return;
++            const width = ctx.canvas.width;
++            const height = ctx.canvas.height;
++            ctx.fillStyle = '#050505';
++            ctx.fillRect(0, 0, width, height);
++            if (!values.length) return;
++            ctx.strokeStyle = '#ffd700';
++            ctx.lineWidth = 2;
++            ctx.beginPath();
++            values.forEach((value, index) => {
++                const x = (index / (values.length - 1 || 1)) * width;
++                const y = height - value * height;
++                if (index === 0) ctx.moveTo(x, y);
++                else ctx.lineTo(x, y);
++            });
++            ctx.stroke();
++            ctx.fillStyle = '#777';
++            ctx.font = "12px 'Inter', sans-serif";
++            ctx.fillText('0', 6, height - 6);
++            ctx.fillText('1', 6, 14);
++        }
++
++        drawDigitTiles(values) {
++            const matrix = values.map(value => {
++                const digits = Math.abs(value).toFixed(16).split('.')[1] || '';
++                const slice = digits.slice(0, 16).padEnd(16, '0');
++                return slice.split('').map(ch => parseInt(ch, 10));
++            });
++            drawDigitMatrix(this.digitCtx, matrix, 10);
++        }
++
++        render() {
++            if (this.rDisplay && this.rSlider) this.rDisplay.textContent = parseFloat(this.rSlider.value).toFixed(2);
++            if (this.stepsDisplay && this.stepsSlider) this.stepsDisplay.textContent = this.stepsSlider.value;
++            const values = this.iterate();
++            this.drawTimeSeries(values);
++            this.drawDigitTiles(values);
++            if (!values.length) {
++                if (this.lyapunovDisplay) this.lyapunovDisplay.textContent = '–';
++                if (this.spreadDisplay) this.spreadDisplay.textContent = '–';
++                if (this.entropyDisplay) this.entropyDisplay.textContent = '–';
++                return;
++            }
++            const r = this.rSlider ? parseFloat(this.rSlider.value) : 0;
++            let sumLyapunov = 0;
++            const digitsMatrix = values.map(value => {
++                const digits = Math.abs(value).toFixed(16).split('.')[1] || '';
++                const slice = digits.slice(0, 16).padEnd(16, '0');
++                return slice.split('').map(ch => parseInt(ch, 10));
++            });
++            for (const value of values) {
++                const term = Math.abs(r * (1 - 2 * value));
++                if (term > 0) {
++                    sumLyapunov += Math.log(Math.abs(term));
++                }
++            }
++            const lyapunov = sumLyapunov / values.length;
++            if (this.lyapunovDisplay) this.lyapunovDisplay.textContent = lyapunov.toFixed(3);
++            const spread = standardDeviation(values);
++            if (this.spreadDisplay) this.spreadDisplay.textContent = spread.toFixed(3);
++            const counts = computeDigitCounts(digitsMatrix, 10);
++            const entropy = computeEntropy(counts, 10);
++            if (this.entropyDisplay) this.entropyDisplay.textContent = `${formatEntropy(entropy)} (of 1.000)`;
++        }
++    }
++
++    global.Chapter4Demos = {
++        BinaryExpansionVisualizer,
++        RecurrenceSequenceExplorer,
++        PrimeSieveAnimator,
++        ConstantRandomnessLab,
++        ChaoticLogisticMapLab,
++        utils: {
++            bigIntToDigits,
++            drawDigitMatrix,
++            computeDigitCounts,
++            computeEntropy,
++            computeTransitionRate,
++            distinctColumnPatterns,
++            formatEntropy,
++            formatLargeNumber,
++            formatPercentage
++        }
++    };
++})(typeof window !== 'undefined' ? window : globalThis);

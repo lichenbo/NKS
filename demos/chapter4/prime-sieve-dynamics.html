@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>素数筛动态 | 第4章演示</title>
+    <link rel="stylesheet" href="chapter4-shared.css">
+    <style>
+        .hero {
+            margin-bottom: clamp(1.8rem, 5vw, 3rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.1rem, 5vw, 3.1rem);
+            margin-bottom: 0.9rem;
+        }
+
+        .hero p {
+            max-width: 760px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1.05rem;
+        }
+
+        .status-note {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 0.9rem;
+        }
+
+        .prime-log {
+            margin-top: 1.5rem;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            font-family: 'Fira Code', 'SFMono-Regular', monospace;
+            font-size: 0.95rem;
+            color: #f2f2f2;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .prime-log strong {
+            color: var(--nks-accent);
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
+
+        <section class="hero">
+            <h1>素数筛动态</h1>
+            <p>
+                观察埃拉托色尼筛法逐步标记合数与素数。动画把每个整数视作一个元胞：黄色是已确认的素数，
+                橙色是当前正在扩散倍数的基数，深色格子则为已排除的合数。
+            </p>
+        </section>
+
+        <section class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="sieve-limit">上限 <span id="sieve-limit-display">120</span></label>
+                    <input type="range" id="sieve-limit" min="50" max="400" step="10" value="120">
+                </div>
+            </div>
+            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+                <button id="sieve-play">自动筛选</button>
+                <button id="sieve-step" class="secondary">单步</button>
+                <button id="sieve-reset" class="secondary">重置</button>
+            </div>
+        </section>
+
+        <section class="canvas-panel">
+            <canvas id="sieve-canvas" width="960" height="480"></canvas>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h4>素数数量</h4>
+                    <p id="sieve-count">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>密度</h4>
+                    <p id="sieve-density">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>最新素数</h4>
+                    <p id="sieve-latest">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>最近间隔</h4>
+                    <p id="sieve-gap">–</p>
+                </div>
+            </div>
+            <p class="status-note">提示：按单步可以观察筛法如何跳过已标记的合数。</p>
+            <div id="sieve-log" class="prime-log"></div>
+        </section>
+    </main>
+
+    <script src="../../js/chapter4-number-systems.js"></script>
+    <script>
+        (() => {
+            const api = window.Chapter4Demos;
+            if (!api) return;
+            const { PrimeSieveAnimator } = api;
+            const ready = () => {
+                const animator = new PrimeSieveAnimator({
+                    canvas: document.getElementById('sieve-canvas'),
+                    limitSlider: document.getElementById('sieve-limit'),
+                    limitDisplay: document.getElementById('sieve-limit-display'),
+                    playBtn: document.getElementById('sieve-play'),
+                    stepBtn: document.getElementById('sieve-step'),
+                    resetBtn: document.getElementById('sieve-reset'),
+                    countDisplay: document.getElementById('sieve-count'),
+                    densityDisplay: document.getElementById('sieve-density'),
+                    latestDisplay: document.getElementById('sieve-latest'),
+                    gapDisplay: document.getElementById('sieve-gap')
+                });
+
+                const log = document.getElementById('sieve-log');
+                const updateLog = () => {
+                    const primes = animator?.primes || [];
+                    if (!primes.length) {
+                        log.innerHTML = '尚未找到素数。';
+                        return;
+                    }
+                    const chunks = [];
+                    for (let i = 0; i < primes.length; i += 15) {
+                        const slice = primes.slice(i, i + 15).join(', ');
+                        chunks.push(slice);
+                    }
+                    log.innerHTML = `<strong>前 ${primes.length} 个素数：</strong><br>${chunks.join('<br>')}`;
+                };
+
+                const renderWithLog = animator.draw.bind(animator);
+                animator.draw = () => {
+                    renderWithLog();
+                    updateLog();
+                };
+                animator.draw();
+
+                const updateStats = animator.updateStats.bind(animator);
+                animator.updateStats = () => {
+                    updateStats();
+                    updateLog();
+                };
+                animator.updateStats();
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', ready);
+            } else {
+                ready();
+            }
+        })();
+    </script>
+</body>
+
+</html>

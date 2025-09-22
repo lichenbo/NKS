@@ -1,0 +1,227 @@
+:root {
+    --nks-bg-start: #050505;
+    --nks-bg-middle: #101010;
+    --nks-bg-end: #050505;
+    --nks-text: #e6e6e6;
+    --nks-accent: #ffd700;
+    --nks-accent-soft: rgba(255, 215, 0, 0.18);
+    --nks-panel: rgba(255, 255, 255, 0.05);
+    --nks-border: rgba(255, 215, 0, 0.25);
+    --nks-muted: #b8b8b8;
+    --nks-card: rgba(255, 255, 255, 0.07);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, var(--nks-bg-start) 0%, var(--nks-bg-middle) 50%, var(--nks-bg-end) 100%);
+    color: var(--nks-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+}
+
+main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 3rem) 4rem;
+}
+
+section + section {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+h1,
+h2,
+h3,
+h4 {
+    color: var(--nks-accent);
+    font-weight: 600;
+}
+
+a {
+    color: var(--nks-accent);
+}
+
+a.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 1.5rem;
+    text-decoration: none;
+    color: var(--nks-accent);
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--nks-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: all 0.3s ease;
+}
+
+a.back-link:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 215, 0, 0.12);
+}
+
+.control-panel {
+    background: var(--nks-panel);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    display: grid;
+    gap: 1.25rem;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.control-group label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+select,
+input[type="range"],
+input[type="number"],
+input[type="text"] {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 10px;
+    color: var(--nks-accent);
+    padding: 0.55rem 0.75rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+}
+
+input[type="range"] {
+    accent-color: var(--nks-accent);
+}
+
+button {
+    padding: 0.7rem 1.4rem;
+    background: var(--nks-accent-soft);
+    border: 1px solid var(--nks-accent);
+    border-radius: 10px;
+    color: var(--nks-accent);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+button.secondary {
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+button:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 215, 0, 0.22);
+}
+
+button.secondary:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.canvas-panel {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    display: grid;
+    gap: 1.25rem;
+}
+
+canvas {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 14px;
+    background: #050505;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.legend-card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
+.legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.legend .color-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stat-card h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    color: var(--nks-accent);
+}
+
+.stat-card p {
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .control-panel {
+        padding: 1.25rem;
+    }
+
+    .canvas-panel {
+        padding: 1.25rem;
+    }
+}

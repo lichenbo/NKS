@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章演示合集 | 一种新科学</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: linear-gradient(135deg, #050505 0%, #141414 50%, #050505 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            padding: 0.5rem 1rem;
+            color: #ffd700;
+            text-decoration: none;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #ffd700;
+            transform: translateY(-1px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2.4rem;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .header h1 {
+            margin: 0 0 1rem;
+            color: #ffd700;
+            font-weight: 700;
+            font-size: 2.4rem;
+        }
+
+        .header p {
+            margin: 0;
+            color: #b8b8b8;
+            font-size: 1.05rem;
+        }
+
+        .category-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .category-title {
+            color: #ffd700;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .demo-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 14px;
+            padding: 1.6rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .demo-card:hover {
+            border-color: rgba(255, 215, 0, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .demo-title {
+            color: #ffd700;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .demo-description {
+            color: #c8c8c8;
+            font-size: 0.95rem;
+            flex: 1 1 auto;
+        }
+
+        .demo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1.1rem;
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.25));
+            color: #f7e49a;
+            text-decoration: none;
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .demo-link:hover {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.35));
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.25rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 1.1rem;
+            }
+
+            .demo-card {
+                padding: 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="../../interactive/chapter4-demos.html" class="back-link">← 返回章节交互实验室</a>
+
+        <header class="header">
+            <h1>第4章：基于数字的系统</h1>
+            <p>这些演示围绕数字序列展开，突出沃尔夫勒姆在《一种新科学》中展示的几类行为。</p>
+        </header>
+
+        <section class="category-section">
+            <h2 class="category-title">数字展开与模式</h2>
+            <div class="demo-grid">
+                <article class="demo-card">
+                    <h3 class="demo-title">算术数字织锦</h3>
+                    <p class="demo-description">堆叠不同算术过程的进制展开，观察嵌套结构与近似随机的对比。</p>
+                    <a class="demo-link" href="arithmetic-digit-tapestry.html">进入演示 →</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">递归与增长</h2>
+            <div class="demo-grid">
+                <article class="demo-card">
+                    <h3 class="demo-title">递归序列探索器</h3>
+                    <p class="demo-description">比较斐波那契、Sylvester 等序列的增长速度与数字模式。</p>
+                    <a class="demo-link" href="recurrence-sequence-explorer.html">进入演示 →</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">素数与混沌</h2>
+            <div class="demo-grid">
+                <article class="demo-card">
+                    <h3 class="demo-title">素数筛动态</h3>
+                    <p class="demo-description">通过动画形式的埃拉托色尼筛法，理解素数出现的计算过程。</p>
+                    <a class="demo-link" href="prime-sieve-dynamics.html">进入演示 →</a>
+                </article>
+                <article class="demo-card">
+                    <h3 class="demo-title">逻辑映射混沌实验室</h3>
+                    <p class="demo-description">探索经典混沌映射的时间演化与数字序列统计。</p>
+                    <a class="demo-link" href="logistic-map-lab.html">进入演示 →</a>
+                </article>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>更多章节演示正在筹备中，欢迎反馈你的想法。</p>
+        </footer>
+    </div>
+</body>
+
+</html>

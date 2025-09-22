@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逻辑映射混沌实验室 | 第4章演示</title>
+    <link rel="stylesheet" href="chapter4-shared.css">
+    <style>
+        .hero {
+            margin-bottom: clamp(1.8rem, 5vw, 3.2rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.1rem, 5vw, 3.1rem);
+            margin-bottom: 0.9rem;
+        }
+
+        .hero p {
+            max-width: 800px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1.05rem;
+        }
+
+        .canvas-panel {
+            gap: 1.8rem;
+        }
+
+        .canvas-panel canvas {
+            background: #050505;
+        }
+
+        .stat-note {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 0.6rem;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <a class="back-link" href="index.html">← 返回第4章演示合集</a>
+
+        <section class="hero">
+            <h1>逻辑映射混沌实验室</h1>
+            <p>
+                逻辑映射 x → r·x·(1−x) 是非线性迭代的经典范例。调节参数 r 与初始值 x₀，观察时间序列、十进制数字纹理、
+                以及用信息熵和 Lyapunov 指数衡量的“随机性”。
+            </p>
+        </section>
+
+        <section class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="chaos-r">参数 r <span id="chaos-r-display">3.70</span></label>
+                    <input type="range" id="chaos-r" min="2.8" max="4.0" step="0.01" value="3.7">
+                </div>
+                <div class="control-group">
+                    <label for="chaos-x0">初始值 x₀</label>
+                    <input type="number" id="chaos-x0" min="0.001" max="0.999" step="0.001" value="0.215">
+                </div>
+                <div class="control-group">
+                    <label for="chaos-steps">迭代次数 <span id="chaos-steps-display">120</span></label>
+                    <input type="range" id="chaos-steps" min="30" max="240" step="10" value="120">
+                </div>
+            </div>
+            <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+                <button id="chaos-run">重新计算</button>
+            </div>
+        </section>
+
+        <section class="canvas-panel">
+            <div>
+                <h3>时间序列</h3>
+                <canvas id="chaos-time-canvas" width="960" height="220"></canvas>
+                <p class="stat-note">同一个初值在不同 r 下可能收敛到周期、出现倍周期分岔或彻底进入混沌。</p>
+            </div>
+            <div>
+                <h3>数字纹理</h3>
+                <canvas id="chaos-digit-canvas" width="960" height="360"></canvas>
+                <p class="stat-note">每行显示一次迭代的十进制小数部分。颜色的随机程度对应统计熵。</p>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h4>Lyapunov 指数</h4>
+                    <p id="chaos-lyapunov">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>数值标准差</h4>
+                    <p id="chaos-spread">–</p>
+                </div>
+                <div class="stat-card">
+                    <h4>数字熵</h4>
+                    <p id="chaos-entropy">–</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../../js/chapter4-number-systems.js"></script>
+    <script>
+        (() => {
+            const api = window.Chapter4Demos;
+            if (!api) return;
+            const { ChaoticLogisticMapLab } = api;
+            const ready = () => {
+                new ChaoticLogisticMapLab({
+                    rSlider: document.getElementById('chaos-r'),
+                    rDisplay: document.getElementById('chaos-r-display'),
+                    x0Input: document.getElementById('chaos-x0'),
+                    stepsSlider: document.getElementById('chaos-steps'),
+                    stepsDisplay: document.getElementById('chaos-steps-display'),
+                    timeCanvas: document.getElementById('chaos-time-canvas'),
+                    digitCanvas: document.getElementById('chaos-digit-canvas'),
+                    lyapunovDisplay: document.getElementById('chaos-lyapunov'),
+                    spreadDisplay: document.getElementById('chaos-spread'),
+                    entropyDisplay: document.getElementById('chaos-entropy'),
+                    runBtn: document.getElementById('chaos-run')
+                });
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', ready);
+            } else {
+                ready();
+            }
+        })();
+    </script>
+</body>
+
+</html>
