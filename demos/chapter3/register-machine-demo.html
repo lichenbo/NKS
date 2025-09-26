@@ -1,904 +1,279 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寄存器机器演示 - 交互式计算模型实验</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: #e0e0e0;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            min-height: 100vh;
-            padding: 0;
-        }
-
-        .container {
-            width: 100vw;
-            min-height: 100vh;
-            margin: 0;
-            background: rgba(26, 26, 26, 0.8);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #ffd700, #ffb300);
-            color: #1a1a1a;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 0;
-            min-height: calc(100vh - 120px);
-        }
-
-        .controls-panel {
-            background: rgba(40, 40, 40, 0.9);
-            padding: 2rem;
-            border-right: 1px solid rgba(255, 215, 0, 0.2);
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        .machines-area {
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            background: rgba(20, 20, 20, 0.5);
-            overflow: auto;
-        }
-
-        .section-title {
-            color: #ffd700;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin: 1.5rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-        }
-
-        .section-title:first-of-type {
-            margin-top: 0;
-        }
-
-        /* Program Selection */
-        .program-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            margin: 1rem 0;
-        }
-
-        .program-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .program-option:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .program-option.active {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #ffd700;
-        }
-
-        .program-name {
-            font-weight: bold;
-            color: #ffd700;
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .program-description {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-        }
-
-        /* Control Buttons */
-        .control-group {
-            margin: 1rem 0;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin: 8px 0;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            border-radius: 6px;
-            background: transparent;
-            color: rgba(255, 215, 0, 0.8);
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-
-        .btn:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .btn.primary {
-            background: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-            border-color: #ffd700;
-        }
-
-        .btn.primary:hover {
-            background: rgba(255, 215, 0, 0.3);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Machine Display */
-        .machine-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .machine-panel {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 10px;
-            padding: 1.5rem;
-        }
-
-        .machine-title {
-            color: #ffd700;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-align: center;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-        }
-
-        /* Registers Display */
-        .registers-container {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-
-        .register {
-            background: rgba(0, 0, 0, 0.4);
-            border: 2px solid rgba(255, 215, 0, 0.5);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            min-width: 80px;
-            transition: all 0.3s ease;
-        }
-
-        .register.highlight {
-            border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.1);
-            transform: scale(1.05);
-        }
-
-        .register-label {
-            font-size: 0.8rem;
-            color: rgba(255, 215, 0, 0.8);
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .register-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffd700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Program Display */
-        .program-display {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .instruction {
-            display: flex;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px 0;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .instruction.current {
-            border-left-color: #ffd700;
-            background: rgba(255, 215, 0, 0.1);
-        }
-
-        .instruction-num {
-            color: rgba(255, 255, 255, 0.5);
-            min-width: 30px;
-            font-weight: 500;
-        }
-
-        .instruction-text {
-            flex: 1;
-            margin-left: 10px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Status Display */
-        .machine-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 1rem 0;
-            padding: 12px 16px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .status-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .status-label {
-            color: rgba(255, 215, 0, 0.8);
-            font-size: 0.8rem;
-        }
-
-        .status-value {
-            color: #ffd700;
-            font-weight: bold;
-        }
-
-        .status-value.running {
-            color: #90EE90;
-        }
-
-        .status-value.halted {
-            color: #FFB6C1;
-        }
-
-        /* Speed Control */
-        .slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #ffd700;
-            cursor: pointer;
-        }
-
-        .slider-value {
-            color: rgba(255, 215, 0, 0.8);
-            font-weight: 500;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        /* Analysis Panel */
-        .analysis-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 1rem 0;
-            font-size: 0.9rem;
-        }
-
-        .analysis-title {
-            color: #ffd700;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .analysis-text {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 350px 1fr;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .controls-panel {
-                max-height: none;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-                padding: 1.5rem;
-            }
-
-            .machines-area {
-                padding: 1rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 1.5rem;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .controls-panel,
-            .machines-area {
-                padding: 1rem;
-            }
-
-            .registers-container {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-
-            .register {
-                min-width: 60px;
-                padding: 0.8rem;
-            }
-
-            .machine-container {
-                gap: 1rem;
-            }
-        }
-
-        /* Loading Animation */
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 0.7;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-
-        .generating {
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Custom Scrollbars */
-        .program-display::-webkit-scrollbar,
-        .controls-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .program-display::-webkit-scrollbar-track,
-        .controls-panel::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .program-display::-webkit-scrollbar-thumb,
-        .controls-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 215, 0, 0.3);
-            border-radius: 3px;
-        }
-
-        .program-display::-webkit-scrollbar-thumb:hover,
-        .controls-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 215, 0, 0.5);
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Register Machines – NKS Chapter 3</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #1f1f1f;
+    }
+    main { max-width: 880px; margin: 0 auto; padding: 30px 20px 42px; }
+    header { margin-bottom: 24px; }
+    h1 { margin: 0 0 0.4rem; font-size: 1.9rem; }
+    p { margin: 0; line-height: 1.55; }
+    section {
+      background: #fff;
+      border: 1px solid #d8d8d8;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .controls { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    select, button {
+      font: inherit;
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 1px solid #b6b6b6;
+      background: #fff;
+      width: 100%;
+    }
+    button {
+      background: #1f63c7;
+      border-color: #1f63c7;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #f1f1f1;
+      border-color: #c2c2c2;
+      color: #232323;
+    }
+    button + button { margin-top: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #c8c8c8; padding: 6px 8px; text-align: center; }
+    th { background: #f1f1f1; }
+    .instructions { list-style: decimal-leading-zero; margin: 12px 0 0 24px; padding: 0; }
+    .instructions li { padding: 4px 6px; border-radius: 6px; margin-bottom: 4px; }
+    .instructions li.active { background: #ffe066; }
+    .stats { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.95rem; margin-top: 12px; }
+    .stat { min-width: 120px; }
+  </style>
 </head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QR1KHESCTK"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-QR1KHESCTK');
-</script>
-
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>寄存器机器演示</h1>
-            <p>交互式探索计算的基本模型，理解简单指令如何产生复杂计算</p>
-        </div>
+  <main>
+    <header>
+      <h1>Small Register Machines</h1>
+      <p>
+        Wolfram’s register-machine experiments (pages 98–100) track how behaviour shifts as the number of instructions grows. The
+        programs below use the exact instruction sequences from the original demo: a three-instruction repeater, a five-instruction
+        loop, and an eight-instruction example that already exhibits tangled register interactions.
+      </p>
+    </header>
 
-        <div class="main-content">
-            <div class="controls-panel">
-                <div class="section-title">程序选择</div>
-                <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
-                    选择不同的程序来探索寄存器机器的计算能力：
-                </p>
+    <section class="controls">
+      <div>
+        <label for="program-select">Choose program</label>
+        <select id="program-select">
+          <option value="increment">3 instructions – repetitive</option>
+          <option value="add">5 instructions – nested</option>
+          <option value="multiply">8 instructions – complex</option>
+        </select>
+      </div>
+      <div>
+        <label>Simulation control</label>
+        <button id="run-btn">Run</button>
+        <button id="step-btn" class="secondary">Step once</button>
+        <button id="reset-btn" class="secondary">Reset</button>
+      </div>
+      <div>
+        <label>Registers</label>
+        <table>
+          <thead>
+            <tr id="register-header"></tr>
+          </thead>
+          <tbody>
+            <tr id="register-values"></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-                <div class="program-grid" id="program-grid">
-                    <div class="program-option active" data-program="increment">
-                        <div class="program-name">简单递增</div>
-                        <div class="program-description">将R0寄存器递增3次</div>
-                    </div>
-                    <div class="program-option" data-program="add">
-                        <div class="program-name">加法运算</div>
-                        <div class="program-description">计算R0 + R1，结果存入R0</div>
-                    </div>
-                    <div class="program-option" data-program="multiply">
-                        <div class="program-name">乘法运算</div>
-                        <div class="program-description">计算R1 × R2，结果存入R0</div>
-                    </div>
-                    <div class="program-option" data-program="fibonacci">
-                        <div class="program-name">斐波那契数列</div>
-                        <div class="program-description">生成斐波那契数列</div>
-                    </div>
-                    <div class="program-option" data-program="subtract">
-                        <div class="program-name">减法运算</div>
-                        <div class="program-description">计算R0 - R1，结果存入R0</div>
-                    </div>
-                    <div class="program-option" data-program="gcd">
-                        <div class="program-name">最大公约数</div>
-                        <div class="program-description">计算R0和R1的最大公约数</div>
-                    </div>
-                </div>
+    <section>
+      <h2 style="font-size:1.1rem;margin-top:0;">Instruction list</h2>
+      <ol id="instruction-list" class="instructions"></ol>
+      <div class="stats">
+        <div class="stat"><strong>Step:</strong> <span id="step-count">0</span></div>
+        <div class="stat"><strong>Program counter:</strong> <span id="pc">0</span></div>
+      </div>
+    </section>
+  </main>
 
-                <div class="section-title">执行控制</div>
+  <script>
+    const PROGRAMS = {
+      increment: {
+        instructions: ['INC R0', 'INC R0', 'INC R0', 'HALT'],
+        initial: [0, 0, 0]
+      },
+      add: {
+        instructions: ['DEC R1 5', 'INC R0', 'DEC R1 5', 'INC R0', 'HALT'],
+        initial: [0, 3, 0]
+      },
+      multiply: {
+        instructions: ['DEC R1 8', 'DEC R2 6', 'INC R0', 'DEC R2 6', 'INC R2', 'DEC R1 8', 'INC R1', 'HALT'],
+        initial: [0, 2, 3]
+      }
+    };
 
-                <div class="control-group">
-                    <div class="control-row">
-                        <button class="btn primary" id="step-btn">单步执行</button>
-                        <button class="btn primary" id="run-btn">连续运行</button>
-                    </div>
-                    <div class="control-row">
-                        <button class="btn" id="stop-btn" disabled>停止</button>
-                        <button class="btn" id="reset-btn">重置</button>
-                    </div>
-                </div>
+    class RegisterMachineDemo {
+      constructor() {
+        this.setProgram('increment');
+        this.running = false;
+        this.timer = null;
+      }
 
-                <div class="control-group">
-                    <label style="color: rgba(255, 215, 0, 0.8); font-size: 0.9rem; margin-bottom: 8px; display: block;">执行速度</label>
-                    <div class="control-row">
-                        <input type="range" class="slider" id="speed-slider" min="1" max="10" value="5">
-                        <span class="slider-value" id="speed-value">5</span>
-                    </div>
-                </div>
+      setProgram(name) {
+        const program = PROGRAMS[name];
+        this.program = program.instructions;
+        this.initial = program.initial;
+        this.reset();
+        this.renderInstructions();
+        this.renderRegisters();
+      }
 
-                <div class="analysis-panel">
-                    <div class="analysis-title">关于寄存器机器</div>
-                    <div class="analysis-text" id="analysis-text">
-                        寄存器机器是Wolfram在《一种新科学》中讨论的基本计算模型。它们由有限个寄存器（存储非负整数）和简单指令组成，却能实现图灵完备的计算。
-                    </div>
-                </div>
-            </div>
+      reset() {
+        this.stop();
+        this.registers = [...this.initial];
+        this.pc = 0;
+        this.steps = 0;
+        this.renderRegisters();
+        this.highlightInstruction();
+        this.updateStats();
+      }
 
-            <div class="machines-area">
-                <div class="machine-container">
-                    <div class="machine-panel">
-                        <div class="machine-title">寄存器机器</div>
-
-                        <div class="registers-container" id="registers-container">
-                            <div class="register" id="register-0">
-                                <div class="register-label">R0</div>
-                                <div class="register-value">0</div>
-                            </div>
-                            <div class="register" id="register-1">
-                                <div class="register-label">R1</div>
-                                <div class="register-value">0</div>
-                            </div>
-                            <div class="register" id="register-2">
-                                <div class="register-label">R2</div>
-                                <div class="register-value">0</div>
-                            </div>
-                        </div>
-
-                        <div class="program-display" id="program-display">
-                            <!-- Program instructions will be displayed here -->
-                        </div>
-
-                        <div class="machine-status">
-                            <div class="status-item">
-                                <span class="status-label">程序计数器</span>
-                                <span class="status-value" id="pc-value">1</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">执行步数</span>
-                                <span class="status-value" id="steps-value">0</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">状态</span>
-                                <span class="status-value" id="status-value">就绪</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">当前指令</span>
-                                <span class="status-value" id="current-instruction">-</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Register Machine Implementation
-        class RegisterMachine {
-            constructor() {
-                this.registers = [0, 0, 0];
-                this.program = [];
-                this.pc = 0; // program counter
-                this.running = false;
-                this.intervalId = null;
-                this.stepCount = 0;
-                this.maxSteps = 10000;
-                this.speed = 200; // milliseconds
-                this.highlightedRegister = -1;
-                
-                this.programs = {
-                    increment: {
-                        program: ['INC R0', 'INC R0', 'INC R0', 'HALT'],
-                        initial: [0, 0, 0],
-                        description: '将R0寄存器递增3次，演示最基本的寄存器操作。'
-                    },
-                    add: {
-                        program: ['DEC R1 5', 'INC R0', 'DEC R1 5', 'INC R0', 'HALT'],
-                        initial: [0, 3, 0],
-                        description: '通过循环将R1的值加到R0上，实现加法运算。每次将R1减1的同时将R0加1。'
-                    },
-                    multiply: {
-                        program: [
-                            'DEC R1 8',
-                            'DEC R2 6', 
-                            'INC R0',
-                            'DEC R2 6',
-                            'INC R2',
-                            'DEC R1 8',
-                            'INC R1',
-                            'HALT'
-                        ],
-                        initial: [0, 2, 3],
-                        description: '通过嵌套循环实现乘法运算，将R1×R2的结果存储在R0中。'
-                    },
-                    fibonacci: {
-                        program: [
-                            'DEC R2 11',
-                            'INC R0',
-                            'DEC R1 8',
-                            'INC R0',
-                            'INC R1',
-                            'INC R1',
-                            'DEC R0 11',
-                            'DEC R1 11',
-                            'DEC R0 4',
-                            'DEC R2 11',
-                            'HALT'
-                        ],
-                        initial: [1, 1, 5],
-                        description: '生成斐波那契数列，展示寄存器机器处理递归模式的能力。'
-                    },
-                    subtract: {
-                        program: ['DEC R1 5', 'DEC R0 5', 'DEC R1 5', 'DEC R0 5', 'HALT'],
-                        initial: [8, 3, 0],
-                        description: '实现减法运算，同时递减R0和R1直到R1为0，结果为R0-R1。'
-                    },
-                    gcd: {
-                        program: [
-                            'DEC R0 5',
-                            'DEC R1 9',
-                            'DEC R0 5',
-                            'INC R1',
-                            'DEC R0 9',
-                            'DEC R1 9',
-                            'DEC R1 9',
-                            'INC R0',
-                            'DEC R1 9',
-                            'HALT'
-                        ],
-                        initial: [12, 8, 0],
-                        description: '使用欧几里得算法计算两个数的最大公约数，展示复杂算法的实现。'
-                    }
-                };
-
-                this.init();
-            }
-
-            init() {
-                this.setupEventListeners();
-                this.loadProgram('increment');
-                this.updateDisplay();
-            }
-
-            setupEventListeners() {
-                // Program selection
-                document.querySelectorAll('.program-option').forEach(option => {
-                    option.addEventListener('click', (e) => {
-                        this.selectProgram(e.currentTarget);
-                    });
-                });
-
-                // Control buttons
-                document.getElementById('step-btn').addEventListener('click', () => this.step());
-                document.getElementById('run-btn').addEventListener('click', () => this.run());
-                document.getElementById('stop-btn').addEventListener('click', () => this.stop());
-                document.getElementById('reset-btn').addEventListener('click', () => this.reset());
-
-                // Speed control
-                document.getElementById('speed-slider').addEventListener('input', (e) => {
-                    this.setSpeed(parseInt(e.target.value));
-                });
-            }
-
-            selectProgram(element) {
-                // Update UI
-                document.querySelectorAll('.program-option').forEach(el => {
-                    el.classList.remove('active');
-                });
-                element.classList.add('active');
-
-                // Load program
-                const programName = element.dataset.program;
-                this.loadProgram(programName);
-                this.updateAnalysis(programName);
-            }
-
-            loadProgram(programName) {
-                const programData = this.programs[programName];
-                this.program = [...programData.program];
-                this.registers = [...programData.initial];
-                this.pc = 0;
-                this.stepCount = 0;
-                this.running = false;
-                this.highlightedRegister = -1;
-                this.updateDisplay();
-            }
-
-            step() {
-                if (this.pc >= this.program.length) {
-                    this.halt();
-                    return false;
-                }
-
-                if (this.stepCount >= this.maxSteps) {
-                    this.halt();
-                    return false;
-                }
-
-                const instruction = this.program[this.pc];
-                this.executeInstruction(instruction);
-                this.stepCount++;
-                this.updateDisplay();
-                return true;
-            }
-
-            executeInstruction(instruction) {
-                const parts = instruction.split(' ');
-                const cmd = parts[0];
-                
-                // Reset register highlighting
-                this.highlightedRegister = -1;
-
-                switch (cmd) {
-                    case 'INC':
-                        const incReg = parseInt(parts[1].substring(1));
-                        this.registers[incReg]++;
-                        this.highlightedRegister = incReg;
-                        this.pc++;
-                        break;
-
-                    case 'DEC':
-                        const decReg = parseInt(parts[1].substring(1));
-                        const jumpTarget = parseInt(parts[2]) - 1; // Convert to 0-based
-                        this.highlightedRegister = decReg;
-                        if (this.registers[decReg] > 0) {
-                            this.registers[decReg]--;
-                            this.pc++;
-                        } else {
-                            this.pc = jumpTarget;
-                        }
-                        break;
-
-                    case 'HALT':
-                        this.halt();
-                        return;
-                }
-            }
-
-            run() {
-                if (this.running) return;
-                
-                this.running = true;
-                document.getElementById('run-btn').disabled = true;
-                document.getElementById('stop-btn').disabled = false;
-                document.getElementById('run-btn').classList.add('generating');
-                
-                const executeStep = () => {
-                    if (!this.running) return;
-                    
-                    if (!this.step()) {
-                        this.stop();
-                        return;
-                    }
-                    
-                    this.intervalId = setTimeout(executeStep, this.speed);
-                };
-                
-                executeStep();
-            }
-
-            stop() {
-                this.running = false;
-                if (this.intervalId) {
-                    clearTimeout(this.intervalId);
-                    this.intervalId = null;
-                }
-                document.getElementById('run-btn').disabled = false;
-                document.getElementById('stop-btn').disabled = true;
-                document.getElementById('run-btn').classList.remove('generating');
-                this.updateDisplay();
-            }
-
-            halt() {
-                this.running = false;
-                if (this.intervalId) {
-                    clearTimeout(this.intervalId);
-                    this.intervalId = null;
-                }
-                document.getElementById('run-btn').disabled = false;
-                document.getElementById('stop-btn').disabled = true;
-                document.getElementById('run-btn').classList.remove('generating');
-                this.updateDisplay();
-            }
-
-            reset() {
-                this.stop();
-                // Get current program name
-                const activeProgram = document.querySelector('.program-option.active');
-                if (activeProgram) {
-                    this.loadProgram(activeProgram.dataset.program);
-                }
-            }
-
-            setSpeed(level) {
-                this.speed = Math.max(50, 550 - level * 50); // 500ms to 50ms
-                document.getElementById('speed-value').textContent = level;
-            }
-
-            updateDisplay() {
-                this.updateRegisters();
-                this.updateProgram();
-                this.updateStatus();
-            }
-
-            updateRegisters() {
-                for (let i = 0; i < 3; i++) {
-                    const registerEl = document.getElementById(`register-${i}`);
-                    const valueEl = registerEl.querySelector('.register-value');
-                    valueEl.textContent = this.registers[i];
-                    
-                    // Highlight register if it was just modified
-                    if (i === this.highlightedRegister) {
-                        registerEl.classList.add('highlight');
-                        setTimeout(() => {
-                            registerEl.classList.remove('highlight');
-                        }, 500);
-                    }
-                }
-            }
-
-            updateProgram() {
-                const programDisplay = document.getElementById('program-display');
-                programDisplay.innerHTML = '';
-                
-                this.program.forEach((instruction, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'instruction' + (index === this.pc ? ' current' : '');
-                    
-                    const numSpan = document.createElement('span');
-                    numSpan.className = 'instruction-num';
-                    numSpan.textContent = `${index + 1}:`;
-                    
-                    const textSpan = document.createElement('span');
-                    textSpan.className = 'instruction-text';
-                    textSpan.textContent = instruction;
-                    
-                    div.appendChild(numSpan);
-                    div.appendChild(textSpan);
-                    programDisplay.appendChild(div);
-                });
-            }
-
-            updateStatus() {
-                document.getElementById('pc-value').textContent = this.pc + 1;
-                document.getElementById('steps-value').textContent = this.stepCount;
-                
-                const statusEl = document.getElementById('status-value');
-                const currentInstrEl = document.getElementById('current-instruction');
-                
-                if (this.running) {
-                    statusEl.textContent = '运行中';
-                    statusEl.className = 'status-value running';
-                } else if (this.pc >= this.program.length) {
-                    statusEl.textContent = '已停止';
-                    statusEl.className = 'status-value halted';
-                } else {
-                    statusEl.textContent = '就绪';
-                    statusEl.className = 'status-value';
-                }
-                
-                if (this.pc < this.program.length) {
-                    currentInstrEl.textContent = this.program[this.pc];
-                } else {
-                    currentInstrEl.textContent = 'HALT';
-                }
-            }
-
-            updateAnalysis(programName) {
-                const analysisText = document.getElementById('analysis-text');
-                const programData = this.programs[programName];
-                if (programData && programData.description) {
-                    analysisText.textContent = programData.description;
-                }
-            }
+      step() {
+        if (this.pc >= this.program.length) {
+          this.stop();
+          return false;
         }
+        const instruction = this.program[this.pc];
+        const parts = instruction.split(' ');
+        const op = parts[0];
+        if (op === 'INC') {
+          const reg = parseInt(parts[1].substring(1), 10);
+          this.ensureRegister(reg);
+          this.registers[reg] += 1;
+          this.pc += 1;
+        } else if (op === 'DEC') {
+          const reg = parseInt(parts[1].substring(1), 10);
+          const target = parseInt(parts[2], 10) - 1;
+          this.ensureRegister(reg);
+          if (this.registers[reg] > 0) {
+            this.registers[reg] -= 1;
+            this.pc += 1;
+          } else {
+            this.pc = target;
+          }
+        } else if (op === 'HALT') {
+          this.stop();
+          return false;
+        }
+        this.steps += 1;
+        this.renderRegisters();
+        this.highlightInstruction();
+        this.updateStats();
+        return true;
+      }
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new RegisterMachine();
+      run() {
+        if (this.running) return;
+        this.running = true;
+        const loop = () => {
+          if (!this.running) return;
+          const progressed = this.step();
+          if (progressed) {
+            this.timer = setTimeout(() => requestAnimationFrame(loop), 160);
+          }
+        };
+        loop();
+      }
+
+      stop() {
+        this.running = false;
+        if (this.timer) {
+          clearTimeout(this.timer);
+          this.timer = null;
+        }
+      }
+
+      ensureRegister(index) {
+        while (this.registers.length <= index) {
+          this.registers.push(0);
+        }
+      }
+
+      renderRegisters() {
+        const headerRow = document.getElementById('register-header');
+        const valueRow = document.getElementById('register-values');
+        headerRow.innerHTML = '';
+        valueRow.innerHTML = '';
+        this.registers.forEach((value, index) => {
+          const th = document.createElement('th');
+          th.textContent = `R${index}`;
+          headerRow.appendChild(th);
+          const td = document.createElement('td');
+          td.textContent = value;
+          valueRow.appendChild(td);
         });
-    </script>
-</body>
+      }
 
+      renderInstructions() {
+        const list = document.getElementById('instruction-list');
+        list.innerHTML = '';
+        this.program.forEach(instruction => {
+          const li = document.createElement('li');
+          li.textContent = instruction;
+          list.appendChild(li);
+        });
+        this.highlightInstruction();
+      }
+
+      highlightInstruction() {
+        const items = document.querySelectorAll('#instruction-list li');
+        items.forEach((item, index) => {
+          item.classList.toggle('active', index === this.pc);
+        });
+      }
+
+      updateStats() {
+        document.getElementById('step-count').textContent = this.steps.toString();
+        document.getElementById('pc').textContent = this.pc.toString();
+      }
+    }
+
+    const demo = new RegisterMachineDemo();
+
+    document.getElementById('program-select').addEventListener('change', (event) => {
+      demo.setProgram(event.target.value);
+      document.getElementById('run-btn').textContent = 'Run';
+    });
+
+    document.getElementById('run-btn').addEventListener('click', () => {
+      if (demo.running) {
+        demo.stop();
+        document.getElementById('run-btn').textContent = 'Run';
+      } else {
+        demo.run();
+        document.getElementById('run-btn').textContent = 'Pause';
+      }
+    });
+
+    document.getElementById('step-btn').addEventListener('click', () => {
+      demo.stop();
+      document.getElementById('run-btn').textContent = 'Run';
+      demo.step();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      demo.reset();
+      document.getElementById('run-btn').textContent = 'Run';
+    });
+  </script>
+</body>
 </html>

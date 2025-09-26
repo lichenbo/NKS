@@ -1,1055 +1,298 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>移动自动机探索器 - 交互式移动细胞实验</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: #e0e0e0;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            min-height: 100vh;
-            padding: 0;
-        }
-
-        .container {
-            width: 100vw;
-            min-height: 100vh;
-            margin: 0;
-            background: rgba(26, 26, 26, 0.8);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #ffd700, #ffb300);
-            color: #1a1a1a;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 0;
-            min-height: calc(100vh - 120px);
-        }
-
-        .controls-panel {
-            background: rgba(40, 40, 40, 0.9);
-            padding: 2rem;
-            border-right: 1px solid rgba(255, 215, 0, 0.2);
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-        }
-
-        .canvas-area {
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(20, 20, 20, 0.5);
-            overflow: auto;
-        }
-
-        .section-title {
-            color: #ffd700;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin: 1.5rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-        }
-
-        .section-title:first-of-type {
-            margin-top: 0;
-        }
-
-        /* Rule Definition Grid */
-        .rule-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin: 1rem 0;
-        }
-
-        .rule-cell {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .rule-cell:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .rule-condition {
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .rule-actions {
-            display: flex;
-            justify-content: center;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .rule-action {
-            background: rgba(255, 215, 0, 0.2);
-            border: 1px solid rgba(255, 215, 0, 0.5);
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 0.8rem;
-            font-family: 'Courier New', monospace;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #ffd700;
-        }
-
-        .rule-action:hover {
-            background: rgba(255, 215, 0, 0.3);
-            transform: scale(1.05);
-        }
-
-        .rule-action.active {
-            background: #ffd700;
-            color: #1a1a1a;
-        }
-
-        /* Preset Rules */
-        .preset-rules {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin: 1rem 0;
-        }
-
-        .preset-rule {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .preset-rule:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .preset-rule.active {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #ffd700;
-        }
-
-        .preset-name {
-            font-weight: bold;
-            color: #ffd700;
-            font-size: 1rem;
-        }
-
-        .preset-description {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-            margin-top: 4px;
-        }
-
-        /* Control Buttons and Sliders */
-        .control-group {
-            margin: 1rem 0;
-        }
-
-        .control-label {
-            display: block;
-            color: rgba(255, 215, 0, 0.8);
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin: 8px 0;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            border-radius: 6px;
-            background: transparent;
-            color: rgba(255, 215, 0, 0.8);
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-
-        .btn:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .btn.primary {
-            background: rgba(255, 215, 0, 0.2);
-            color: #ffd700;
-            border-color: #ffd700;
-        }
-
-        .btn.primary:hover {
-            background: rgba(255, 215, 0, 0.3);
-        }
-
-        .slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #ffd700;
-            cursor: pointer;
-        }
-
-        .slider-value {
-            color: rgba(255, 215, 0, 0.8);
-            font-weight: 500;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        /* Canvas Styling */
-        #mobile-canvas {
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            border-radius: 8px;
-            background: #000;
-            margin: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .canvas-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 1rem 0;
-            padding: 12px 16px;
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .info-label {
-            color: rgba(255, 215, 0, 0.8);
-            font-size: 0.8rem;
-        }
-
-        .info-value {
-            color: #ffd700;
-            font-weight: bold;
-        }
-
-        /* Rule Analysis */
-        .rule-analysis {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 1rem 0;
-            font-size: 0.9rem;
-        }
-
-        .analysis-title {
-            color: #ffd700;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .analysis-text {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
-        }
-
-        /* Initial Pattern Selector */
-        .pattern-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin: 1rem 0;
-        }
-
-        .pattern-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-        }
-
-        .pattern-option:hover {
-            background: rgba(255, 215, 0, 0.1);
-            border-color: rgba(255, 215, 0, 0.6);
-        }
-
-        .pattern-option.active {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #ffd700;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 350px 1fr;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .controls-panel {
-                max-height: none;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-                padding: 1.5rem;
-            }
-
-            .canvas-area {
-                padding: 1rem;
-            }
-
-            .preset-rules {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                margin: 0;
-                border-radius: 0;
-            }
-
-            .header {
-                padding: 1.5rem;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .controls-panel,
-            .canvas-area {
-                padding: 1rem;
-            }
-
-            .rule-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .preset-rules {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .canvas-info {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            #mobile-canvas {
-                max-width: 100%;
-                height: auto;
-            }
-        }
-
-        /* Loading Animation */
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 0.7;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-
-        .generating {
-            animation: pulse 1.5s infinite;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Mobile Automata – NKS Chapter 3</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: #f4f4f4;
+      color: #1f1f1f;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    header { margin-bottom: 20px; }
+    h1 { font-size: 1.85rem; margin: 0 0 0.4rem; }
+    p { margin: 0; line-height: 1.55; }
+    section {
+      background: #fff;
+      border: 1px solid #d7d7d7;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .controls { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    select, button {
+      font: inherit;
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 1px solid #b6b6b6;
+      background: #fff;
+      width: 100%;
+    }
+    button {
+      background: #1f63c7;
+      border-color: #1f63c7;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #f1f1f1;
+      border-color: #c2c2c2;
+      color: #232323;
+    }
+    button + button { margin-top: 8px; }
+    canvas {
+      width: 100%;
+      border: 1px solid #9c9c9c;
+      background: #fff;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .stats { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.95rem; margin-top: 12px; }
+    .stat { min-width: 120px; }
+    #rule-description { margin-top: 12px; line-height: 1.5; font-size: 0.95rem; }
+  </style>
 </head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QR1KHESCTK"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-QR1KHESCTK');
-</script>
-
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>移动自动机探索器</h1>
-            <p>探索Wolfram的移动自动机系统，观察单个活跃细胞的移动和更新规律</p>
-        </div>
-
-        <div class="main-content">
-            <div class="controls-panel">
-                <div class="section-title">定义规则</div>
-                <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">
-                    设置移动自动机的状态转移规则：
-                </p>
-
-                <div class="rule-grid">
-                    <div class="rule-cell">
-                        <div class="rule-condition">读取0时</div>
-                        <div class="rule-actions">
-                            <div class="rule-action" data-condition="0" data-action="move" data-value="-1">←</div>
-                            <div class="rule-action" data-condition="0" data-action="move" data-value="0">停</div>
-                            <div class="rule-action active" data-condition="0" data-action="move" data-value="1">→</div>
-                            <div class="rule-action active" data-condition="0" data-action="write" data-value="1">写1</div>
-                            <div class="rule-action" data-condition="0" data-action="write" data-value="0">写0</div>
-                        </div>
-                    </div>
-                    <div class="rule-cell">
-                        <div class="rule-condition">读取1时</div>
-                        <div class="rule-actions">
-                            <div class="rule-action active" data-condition="1" data-action="move" data-value="-1">←</div>
-                            <div class="rule-action" data-condition="1" data-action="move" data-value="0">停</div>
-                            <div class="rule-action" data-condition="1" data-action="move" data-value="1">→</div>
-                            <div class="rule-action active" data-condition="1" data-action="write" data-value="0">写0</div>
-                            <div class="rule-action" data-condition="1" data-action="write" data-value="1">写1</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <div class="control-row">
-                        <span style="color: rgba(255, 215, 0, 0.8); font-size: 0.9rem;">当前规则: </span>
-                        <span id="current-rule" style="color: #ffd700; font-weight: bold; font-size: 1.1rem;">简单</span>
-                    </div>
-                </div>
-
-                <div class="section-title">预设规则</div>
-                <div class="preset-rules">
-                    <div class="preset-rule active" data-rule="simple">
-                        <div class="preset-name">简单移动</div>
-                        <div class="preset-description">基础左右移动</div>
-                    </div>
-                    <div class="preset-rule" data-rule="oscillating">
-                        <div class="preset-name">振荡运动</div>
-                        <div class="preset-description">周期性摆动</div>
-                    </div>
-                    <div class="preset-rule" data-rule="sweeping">
-                        <div class="preset-name">扫描模式</div>
-                        <div class="preset-description">逐渐扩展</div>
-                    </div>
-                    <div class="preset-rule" data-rule="complex">
-                        <div class="preset-name">复杂行为</div>
-                        <div class="preset-description">不可预测</div>
-                    </div>
-                    <div class="preset-rule" data-rule="splitting">
-                        <div class="preset-name">细胞分裂</div>
-                        <div class="preset-description">多活跃细胞</div>
-                    </div>
-                    <div class="preset-rule" data-rule="tag">
-                        <div class="preset-name">标签系统</div>
-                        <div class="preset-description">序列处理</div>
-                    </div>
-                </div>
-
-                <div class="section-title">初始配置</div>
-                <div class="pattern-selector">
-                    <div class="pattern-option active" data-pattern="single">
-                        <div style="color: #ffd700; font-weight: bold;">单细胞</div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">中心单个活跃</div>
-                    </div>
-                    <div class="pattern-option" data-pattern="three">
-                        <div style="color: #ffd700; font-weight: bold;">三细胞</div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">三个随机细胞</div>
-                    </div>
-                    <div class="pattern-option" data-pattern="random">
-                        <div style="color: #ffd700; font-weight: bold;">随机模式</div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">随机分布</div>
-                    </div>
-                    <div class="pattern-option" data-pattern="edges">
-                        <div style="color: #ffd700; font-weight: bold;">边缘激活</div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">两端活跃</div>
-                    </div>
-                </div>
-
-                <div class="section-title">控制参数</div>
-
-                <div class="control-group">
-                    <label class="control-label">带状长度</label>
-                    <div class="control-row">
-                        <input type="range" class="slider" id="tape-size" min="50" max="200" value="100">
-                        <span class="slider-value" id="tape-size-value">100</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">演化步数</label>
-                    <div class="control-row">
-                        <input type="range" class="slider" id="max-steps" min="50" max="300" value="150">
-                        <span class="slider-value" id="max-steps-value">150</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">演化速度</label>
-                    <div class="control-row">
-                        <input type="range" class="slider" id="speed" min="1" max="10" value="5">
-                        <span class="slider-value" id="speed-value">5</span>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <div class="control-row">
-                        <button class="btn primary" id="start-btn">开始演化</button>
-                        <button class="btn" id="stop-btn">停止</button>
-                    </div>
-                    <div class="control-row">
-                        <button class="btn" id="reset-btn">重置</button>
-                        <button class="btn" id="step-btn">单步</button>
-                    </div>
-                </div>
-
-                <div class="rule-analysis" id="rule-analysis">
-                    <div class="analysis-title">规则分析</div>
-                    <div class="analysis-text" id="analysis-text">
-                        简单移动：活跃细胞在空白区域向右移动并写入1，在已填充区域向左移动并写入0。这创造了基本的来回移动模式。
-                    </div>
-                </div>
-            </div>
-
-            <div class="canvas-area">
-                <canvas id="mobile-canvas" width="800" height="600"></canvas>
-
-                <div class="canvas-info">
-                    <div class="info-item">
-                        <span class="info-label">当前步数</span>
-                        <span class="info-value" id="current-step">0</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">活跃细胞</span>
-                        <span class="info-value" id="active-cells">1</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">头部位置</span>
-                        <span class="info-value" id="head-position">50</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">状态</span>
-                        <span class="info-value" id="evolution-status">就绪</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        class MobileAutomatonExplorer {
-            constructor() {
-                /* --- cache frequently used DOM nodes --- */
-                this.canvas = document.getElementById('mobile-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.ruleActions = Array.from(document.querySelectorAll('.rule-action'));
-                this.presetEls = Array.from(document.querySelectorAll('.preset-rule'));
-                this.patternEls = Array.from(document.querySelectorAll('.pattern-option'));
-
-                /* --- runtime state --- */
-                this.tapeSize = 100;
-                this.maxSteps = 150;
-                this.currentStep = 0;
-                this.speedLevel = 5;
-                this.speed = this.calculateDelay(this.speedLevel);
-                this.isRunning = false;
-                this.animationId = null;
-
-                /* mobile automaton state */
-                this.tape = new Array(this.tapeSize).fill(0);
-                this.activeCells = [{ position: Math.floor(this.tapeSize / 2), direction: 1 }];
-                this.history = [];
-                this.maxHistory = 150;
-
-                /* rules: [move_delta, write_value] for states 0 and 1 */
-                this.rules = {
-                    0: [1, 1],  // If current cell is 0: move right, write 1
-                    1: [-1, 0]  // If current cell is 1: move left, write 0
-                };
-
-                this.currentRuleName = "简单";
-                this.currentPattern = "single";
-
-                this.init();
-            }
-
-            /* ---------- helpers ---------- */
-
-            clamp(n, min, max) {
-                return Math.min(Math.max(n, min), max);
-            }
-
-            calculateDelay(level) {
-                return Math.max(50, 550 - level * 50);
-            }
-
-            /* ---------- initialisation ---------- */
-
-            init() {
-                this.setupCanvas();
-                this.setupEventListeners();
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.resetSystem();
-                this.render();
-            }
-
-            setupCanvas() {
-                this.cellWidth = Math.min(this.canvas.width / this.tapeSize, 6);
-                this.cellHeight = Math.min(this.canvas.height / this.maxHistory, 4);
-                this.ctx.imageSmoothingEnabled = false;
-            }
-
-            /* ---------- UI / Events ---------- */
-
-            setupEventListeners() {
-                // rule actions
-                this.ruleActions.forEach(action => action.addEventListener('click', e => {
-                    this.toggleRuleAction(e.currentTarget);
-                }));
-
-                // preset rules
-                this.presetEls.forEach(preset => preset.addEventListener('click', e => {
-                    this.loadPresetRule(e.currentTarget);
-                }));
-
-                // pattern options
-                this.patternEls.forEach(pattern => pattern.addEventListener('click', e => {
-                    this.selectPattern(e.currentTarget);
-                }));
-
-                // main control buttons
-                document.getElementById('start-btn').addEventListener('click', () => this.start());
-                document.getElementById('stop-btn').addEventListener('click', () => this.stop());
-                document.getElementById('reset-btn').addEventListener('click', () => this.reset());
-                document.getElementById('step-btn').addEventListener('click', () => this.step());
-
-                // sliders
-                document.getElementById('tape-size')
-                    .addEventListener('input', e => this.setTapeSize(+e.target.value));
-                document.getElementById('max-steps')
-                    .addEventListener('input', e => this.setMaxSteps(+e.target.value));
-                document.getElementById('speed')
-                    .addEventListener('input', e => this.setSpeed(+e.target.value));
-            }
-
-            toggleRuleAction(el) {
-                const condition = parseInt(el.dataset.condition);
-                const action = el.dataset.action;
-                const value = parseInt(el.dataset.value);
-
-                // Remove active from other actions of the same type and condition
-                this.ruleActions.forEach(other => {
-                    if (parseInt(other.dataset.condition) === condition && 
-                        other.dataset.action === action && 
-                        other !== el) {
-                        other.classList.remove('active');
-                    }
-                });
-
-                // Toggle this action
-                el.classList.toggle('active');
-
-                this.updateRulesFromUI();
-            }
-
-            updateRulesFromUI() {
-                // Build rules from UI state
-                const newRules = { 0: [0, 0], 1: [0, 0] };
-
-                for (let condition of [0, 1]) {
-                    // Find active move action
-                    const activeMoveAction = this.ruleActions.find(el => 
-                        parseInt(el.dataset.condition) === condition &&
-                        el.dataset.action === 'move' &&
-                        el.classList.contains('active')
-                    );
-                    if (activeMoveAction) {
-                        newRules[condition][0] = parseInt(activeMoveAction.dataset.value);
-                    }
-
-                    // Find active write action
-                    const activeWriteAction = this.ruleActions.find(el => 
-                        parseInt(el.dataset.condition) === condition &&
-                        el.dataset.action === 'write' &&
-                        el.classList.contains('active')
-                    );
-                    if (activeWriteAction) {
-                        newRules[condition][1] = parseInt(activeWriteAction.dataset.value);
-                    }
-                }
-
-                this.rules = newRules;
-                this.currentRuleName = "自定义";
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updatePresetActiveState(null);
-            }
-
-            /* ---------- rule setters ---------- */
-
-            loadPresetRule(el) {
-                this.setRule(el.dataset.rule);
-            }
-
-            selectPattern(el) {
-                this.patternEls.forEach(p => p.classList.remove('active'));
-                el.classList.add('active');
-                this.currentPattern = el.dataset.pattern;
-                this.resetSystem();
-            }
-
-            setRule(ruleName) {
-                switch (ruleName) {
-                    case 'simple':
-                        this.rules = { 0: [1, 1], 1: [-1, 0] };
-                        this.currentRuleName = "简单";
-                        break;
-                    case 'oscillating':
-                        this.rules = { 0: [1, 1], 1: [-1, 1] };
-                        this.currentRuleName = "振荡";
-                        break;
-                    case 'sweeping':
-                        this.rules = { 0: [1, 0], 1: [-1, 1] };
-                        this.currentRuleName = "扫描";
-                        break;
-                    case 'complex':
-                        this.rules = { 0: [1, 1], 1: [1, 0] };
-                        this.currentRuleName = "复杂";
-                        break;
-                    case 'splitting':
-                        this.rules = { 0: [1, 1], 1: [-1, 0] };
-                        this.currentRuleName = "分裂";
-                        this.allowSplitting = true;
-                        break;
-                    case 'tag':
-                        this.rules = { 0: [1, 1], 1: [0, 0] };
-                        this.currentRuleName = "标签";
-                        break;
-                }
-
-                this.updateRuleUI();
-                this.updateRuleDisplay();
-                this.updateRuleAnalysis();
-                this.updatePresetActiveState(ruleName);
-            }
-
-            /* ---------- rule-related UI helpers ---------- */
-
-            updateRuleUI() {
-                // Update rule action states based on current rules
-                this.ruleActions.forEach(action => {
-                    const condition = parseInt(action.dataset.condition);
-                    const actionType = action.dataset.action;
-                    const value = parseInt(action.dataset.value);
-
-                    let shouldBeActive = false;
-                    if (actionType === 'move') {
-                        shouldBeActive = this.rules[condition][0] === value;
-                    } else if (actionType === 'write') {
-                        shouldBeActive = this.rules[condition][1] === value;
-                    }
-
-                    action.classList.toggle('active', shouldBeActive);
-                });
-            }
-
-            updateRuleDisplay() {
-                document.getElementById('current-rule').textContent = this.currentRuleName;
-            }
-
-            updateRuleAnalysis() {
-                const analyses = {
-                    "简单": "简单移动：活跃细胞在空白区域向右移动并写入1，在已填充区域向左移动并写入0。这创造了基本的来回移动模式。",
-                    "振荡": "振荡运动：更复杂的周期性运动模式，活跃细胞在不同状态下表现出不同的移动和写入行为。",
-                    "扫描": "扫描模式：活跃细胞进行渐进式的前后扫描运动，逐渐覆盖更大的区域。",
-                    "复杂": "复杂行为：产生不可预测的移动模式，展现出类似于混沌系统的特征。",
-                    "分裂": "细胞分裂：在特定条件下，活跃细胞可能分裂成多个独立的移动单元。",
-                    "标签": "标签系统：模拟标签系统的行为，通过符号操作实现计算过程。"
-                };
-
-                const text = analyses[this.currentRuleName] || `${this.currentRuleName}规则：观察其产生的移动模式和演化特征。`;
-                document.getElementById('analysis-text').textContent = text;
-            }
-
-            updatePresetActiveState(activeRule) {
-                this.presetEls.forEach(preset => {
-                    preset.classList.toggle('active', preset.dataset.rule === activeRule);
-                });
-            }
-
-            /* ---------- user adjustable params ---------- */
-
-            setTapeSize(size) {
-                this.tapeSize = size;
-                document.getElementById('tape-size-value').textContent = size;
-                this.setupCanvas();
-                this.resetSystem();
-            }
-
-            setMaxSteps(steps) {
-                this.maxSteps = steps;
-                document.getElementById('max-steps-value').textContent = steps;
-                this.setupCanvas();
-                this.resetSystem();
-            }
-
-            setSpeed(level) {
-                this.speedLevel = level;
-                this.speed = this.calculateDelay(level);
-                document.getElementById('speed-value').textContent = level;
-            }
-
-            /* ---------- simulation core ---------- */
-
-            resetSystem() {
-                this.currentStep = 0;
-                this.tape = new Array(this.tapeSize).fill(0);
-                this.activeCells = [];
-                this.history = [];
-                this.allowSplitting = false;
-
-                // Initialize based on selected pattern
-                this.initializePattern();
-                this.saveHistory();
-                this.updateInfo();
-                this.render();
-            }
-
-            initializePattern() {
-                const centerX = Math.floor(this.tapeSize / 2);
-
-                switch (this.currentPattern) {
-                    case 'single':
-                        this.activeCells = [{ position: centerX, direction: 1 }];
-                        break;
-                    case 'three':
-                        this.activeCells = [{ position: centerX, direction: 1 }];
-                        this.tape[centerX - 1] = Math.floor(Math.random() * 2);
-                        this.tape[centerX + 1] = Math.floor(Math.random() * 2);
-                        break;
-                    case 'random':
-                        this.activeCells = [{ position: centerX, direction: 1 }];
-                        for (let x = 0; x < this.tapeSize; x++) {
-                            if (Math.random() < 0.1) {
-                                this.tape[x] = 1;
-                            }
-                        }
-                        break;
-                    case 'edges':
-                        this.activeCells = [
-                            { position: 10, direction: 1 },
-                            { position: this.tapeSize - 10, direction: -1 }
-                        ];
-                        break;
-                }
-            }
-
-            step() {
-                if (this.currentStep >= this.maxSteps) {
-                    this.stop();
-                    return false;
-                }
-
-                const newActiveCells = [];
-
-                for (const activeCell of this.activeCells) {
-                    let { position, direction } = activeCell;
-
-                    // Wrap position
-                    position = ((position % this.tapeSize) + this.tapeSize) % this.tapeSize;
-
-                    // Get current cell value
-                    const currentValue = this.tape[position];
-
-                    // Apply rule
-                    const [moveDelta, writeValue] = this.rules[currentValue];
-
-                    // Write to current position
-                    this.tape[position] = writeValue;
-
-                    // Calculate new position
-                    const newPosition = ((position + moveDelta) % this.tapeSize + this.tapeSize) % this.tapeSize;
-
-                    // Add to new active cells
-                    newActiveCells.push({
-                        position: newPosition,
-                        direction: moveDelta
-                    });
-
-                    // Splitting behavior (for certain rules)
-                    if (this.allowSplitting && Math.random() < 0.05 && this.activeCells.length < 3) {
-                        newActiveCells.push({
-                            position: ((position - moveDelta) % this.tapeSize + this.tapeSize) % this.tapeSize,
-                            direction: -moveDelta
-                        });
-                    }
-                }
-
-                this.activeCells = newActiveCells;
-                this.currentStep++;
-
-                this.saveHistory();
-                this.updateInfo();
-                this.render();
-
-                return true;
-            }
-
-            saveHistory() {
-                const snapshot = {
-                    tape: [...this.tape],
-                    activeCells: this.activeCells.map(cell => ({ ...cell }))
-                };
-
-                this.history.push(snapshot);
-
-                if (this.history.length > this.maxHistory) {
-                    this.history.shift();
-                }
-            }
-
-            start() {
-                if (this.isRunning) return;
-                this.isRunning = true;
-                document.getElementById('evolution-status').textContent = '运行中';
-                document.getElementById('start-btn').classList.add('generating');
-
-                const evolve = () => {
-                    if (!this.isRunning) return;
-                    const canContinue = this.step();
-                    if (!canContinue) {
-                        this.stop();
-                        return;
-                    }
-                    this.animationId = setTimeout(evolve, this.speed);
-                };
-                evolve();
-            }
-
-            stop() {
-                this.isRunning = false;
-                if (this.animationId) {
-                    clearTimeout(this.animationId);
-                    this.animationId = null;
-                }
-                document.getElementById('evolution-status').textContent = '已停止';
-                document.getElementById('start-btn').classList.remove('generating');
-            }
-
-            reset() {
-                this.stop();
-                this.resetSystem();
-                document.getElementById('evolution-status').textContent = '就绪';
-            }
-
-            render() {
-                // Clear canvas
-                this.ctx.fillStyle = '#000';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // Draw history
-                for (let t = 0; t < this.history.length; t++) {
-                    const snapshot = this.history[t];
-                    const y = t * this.cellHeight;
-                    const alpha = Math.max(0.3, 1 - (this.history.length - t - 1) * 0.02);
-
-                    // Draw tape
-                    for (let x = 0; x < this.tapeSize; x++) {
-                        const value = snapshot.tape[x];
-                        if (value === 1) {
-                            this.ctx.fillStyle = `rgba(78, 205, 196, ${alpha})`;
-                            this.ctx.fillRect(x * this.cellWidth, y, this.cellWidth, this.cellHeight);
-                        }
-                    }
-
-                    // Draw active cells
-                    for (const activeCell of snapshot.activeCells) {
-                        this.ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
-                        this.ctx.fillRect(
-                            activeCell.position * this.cellWidth,
-                            y,
-                            this.cellWidth,
-                            this.cellHeight
-                        );
-                    }
-                }
-            }
-
-            updateInfo() {
-                document.getElementById('current-step').textContent = this.currentStep;
-                document.getElementById('active-cells').textContent = this.activeCells.length;
-                const headPos = this.activeCells.length > 0 ? this.activeCells[0].position : 'N/A';
-                document.getElementById('head-position').textContent = headPos;
-            }
+  <main>
+    <header>
+      <h1>Mobile Automata</h1>
+      <p>
+        Chapter 3 studies single active-cell mobile automata with two colours and nearest-neighbour motion. The selector below
+        enumerates the 16 rules from the original demo. Each rule specifies what happens when the head encounters a white cell
+        (0) or a black cell (1): write a new colour and move left or right. The traces plotted here match the behaviour shown on
+        the NKS website—revealing how simple sequential update rules already realise Wolfram’s four classes.
+      </p>
+    </header>
+
+    <section class="controls">
+      <div>
+        <label for="rule-select">Rule code (0–15)</label>
+        <select id="rule-select"></select>
+      </div>
+      <div>
+        <label>Simulation control</label>
+        <button id="run-btn">Run</button>
+        <button id="step-btn" class="secondary">Step once</button>
+        <button id="reset-btn" class="secondary">Reset</button>
+      </div>
+      <div>
+        <label for="head-position">Initial head position</label>
+        <select id="head-position">
+          <option value="center">Centre cell</option>
+          <option value="left">Quarter from left</option>
+          <option value="right">Quarter from right</option>
+        </select>
+      </div>
+    </section>
+
+    <section>
+      <canvas id="ma-canvas" width="820" height="480"></canvas>
+      <div class="stats">
+        <div class="stat"><strong>Generation:</strong> <span id="generation">0</span></div>
+        <div class="stat"><strong>Head index:</strong> <span id="head-index">0</span></div>
+        <div class="stat"><strong>Visited cells:</strong> <span id="visited">0</span></div>
+      </div>
+      <p id="rule-description"></p>
+    </section>
+  </main>
+
+  <script>
+    const RULE_INFO = [
+      { code: 0, text: '0→(write 0, move left); 1→(write 0, move left). The head simply walks left and erases.' },
+      { code: 1, text: '0→0L, 1→0R. The head drifts right on black cells but erases white cells on contact.' },
+      { code: 2, text: '0→0L, 1→1L. The tape fills with black cells and the head marches steadily left.' },
+      { code: 3, text: '0→0L, 1→1R. A simple two-cycle that toggles colours around the head.' },
+      { code: 4, text: '0→0R, 1→0L. The head reverses direction whenever it finds a black cell.' },
+      { code: 5, text: '0→0R, 1→0R. The head sweeps right leaving blank space behind—pure class 1 behaviour.' },
+      { code: 6, text: '0→0R, 1→1L. Produces a short-period oscillator as the head shuttles in place.' },
+      { code: 7, text: '0→0R, 1→1R. The head leaves a trail of black cells as it moves right forever.' },
+      { code: 8, text: '0→1L, 1→0L. Creates a growing black wedge while the head drifts left.' },
+      { code: 9, text: '0→1L, 1→0R. An example of nested growth reminiscent of the printed figure on page 73.' },
+      { code: 10, text: '0→1L, 1→1L. The tape fills with ones; motion remains directed left.' },
+      { code: 11, text: '0→1L, 1→1R. Reversible local interaction that yields a short periodic orbit.' },
+      { code: 12, text: '0→1R, 1→0L. The head alternates direction—one of the few rules that shows longer transients.' },
+      { code: 13, text: '0→1R, 1→0R. Builds a staircase of isolated black cells marching right.' },
+      { code: 14, text: '0→1R, 1→1L. The head lays down a triangular block of black cells (class 2 behaviour).' },
+      { code: 15, text: '0→1R, 1→1R. Every step writes a black cell while the head runs to the right.' }
+    ];
+
+    function decodeInstruction(code) {
+      const move = (code === 0 || code === 2) ? -1 : 1;
+      const write = (code === 0 || code === 1) ? 0 : 1;
+      return { move, write };
+    }
+
+    class MobileAutomaton {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.width = 121;
+        this.maxGenerations = 220;
+        this.cellSize = Math.floor(canvas.width / this.width);
+        this.rowHeight = Math.floor(canvas.height / this.maxGenerations);
+        this.rule = 9;
+        this.instructions = this.buildInstructions(this.rule);
+        this.resetState('center');
+        this.running = false;
+        this.timer = null;
+      }
+
+      buildInstructions(ruleNumber) {
+        const action0 = decodeInstruction(ruleNumber % 4);
+        const action1 = decodeInstruction(Math.floor(ruleNumber / 4) % 4);
+        return { 0: action0, 1: action1 };
+      }
+
+      resetState(positionPreset) {
+        this.stop();
+        this.tape = new Array(this.width).fill(0);
+        if (positionPreset === 'left') {
+          this.head = Math.floor(this.width / 4);
+        } else if (positionPreset === 'right') {
+          this.head = Math.floor((this.width * 3) / 4);
+        } else {
+          this.head = Math.floor(this.width / 2);
         }
+        this.history = [];
+        this.generation = 0;
+        this.visited = new Set([this.head]);
+        this.pushHistory();
+        this.draw();
+        this.updateStats();
+      }
 
-        /* ---------- bootstrap ---------- */
-        document.addEventListener('DOMContentLoaded', () => new MobileAutomatonExplorer());
-    </script>
+      setRule(ruleNumber) {
+        this.rule = ruleNumber;
+        this.instructions = this.buildInstructions(ruleNumber);
+        this.resetState(document.getElementById('head-position').value);
+      }
+
+      pushHistory() {
+        this.history.push({ tape: this.tape.slice(), head: this.head });
+        if (this.history.length > this.maxGenerations) {
+          this.history.shift();
+        }
+      }
+
+      step() {
+        const current = this.tape[this.head];
+        const instruction = this.instructions[current];
+        this.tape[this.head] = instruction.write;
+        this.head = (this.head + instruction.move + this.width) % this.width;
+        this.visited.add(this.head);
+        this.generation += 1;
+        this.pushHistory();
+        this.draw();
+        this.updateStats();
+      }
+
+      run() {
+        if (this.running) return;
+        this.running = true;
+        const loop = () => {
+          if (!this.running) return;
+          this.step();
+          this.timer = setTimeout(() => requestAnimationFrame(loop), 90);
+        };
+        loop();
+      }
+
+      stop() {
+        this.running = false;
+        if (this.timer) {
+          clearTimeout(this.timer);
+          this.timer = null;
+        }
+      }
+
+      draw() {
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        const start = Math.max(0, this.history.length - this.maxGenerations);
+        for (let i = start; i < this.history.length; i++) {
+          const row = this.history[i].tape;
+          const headIndex = this.history[i].head;
+          const y = (i - start) * this.rowHeight;
+          for (let x = 0; x < this.width; x++) {
+            if (row[x] === 1) {
+              this.ctx.fillStyle = '#000';
+              this.ctx.fillRect(x * this.cellSize, y, this.cellSize, this.rowHeight);
+            }
+          }
+          this.ctx.fillStyle = '#d62828';
+          this.ctx.fillRect(headIndex * this.cellSize, y, this.cellSize, this.rowHeight);
+        }
+      }
+
+      updateStats() {
+        document.getElementById('generation').textContent = this.generation.toString();
+        document.getElementById('head-index').textContent = this.head.toString();
+        document.getElementById('visited').textContent = this.visited.size.toString();
+      }
+    }
+
+    const canvas = document.getElementById('ma-canvas');
+    const automaton = new MobileAutomaton(canvas);
+
+    const ruleSelect = document.getElementById('rule-select');
+    for (const info of RULE_INFO) {
+      const option = document.createElement('option');
+      option.value = info.code;
+      option.textContent = `Rule ${info.code}`;
+      if (info.code === 9) option.selected = true;
+      ruleSelect.appendChild(option);
+    }
+
+    const description = document.getElementById('rule-description');
+    function updateDescription(code) {
+      const item = RULE_INFO.find(entry => entry.code === code);
+      description.textContent = item ? item.text : '';
+    }
+
+    updateDescription(automaton.rule);
+
+    ruleSelect.addEventListener('change', () => {
+      const value = parseInt(ruleSelect.value, 10);
+      automaton.setRule(value);
+      updateDescription(value);
+      document.getElementById('run-btn').textContent = 'Run';
+    });
+
+    document.getElementById('head-position').addEventListener('change', (event) => {
+      automaton.resetState(event.target.value);
+      document.getElementById('run-btn').textContent = 'Run';
+    });
+
+    document.getElementById('run-btn').addEventListener('click', () => {
+      if (automaton.running) {
+        automaton.stop();
+        document.getElementById('run-btn').textContent = 'Run';
+      } else {
+        automaton.run();
+        document.getElementById('run-btn').textContent = 'Pause';
+      }
+    });
+
+    document.getElementById('step-btn').addEventListener('click', () => {
+      automaton.stop();
+      document.getElementById('run-btn').textContent = 'Run';
+      automaton.step();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      automaton.resetState(document.getElementById('head-position').value);
+      document.getElementById('run-btn').textContent = 'Run';
+    });
+  </script>
 </body>
-
 </html>
