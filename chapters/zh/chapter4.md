@@ -8,9 +8,23 @@
 ## 基本算术
 看似最简单的算术过程也可能导致高度复杂的行为。例如，从 1 开始重复加 1，生成的数字序列（1, 2, 3, ...）在二进制表示下会形成一个具有复杂嵌套结构的模式，这表明简单的累加过程在底层结构上并不简单。
 
+![alt text](../../images/chapter4/image.png) ![alt text](../../images/chapter4/image-1.png)
+
+
 乘法可以产生更引人注目的结果。从 1 开始重复乘以 2，在二进制中只是一个简单的左移操作，产生一个非常简单的、可预测的模式。然而，如果重复乘以 3，生成的数字序列模式则异常复杂，虽然其中仍可见微小的三角形结构，但在宏观尺度上看起来几乎是[随机的](annotation:numeric-randomness)。
 
+![alt text](../../images/chapter4/image-2.png)
+
+![alt text](../../images/chapter4/image-3.png)
+
 这种复杂性并非仅仅是数字表示法的产物。例如，重复乘以 3/2 的过程，其结果的小数部分大小的序列本身就表现出复杂性和明显的[随机性](annotation:numeric-randomness)，这证明了复杂性存在于数值本身，而不仅仅是其二进制的视觉表现。即使在只涉及整数的系统中，例如根据数字的奇偶性应用不同规则的系统，也可能出现看似随机的行为和不可预测的增长。这些例子共同表明，即使是基本的算术运算，也能够像[细胞自动机](annotation:numeric-cellular-automata)一样，从简单的规则中生成高度复杂和看似随机的行为。
+
+![alt text](../../images/chapter4/image-4.png)
+
+![alt text](../../images/chapter4/image-5.png)
+
+
+> 补充阅读：[100年后，我们能最终破解Post的标签问题吗？一个关于计算不可约性的故事，以及更多内容](https://writings.stephenwolfram.com/2021/03/after-100-years-can-we-finally-crack-posts-problem-of-tag-a-story-of-computational-irreducibility-and-more/)
 
 ## 递归序列
 [递归序列](annotation:self-referential-recursion)，即序列中的每一项由前面项确定，是另一个复杂性的来源。标准的线性递归关系，如斐波那契数列 `f(n) = f(n-1) + f(n-2)`，其规则是固定的，因此通常产生简单的增长或重复行为。
