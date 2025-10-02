@@ -38,7 +38,7 @@
 ![规则 110 式的混合结构互动](../../images/chapter3/p66.png)
 ![复杂模式在 3000 步后的持续演化](../../images/chapter3/p68.png)
 ![随机爆发与整体收敛的对比](../../images/chapter3/p69.png)
-![长时演化后归于周期的示例](../../images/chapter3/p70.png)
+![alt text](../../images/chapter3/image.png)
 
 ### 总和规则与多色扩展
 为了测试规则复杂性是否会根本改变行为，我们把元胞颜色从两种（黑 / 白）扩展到三种（黑 / 白 / 灰），并尝试“极端”或[总和规则](annotation:totalistic-cellular-automata)（新颜色仅取决于邻域颜色之和）。这样的设定将规则数量从 256 推升至 2187 乃至更高，但其核心行为依旧沿着重复、嵌套与随机三大主题展开。
