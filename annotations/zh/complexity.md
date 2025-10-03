@@ -9,7 +9,7 @@
 - 多层次：从微观到宏观呈现不同结构
 - 不可简化：仅分析部件不足以预测整体行为
 
-![Rule 30 复杂性](images/cellular-automata/rule-30-evolution-250.jpg)
+![Rule 30 复杂性](../../images/cellular-automata/rule-30-evolution-250.jpg)
 
 ## 与涌现的区分
 
@@ -31,7 +31,7 @@
 - 计算不可简化性：许多复杂系统缺乏捷径，除逐步演化外难以快速预测其长期行为。
 - 粗粒化与有效理论：即使微观规则极简，宏观尺度仍能出现稳定模式与规律，便于建立有效理论。
 - 计算等价性原则：自然与简单程序广泛接近通用计算能力，复杂性因此普遍可得。
-- 相关演示：[规则浏览器](demos/wolfram-rules-explorer/wolfram-rules-explorer.html) · [256 规则演化](demos/wolfram-rules-256/wolfram-256-rules-demo.html)（对照 Rule 30 与 Rule 110）。
+- 相关演示：[规则浏览器](../../demos/wolfram-rules-explorer/wolfram-rules-explorer.html) · [256 规则演化](../../demos/wolfram-rules-256/wolfram-256-rules-demo.html)（对照 Rule 30 与 Rule 110）。
 
 ### 复杂性科学
 - **跨学科研究**: 复杂性在物理、生物、社会等领域的表现
