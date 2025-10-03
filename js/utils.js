@@ -88,11 +88,13 @@ async function loadLanguageFile(basePath, fileName, language = null) {
   try {
     let response;
     if (lang === 'zh') {
+      // Prefer Chinese-specific path, then generic
       response = await fetch(`${basePath}/zh/${fileName}`);
       if (!response.ok) {
         response = await fetch(`${basePath}/${fileName}`);
       }
     } else if (lang === 'ja') {
+      // Prefer Japanese, then Chinese, then generic
       response = await fetch(`${basePath}/ja/${fileName}`);
       if (!response.ok) {
         response = await fetch(`${basePath}/zh/${fileName}`);
@@ -100,11 +102,27 @@ async function loadLanguageFile(basePath, fileName, language = null) {
           response = await fetch(`${basePath}/${fileName}`);
         }
       }
+    } else if (lang === 'en') {
+      // Prefer English subdir when available, then generic, then Chinese as last resort
+      response = await fetch(`${basePath}/en/${fileName}`);
+      if (!response.ok) {
+        response = await fetch(`${basePath}/${fileName}`);
+        if (!response.ok) {
+          response = await fetch(`${basePath}/zh/${fileName}`);
+        }
+      }
     } else {
+      // Unknown language code: try generic, then fall back to zh and en
       response = await fetch(`${basePath}/${fileName}`);
+      if (!response.ok) {
+        response = await fetch(`${basePath}/zh/${fileName}`);
+        if (!response.ok) {
+          response = await fetch(`${basePath}/en/${fileName}`);
+        }
+      }
     }
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
       throw new Error(`File not found: ${fileName}`);
     }
     return await response.text();
@@ -122,4 +140,3 @@ window.debounce = debounce;
 window.isMobile = isMobile;
 window.shouldUseInlineAnnotations = shouldUseInlineAnnotations;
 window.loadLanguageFile = loadLanguageFile;
-
