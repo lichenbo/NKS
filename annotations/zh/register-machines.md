@@ -2,6 +2,8 @@
 
 寄存器机（Register Machine）是计算机中央处理器（CPU）的一个简单的抽象模型。它被设计成对实际计算机在最低级别上如何工作的清晰理想化。
 
+![alt text](../../images/chapter3/image-1.png)
+
 ## 工作原理
 
 寄存器机由以下部分组成：

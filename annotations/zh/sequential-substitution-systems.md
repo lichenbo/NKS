@@ -2,6 +2,9 @@
 
 顺序替换系统（Sequential Substitution System）是[替换系统](annotation:substitution-systems)的一种变体，其操作方式更像典型文本编辑器中的“查找和替换”功能。
 
+![有序替代系统的基础规则](../../images/chapter3/p89.png)
+
+
 ## 工作原理
 
 顺序替换系统不是同时替换所有元素，而是从左到右扫描序列，并仅对它找到的**第一个匹配项**执行替换。

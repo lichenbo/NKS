@@ -7,7 +7,7 @@
 - **同步更新：** 所有细胞在每个时间步同时更新
 - **简单状态：** 细胞通常只有两种状态（0/1，开/关，生/死）
 
-![基本元胞自动机规则](images/cellular-automata/elementary-ca-rules.svg)
+![基本元胞自动机规则](../../images/cellular-automata/elementary-ca-rules.svg)
 
 *不同基本元胞自动机规则的概览，显示了简单规则变化所产生的图案多样性*
 
