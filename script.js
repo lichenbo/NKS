@@ -57,6 +57,10 @@ async function loadChapter(chapterId) {
 
         const processedMarkdown = TextUtils.processAnnotationLinks(markdownText);
         notesContent.innerHTML = marked.parse(processedMarkdown);
+        // Normalize image/link paths from Markdown to ./images/...
+        if (window.TextUtils && typeof TextUtils.rewriteMarkdownAssets === 'function') {
+            TextUtils.rewriteMarkdownAssets(notesContent);
+        }
 
         setTimeout(() => { initLayeredContentSystem(); }, 200);
         if (chapterId === 'intro-demo') {
@@ -202,6 +206,11 @@ async function showDesktopAnnotation(key) {
             onComplete: function () {
                 stopLinkMonitoring();
                 enableLinksIn('#typewriter-text');
+                // Normalize any image/link paths within the annotation content
+                const container = document.getElementById('typewriter-text');
+                if (container && window.TextUtils && typeof TextUtils.rewriteMarkdownAssets === 'function') {
+                    TextUtils.rewriteMarkdownAssets(container);
+                }
             }
         });
     } else {
@@ -261,6 +270,10 @@ async function showInlineAnnotation(key, clickedElement) {
             onComplete: function () {
                 stopLinkMonitoring();
                 enableLinksIn(`#inline-typewriter-text-${key}`);
+                const container = document.getElementById(`inline-typewriter-text-${key}`);
+                if (container && window.TextUtils && typeof TextUtils.rewriteMarkdownAssets === 'function') {
+                    TextUtils.rewriteMarkdownAssets(container);
+                }
             }
         });
     } else {

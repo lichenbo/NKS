@@ -134,9 +134,26 @@ async function loadLanguageFile(basePath, fileName, language = null) {
 
 // Export to global scope for backward compatibility
 window.DOM = DOM;
-window.Events = Events; 
+window.Events = Events;
 window.TextUtils = TextUtils;
 window.debounce = debounce;
 window.isMobile = isMobile;
 window.shouldUseInlineAnnotations = shouldUseInlineAnnotations;
 window.loadLanguageFile = loadLanguageFile;
+
+// Add-on: normalize Markdown image/link paths to ./images/...
+TextUtils.rewriteMarkdownAssets = function (container) {
+  if (!container) return;
+
+  const isAbsolute = (url) => /^(data:|https?:|\/\/)/.test(url);
+
+  // Simple rule: convert any '../../' at start of attribute to './'
+  container.querySelectorAll('img, a').forEach((el) => {
+    const attr = el.tagName === 'A' ? 'href' : 'src';
+    const val = el.getAttribute(attr);
+    if (!val) return;
+    if (val.startsWith('../../')) {
+      el.setAttribute(attr, val.replace(/^\.\.\//, './').replace(/^\.\.\//, './'));
+    }
+  });
+};
