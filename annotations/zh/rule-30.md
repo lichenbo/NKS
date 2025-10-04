@@ -48,7 +48,7 @@
 
 ## 视觉图案
 
-![规则30元胞自动机](images/cellular-automata/cellular-automata-rule-30.svg)
+![规则30元胞自动机](../../images/cellular-automata/cellular-automata-rule-30.svg)
 
 *详细的元胞自动机可视化，显示规则30的演化图案和结构*
 

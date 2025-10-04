@@ -55,7 +55,7 @@
 - **例子**：规则54、110、124、137
 - **自然类比**：生命系统、计算、意识
 
-![规则110复杂结构](images/cellular-automata/rule-110-single-cell.png)
+![规则110复杂结构](../../images/cellular-automata/rule-110-single-cell.png)
 
 *参见[规则110例子](https://en.wikipedia.org/wiki/Rule_110)查看IV类复杂行为*
 

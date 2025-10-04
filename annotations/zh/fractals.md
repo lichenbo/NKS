@@ -20,15 +20,15 @@
 
 **谢尔宾斯基三角形**：通过递归地从较大三角形中移除三角形部分形成。
 
-![规则90生成的谢尔宾斯基三角形](images/fractals/rule-90-sierpinski.svg)
+![规则90生成的谢尔宾斯基三角形](../../images/fractals/rule-90-sierpinski.svg)
 
 *谢尔宾斯基三角形从规则90元胞自动机中自然涌现，展示了计算过程与分形几何之间的联系*
 
-![嵌套三角形模式](../images/cellular-automata/p26_1.png)
+![嵌套三角形模式](../../images/cellular-automata/p26_1.png)
 
 *元胞自动机产生的嵌套三角形模式，展示了自相似性和分形结构*
 
-![嵌套模式的详细演化](../images/cellular-automata/p25_2.png)
+![嵌套模式的详细演化](../../images/cellular-automata/p25_2.png)
 
 *嵌套模式的详细演化过程，显示了简单规则如何产生复杂的分形结构*
 

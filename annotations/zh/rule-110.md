@@ -6,11 +6,11 @@
 
 规则110同样作用于一维单元格阵列，每个单元格可以是黑色（1）或白色（0）。该规则根据每个单元格的当前状态及其两个直接邻居的状态来确定其下一个状态。
 
-![规则110初始图案](../images/cellular-automata/rule-110-p32.png)
+![规则110初始图案](../../images/cellular-automata/rule-110-p32.png)
 
 *规则110从简单初始条件开始演化，展现了复杂的局部结构和背景图案*
 
-![规则110演化图案](../images/cellular-automata/rule-110-p33.png)
+![规则110演化图案](../../images/cellular-automata/rule-110-p33.png)
 
 *规则110经过更多步数迭代后，显示了稳定的局部结构在重复背景上的相互作用*
 
@@ -40,11 +40,11 @@
 
 ## 视觉图案
 
-![规则110元胞自动机详细演化](../images/cellular-automata/rule-110-p34.png)
+![规则110元胞自动机详细演化](../../images/cellular-automata/rule-110-p34.png)
 
 *详细的元胞自动机可视化，显示规则110的演化图案和局部结构*
 
-![规则110长期演化](../images/cellular-automata/rule-110-p35.png)
+![规则110长期演化](../../images/cellular-automata/rule-110-p35.png)
 
 *规则110的长期演化，展示了结构之间的复杂相互作用*
 
@@ -53,7 +53,7 @@
 - 在背景上移动的局部"粒子"
 - 粒子碰撞时产生的复杂相互作用
 
-![规则110结构相互作用](../images/cellular-automata/rule-110-p36.png)
+![规则110结构相互作用](../../images/cellular-automata/rule-110-p36.png)
 
 *规则110中局部结构的详细相互作用，展示了计算通用性的基础*
 
