@@ -96,3 +96,12 @@
 - [基本元胞自动机（维基百科）](https://en.wikipedia.org/wiki/Elementary_cellular_automaton)
 - [规则110（维基百科）](https://en.wikipedia.org/wiki/Rule_110)
 - [沃尔夫拉姆《新科学》相关章节](https://www.wolframscience.com/nksonline/section-11.8)
+
+
+![alt text](../../images/rule-110/image.png)
+
+![alt text](../../images/rule-110/image-1.png)
+
+![alt text](../../images/rule-110/image-2.png)
+
+![alt text](../../images/rule-110/image-3.png)
