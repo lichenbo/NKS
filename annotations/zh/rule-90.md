@@ -2,7 +2,7 @@
 
 规则 90 是最简单的[基本元胞自动机](https://en.wikipedia.org/wiki/Elementary_cellular_automaton)之一，也是“可加性”规则的典型代表。尽管它的局部规则极其简洁，却能产生著名的谢尔宾斯基三角形等自相似结构，为理解从简单原则生成复杂图案提供了一个清晰样本。
 
-![alt text](../../images/rule-90/image.png)
+![alt text](../../images/rule-90/image-1.png)
 
 ## 规则定义
 

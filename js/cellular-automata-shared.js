@@ -2,17 +2,23 @@
 
 window.APP = window.APP || {};
 
-(function(APP) {
+(function (APP) {
     'use strict';
 
     class CellularAutomataRules {
         static RULES = {
+            28: [0, 0, 1, 1, 1, 0, 0, 0],   // Checkerboard - Alternating bands
             30: [0, 1, 1, 1, 1, 0, 0, 0],   // Chaotic - Classic chaos pattern
-            90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal - Sierpinski triangle
-            110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex - Turing complete
             54: [0, 1, 1, 0, 1, 1, 0, 0],   // Symmetric - Mirror patterns
-            150: [1, 0, 1, 0, 0, 1, 0, 1],  // XOR - Simple additive
-            126: [0, 1, 1, 1, 1, 1, 1, 0]   // Dense - High activity
+            90: [0, 1, 0, 1, 1, 0, 1, 0],   // Fractal - Sierpinski triangle
+            94: [0, 1, 1, 1, 1, 0, 1, 0],   // Fractal - Sierpinski triangle
+            110: [0, 1, 1, 1, 0, 1, 1, 0],  // Complex - Turing complete
+            126: [0, 1, 1, 1, 1, 1, 1, 0],  // Dense - High activity
+            150: [0, 1, 1, 0, 1, 0, 0, 1],  // XOR - Simple additive
+            158: [0, 1, 1, 1, 1, 0, 0, 1],  // XOR - Simple additive
+            190: [0, 1, 1, 1, 1, 1, 0, 1],  // XOR - Simple additive
+            222: [0, 1, 1, 1, 1, 0, 1, 1],  // XOR - Simple additive
+            250: [0, 1, 0, 1, 1, 1, 1, 1],  // Edge-emitting - Alternating voids
         };
 
         static RULE_KEYS = Object.keys(CellularAutomataRules.RULES);
@@ -138,24 +144,24 @@ window.APP = window.APP || {};
             this.reset();
         }
 
-                reset() {
+        reset() {
             this.grid = new Array(this.cols).fill(0);
             this.grid[Math.floor(this.cols / 2)] = 1; // Start with center cell active
             this.drawnRows = [];
             this.currentRow = 0;
         }
 
-                updateDimensions(cols, rows) {
+        updateDimensions(cols, rows) {
             this.cols = cols;
             this.rows = rows;
             this.reset();
         }
 
-                storeCurrentGeneration() {
+        storeCurrentGeneration() {
             this.drawnRows[this.currentRow] = [...this.grid];
         }
 
-                computeNextGenerationCPU(rule) {
+        computeNextGenerationCPU(rule) {
             const newGrid = new Array(this.cols).fill(0);
             for (let i = 0; i < this.cols; i++) {
                 const left = this.grid[i - 1] || 0;
@@ -166,12 +172,12 @@ window.APP = window.APP || {};
             return newGrid;
         }
 
-                advanceGeneration(nextGrid) {
+        advanceGeneration(nextGrid) {
             this.grid = nextGrid;
             this.currentRow++;
         }
 
-                isAnimationComplete() {
+        isAnimationComplete() {
             return this.currentRow >= this.rows - 1;
         }
 
@@ -186,24 +192,24 @@ window.APP = window.APP || {};
             this.fadeSpeed = options.fadeSpeed || 0.01;
         }
 
-                update() {
+        update() {
             this.globalAlpha += this.fadeDirection * this.fadeSpeed;
-            
+
             if (this.globalAlpha >= this.maxAlpha) {
                 this.fadeDirection = -1;
             } else if (this.globalAlpha <= this.minAlpha) {
                 this.fadeDirection = 1;
             }
-            
+
             return this.globalAlpha;
         }
 
-                reset() {
+        reset() {
             this.globalAlpha = 0.3;
             this.fadeDirection = 1;
         }
 
-                getCurrentAlpha() {
+        getCurrentAlpha() {
             return this.globalAlpha;
         }
     }
