@@ -154,7 +154,15 @@ async function loadAnnotation(key) {
         if (!markdownText) {
             throw new Error(`Annotation file not found: ${key}.md`);
         }
-        const htmlContent = TextUtils.processExternalLinks(marked.parse(markdownText));
+        let htmlContent = TextUtils.processExternalLinks(marked.parse(markdownText));
+
+        // Normalize image/link paths before typing animation
+        if (window.TextUtils && typeof TextUtils.rewriteMarkdownAssets === 'function') {
+            const tempWrapper = document.createElement('div');
+            tempWrapper.innerHTML = htmlContent;
+            TextUtils.rewriteMarkdownAssets(tempWrapper);
+            htmlContent = tempWrapper.innerHTML;
+        }
 
         const annotation = {
             title: TextUtils.extractTitle(markdownText, key.replace('-', ' ')),
