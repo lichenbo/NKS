@@ -151,9 +151,11 @@ TextUtils.rewriteMarkdownAssets = function (container) {
   container.querySelectorAll('img, a').forEach((el) => {
     const attr = el.tagName === 'A' ? 'href' : 'src';
     const val = el.getAttribute(attr);
-    if (!val) return;
-    if (val.startsWith('../../')) {
-      el.setAttribute(attr, val.replace(/^\.\.\//, './').replace(/^\.\.\//, './'));
+    if (!val || isAbsolute(val)) return;
+
+    if (val.startsWith('../')) {
+      const normalized = val.replace(/^(\.\.\/)+/, './');
+      el.setAttribute(attr, normalized);
     }
   });
 };
