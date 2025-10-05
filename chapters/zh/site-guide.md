@@ -1,4 +1,4 @@
-我们曾倾尽人类智识，以确立能够阐释宇宙秩序的复杂方程。
+我们曾倾尽人类智识，以确立能够阐释宇宙秩序的[复杂方程](annotation:complex-equations)。
 
 [斯蒂芬·沃尔夫拉姆](annotation:stephen-wolfram)的《一种新科学》直抵存在的原点：那套绝对本原的[生成规则](annotation:generative-rules)。它严谨地揭示，当这些规则在初始状态下被驱动，一条[确定性](annotation:determinism)的演化链条便必然展开。
 
