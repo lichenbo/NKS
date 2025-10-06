@@ -1,4 +1,4 @@
-# [第一章：新科学的基础](annotation:chapter1)
+# [第1章：新科学的基础](annotation:chapter1)
 
 ## 基本思想概述
 
