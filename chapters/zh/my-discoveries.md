@@ -19,3 +19,5 @@
 
 - 整理更多与元胞自动机、复杂系统和自动化建模相关的优秀资源。
 - 结合本站交互式演示，记录自己的探索步骤与心得。
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/PdE-waSx-d8?si=GBzN2wRzHuttMZlS" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
