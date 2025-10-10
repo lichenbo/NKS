@@ -9,6 +9,8 @@
 - **预测需要完整模拟**：你不能在不计算所有中间状态的情况下跳到未来状态
 - **数学分析失效**：传统的解析方法无法提供更快的解决方案
 
+![alt text](../../images/computational-irreducibility/image.png)
+
 *参见[计算不可简化性示例](https://mathworld.wolfram.com/ComputationalIrreducibility.html)查看数学图解*
 
 ## 简单系统中的例子
