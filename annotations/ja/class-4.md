@@ -27,4 +27,4 @@
 - **情報伝達**: ローカル構造は「論理信号」とみなすことができ、それらの衝突により論理演算を実装できます。
 - **重大な現象**: 多くの場合、カテゴリー 2 (周期的) とカテゴリー 3 (ランダム) の境界線の状態であると考えられます。
 
-背景の詳細​​については、 [Four Classes Of Behavior](annotation:four-classes-of-behavior) および [Rule 110](annotation:rule-110) の詳細な説明を参照してください。
+詳しい背景については、[4 つの行動カテゴリ](annotation:four-classes-of-behavior) および [ルール 110](annotation:rule-110) を参照してください。

@@ -1,6 +1,6 @@
 # 順次交換システム
 
-Sequential Substitution System は [Substitution Systems](annotation:substitution-systems) のバリエーションで、一般的なテキスト エディタの「検索と置換」機能によく似た動作をします。
+Sequential Substitution System は、[Substitution System](annotation:substitution-systems) のバリエーションであり、一般的なテキスト エディタの「検索と置換」機能によく似た動作をします。
 
 ![順序付け置換システムの基本ルール](../../images/chapter3/p89.png)
 
