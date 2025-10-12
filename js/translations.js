@@ -66,6 +66,7 @@ window.APP = window.APP || {};
             'chapter2-ca-static-demo': '🔬 Elementary CA Static Demo',
             'chapter3-demo': '🔬 Interactive Demo: Chapter 3 Experiments',
             'chapter3-wolfram256': '🔬 Wolfram 256 Rules Demo',
+            'chapter4-demos': '🔬 Interactive Demos: Number-Based Systems',
             // External readings / supplements
             'preface-making-nks': '📖 Supplementary Reading: The Making of A New Kind of Science',
             'chapter3-combinators': '📖 Further Reading: Combinators—A Centennial View',
@@ -122,6 +123,7 @@ window.APP = window.APP || {};
             'chapter2-ca-static-demo': '🔬 交互演示：初等元胞自动机',
             'chapter3-demo': '🔬 交互演示：第3章实验合集',
             'chapter3-wolfram256': '🔬 演示：Wolfram 256 条规则',
+            'chapter4-demos': '🔬 交互演示：基于数字的系统',
             // External readings / supplements
             'preface-making-nks': '📖 补充阅读：《一种新科学》的诞生',
             'chapter3-combinators': '📖 扩展阅读：组合子：百年回顾',
@@ -178,6 +180,7 @@ window.APP = window.APP || {};
             'chapter2-ca-static-demo': '🔬 初等セルオートマトン静的デモ',
             'chapter3-demo': '🔬 インタラクティブデモ：第3章の実験',
             'chapter3-wolfram256': '🔬 ウルフラム256ルールデモ',
+            'chapter4-demos': '🔬 インタラクティブデモ：数値ベースのシステム',
             // External readings / supplements (Japanese localization pending; using English titles)
             'preface-making-nks': '📖 Supplementary Reading: The Making of A New Kind of Science',
             'chapter3-combinators': '📖 Further Reading: Combinators—A Centennial View',
