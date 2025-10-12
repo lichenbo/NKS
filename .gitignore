@@ -100,6 +100,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv/
+.python-version
 
 # Local Development Server Files
 .serve/
@@ -141,6 +143,7 @@ coverage/
 .sass-cache/
 .connect.lock
 .typings/
+.v/
 
 # Local Testing
 test-results/

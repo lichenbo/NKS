@@ -1,29 +1,29 @@
-# Interactive Demo: [Conway's Game of Life](annotation:conways-game-of-life)
+# Interactive demonstration: [Conway Game of Life](annotation:conways-game-of-life)
 
-*Before diving into "A New Kind of Science," experience firsthand how simple rules can create infinite complexity.*
+*See firsthand how simple rules can create infinite complexity before diving into A New Science. *
 
-**💡 How to Use:**
+**💡 How to use:**
 
-- **Left-click cells** on the grid to toggle them alive (golden) or dead (black)
-- **Click "Play"** to start the simulation and watch patterns evolve  
-- **Try "Random"** for instant chaos - then see what [emerges](annotation:emergence)!
-- **Use preset patterns** below to explore famous configurations
+- **Left click on the grid** to switch the life and death status of cells (gold is live cells, black is dead cells)
+- **Click the "Play" button** to start the simulation and watch how the pattern evolves
+- **Try the "Random" button** for instant chaos - and see what emerges!
+- **Explore famous configurations using preset modes below**
 
 <div id="game-of-life-container" class="game-of-life-container">
     <div class="game-controls">
         <div class="control-row">
-            <button id="play-pause-btn" class="control-btn primary">▶ Play</button>
-            <button id="step-btn" class="control-btn">Step</button>
-            <button id="clear-btn" class="control-btn">Clear</button>
-            <button id="random-btn" class="control-btn">Random</button>
+            <button id="play-pause-btn" class="control-btn primary">▶ 播放</button>
+            <button id="step-btn" class="control-btn">单步</button>
+            <button id="clear-btn" class="control-btn">清空</button>
+            <button id="random-btn" class="control-btn">随机</button>
         </div>
         <div class="control-row">
-            <label for="speed-slider">Speed:</label>
+            <label for="speed-slider">速度：</label>
             <input type="range" id="speed-slider" min="1" max="10" value="5" class="slider">
             <span id="speed-display">1x</span>
         </div>
         <div class="control-row">
-            <label>Grid Size:</label>
+            <label>网格大小：</label>
             <button id="grid-smallest" class="size-btn active">20×20</button>
             <button id="grid-small" class="size-btn">40×40</button>
             <button id="grid-medium" class="size-btn">100×100</button>
@@ -34,67 +34,69 @@
 <canvas id="game-canvas" class="game-canvas"></canvas>
 
 <div class="pattern-library">
-    <h3>🎨 Try These Patterns:</h3>
+    <h3>🎨 Try these modes:</h3>
     <div class="pattern-buttons">
         <button class="pattern-btn" data-pattern="glider">✈️ Glider</button>
-        <button class="pattern-btn" data-pattern="blinker">💫 Blinker</button>
+        <button class="pattern-btn" data-pattern="blinker">💫 blinker</button>
         <button class="pattern-btn" data-pattern="toad">🐸 Toad</button>
-        <button class="pattern-btn" data-pattern="beacon">🔆 Beacon</button>
+        <button class="pattern-btn" data-pattern="beacon">🔆 beacon</button>
         <button class="pattern-btn" data-pattern="pulsar">🌟 Pulsar</button>
-        <button class="pattern-btn" data-pattern="lightweight-spaceship">🚀 LWSS</button>
-        <button class="pattern-btn" data-pattern="gosper-gun">🔫 Gosper Gun</button>
-        <button class="pattern-btn" data-pattern="pentadecathlon">⚡ Pentadecathlon</button>
-        <button class="pattern-btn" data-pattern="acorn">🌰 Acorn</button>
-        <button class="pattern-btn" data-pattern="diehard">💀 Diehard</button>
-        <button class="pattern-btn" data-pattern="r-pentomino">🔥 R-Pentomino</button>
-        <button class="pattern-btn" data-pattern="infinite-growth">📈 Infinite Growth</button>
+        <button class="pattern-btn" data-pattern="lightweight-spaceship">🚀 Lightweight spaceship</button>
+        <button class="pattern-btn" data-pattern="gosper-gun">🔫 Gosper Machine Gun</button>
+        <button class="pattern-btn" data-pattern="pentadecathlon">⚡ Fifteen grid oscillator</button>
+        <button class="pattern-btn" data-pattern="acorn">🌰 acorn</button>
+        <button class="pattern-btn" data-pattern="diehard">💀 Survive tenaciously</button>
+        <button class="pattern-btn" data-pattern="r-pentomino">🔥 R-shaped pentomino</button>
+        <button class="pattern-btn" data-pattern="infinite-growth">📈 infinite growth</button>
     </div>
 </div>
 
-## 🧬 The Rules
+## 🧬 Game Rules
 
-Conway's Game of Life follows just **four simple rules**:
+Conway's Game of Life follows only **Four Simple Rules**:
 
-1. **Birth**: A dead cell with exactly 3 live neighbors becomes alive
-2. **Survival**: A live cell with 2 or 3 live neighbors stays alive  
-3. **Death by Isolation**: A live cell with fewer than 2 neighbors dies
-4. **Death by Overcrowding**: A live cell with more than 3 neighbors dies
+1. **Birth**: A dead cell becomes a living cell when there are exactly 3 living neighbors around it.
+2. **Survival**: A living cell remains alive when it has 2 or 3 live neighbors.
+3. **Lonely death**: A living cell dies when it has less than 2 neighbors.
+4. **Overcrowding death**: A living cell dies when it has more than 3 neighbors.
 
-*That's it! From these four rules emerges infinite complexity.*
+*That's it! From these four rules emerge infinite complexity. *
 
-## 🎯 What You're Experiencing
+If you are interested in the game of life, it is recommended to use [Golly](https://golly.sourceforge.io/) for in-depth exploration
 
-- **Emergence**: Complex patterns arising from simple rules
-- **Self-Organization**: No central control, yet organized behavior appears
+## 🎯 What you are experiencing
+
+- **Emergency**: complex patterns emerge from simple rules
+- **Self-organization**: There is no central control, but organized behavior occurs
 - **Universality**: The same principles govern many natural phenomena
-- **Unpredictability**: Even knowing the rules, outcomes can surprise us
+- **Unpredictability**: Even if you know the rules, the results can still be surprising
 
-## 🌐 Explore More Interactive Demos
+## 🌐 Explore more interactive demos
 
-### Conway's Game of Life
-- [Golly](https://golly.sourceforge.io/) - Advanced Game of Life simulator (cross-platform)
-- [Copy.sh Game of Life](https://copy.sh/life/) - Clean, fast online implementation
-- [LifeViewer](https://lazyslug.com/lifeviewer/) - Pattern viewer with RLE support
+### Conway Game of Life
+- [Golly](https://golly.sourceforge.io/) - Advanced game of life simulator (cross-platform)
+- [Copy.sh Game of Life](https://copy.sh/life/) - Simple and fast online implementation
+- [LifeViewer](https://lazyslug.com/lifeviewer/) - Schema viewer that supports RLE format
 
-### Related Interactive Simulations
-- [Complexity Explorables](https://www.complexity-explorables.org/) - Interactive complex systems
-- [NetLogo Models](https://ccl.northwestern.edu/netlogo/models/) - Agent-based simulations
+### Related interaction simulation
+- [Complexity Exploration](https://www.complexity-explorables.org/) - Interactive complex systems
+- [NetLogo Model](https://ccl.northwestern.edu/netlogo/models/) - Agent-based simulation
 - [Emergent Mind](https://emergentmind.com/) - AI research discovery platform
-- [Genetic Cars Evolution](https://rednuht.org/genetic_cars_2/) - Genetic algorithms and evolution
-- [Wolfram Demonstrations](https://demonstrations.wolfram.com/) - Mathematical and scientific demonstrations
+- [Genetic Cars Evolution](https://rednuht.org/genetic_cars_2/) - Genetic Algorithms and Evolution
+- [Wolfram Demonstrations](https://demonstrations.wolfram.com/) - Math and Science Demonstrations
 
-## 🧠 Why This Matters
+## 🧠 Why this matters
 
-What you've just experienced is the central theme of Wolfram's work: **simple rules can generate unlimited complexity**. This principle appears everywhere:
+What you have just experienced is a central theme of Wolfram's work: **Simple rules can generate infinite complexity**. This principle is everywhere:
 
-- 🌿 **Biology**: How cells organize into complex organisms
-- 🌊 **Physics**: How particles create emergent phenomena  
-- 💻 **Computation**: How simple programs solve complex problems
+- 🌿 **Biology**: How cells are organized into complex organisms
+- 🌊 **Physics**: How particles create emergent phenomena
+- 💻 **Calculation**: How simple programs can solve complex problems
 - 🧬 **Evolution**: How simple selection rules create diversity
-- 🏙️ **Society**: How individual actions create collective behavior
+- 🏙️ **Society**: How individual behavior creates collective behavior
 
-## 🎬 Ready to Dive Deeper?
+## 🎬 Ready to explore further?
 
-Now that you've experienced emergence firsthand, you're ready to explore how this principle revolutionizes our understanding of science, nature, and computation.
+Now that you've experienced the phenomenon of emergence firsthand, you're ready to explore how this principle could revolutionize our understanding of science, nature, and computing.
 
-*Click on **Chapter 1** to begin your journey into "A New Kind of Science."*
+*Click **Chapter 1** to start your journey with "A New Science". *
