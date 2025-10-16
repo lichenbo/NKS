@@ -6,6 +6,8 @@
 
 1. [Growing Neural Cellular Automata](https://distill.pub/2020/growing-ca/) —— Distill 的深度文章，展示了如何通过可微分的元胞自动机框架训练系统自我生长、修复与维持形态。
 
+2. 「复杂」的极限在哪里：Wolfram与他的「计算等价性原理」：https://zhuanlan.zhihu.com/p/24950767
+
 ## 研究随记
 
 - 可以在此记录个人实验、思考或阅读摘记，持续补充自己的研究轨迹。
@@ -14,6 +16,8 @@
 ![alt text](../../favicon.png)
 
 ![alt text](../../images/my-discoveries/image.png)
+
+![alt text](../../images/my-discoveries/image-1.png)
 
 ## 后续计划
 

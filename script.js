@@ -7,10 +7,24 @@ document.addEventListener('DOMContentLoaded', function () {
     initScrollToTop();
     initImageLightbox();
 
-    const initialChapter = getChapterFromHash();
-    if (initialChapter) {
-        if (!navigateToChapter(initialChapter, { updateHash: false })) {
+    // Parse initial hash for language and chapter
+    const { lang: initialLang, chapter: initialChapter } = parseHash();
+    if (initialLang && initialLang !== currentLanguage) {
+        currentLanguage = initialLang;
+        localStorage.setItem('nks-language', currentLanguage);
+        refreshLanguageUI();
+    }
+
+    const chapterToLoad = initialChapter || (!initialChapter && initialLang ? DEFAULT_CHAPTER : getChapterFromHash());
+    if (chapterToLoad) {
+        if (!navigateToChapter(chapterToLoad, { updateHash: false })) {
             navigateToChapter(DEFAULT_CHAPTER, { updateHash: true });
+        } else if (initialLang) {
+            // Normalize URL to chapter-only after applying language from hash
+            const cleanHash = `#${chapterToLoad}`;
+            if (window.location.hash !== cleanHash) {
+                window.location.hash = cleanHash.substring(1);
+            }
         }
     } else {
         navigateToChapter(DEFAULT_CHAPTER, { updateHash: false });
@@ -77,15 +91,59 @@ async function loadChapter(chapterId) {
 
 function getChapterFromHash() {
     if (!window.location.hash) return null;
-    const chapterId = decodeURIComponent(window.location.hash.substring(1));
-    return chapterId || null;
+    const raw = decodeURIComponent(window.location.hash.substring(1));
+    // Support language-prefixed hashes like "en/chapter1"
+    const parts = raw.split('/');
+    if (parts.length >= 2 && isLanguageCode(parts[0])) {
+        return parts.slice(1).join('/') || null;
+    }
+    // If hash is just a language code, no chapter
+    if (isLanguageCode(raw)) return null;
+    return raw || null;
+}
+
+function getLanguageFromHash() {
+    if (!window.location.hash) return null;
+    const raw = decodeURIComponent(window.location.hash.substring(1));
+    if (!raw) return null;
+    const parts = raw.split('/');
+    if (isLanguageCode(parts[0])) return parts[0];
+    return isLanguageCode(raw) ? raw : null;
+}
+
+function isLanguageCode(str) {
+    return str === 'en' || str === 'zh' || str === 'ja';
+}
+
+function parseHash() {
+    const lang = getLanguageFromHash();
+    const chapter = getChapterFromHash();
+    return { lang, chapter };
 }
 
 function handleChapterHashChange() {
-    const chapterId = getChapterFromHash();
+    const { lang, chapter } = parseHash();
+    const hadLangPrefix = !!lang;
+
+    if (lang && lang !== currentLanguage) {
+        currentLanguage = lang;
+        localStorage.setItem('nks-language', currentLanguage);
+        refreshLanguageUI();
+        clearAnnotationContent();
+        APP.CellularAutomata.updateRuleIndicators();
+    }
+
+    const chapterId = chapter || (lang ? DEFAULT_CHAPTER : null);
     if (chapterId) {
+        // Load content without changing hash first
         if (!navigateToChapter(chapterId, { updateHash: false })) {
             navigateToChapter(DEFAULT_CHAPTER, { updateHash: true });
+            return;
+        }
+        // Normalize to chapter-only hash if there was a language prefix
+        const cleanHash = `#${chapterId}`;
+        if (hadLangPrefix && window.location.hash !== cleanHash) {
+            window.location.hash = cleanHash.substring(1);
         }
     } else {
         navigateToChapter(DEFAULT_CHAPTER, { updateHash: false });
@@ -95,9 +153,10 @@ function handleChapterHashChange() {
 function navigateToChapter(chapterId, { updateHash = true } = {}) {
     if (!chapterId) return false;
 
+    // Keep URL clean: always use chapter-only hash
     const targetHash = `#${chapterId}`;
     if (updateHash && window.location.hash !== targetHash) {
-        window.location.hash = chapterId;
+        window.location.hash = targetHash.substring(1);
         return true;
     }
 
@@ -420,7 +479,18 @@ function initLanguageSystem() {
             clearAnnotationContent();
             APP.CellularAutomata.updateRuleIndicators();
             const activeChapter = document.querySelector('.chapter-link.active');
-            if (activeChapter) loadChapter(activeChapter.getAttribute('data-chapter'));
+            if (activeChapter) {
+                // Reload current chapter in new language and keep clean hash
+                const chapterId = activeChapter.getAttribute('data-chapter');
+                loadChapter(chapterId);
+                const cleanHash = `#${chapterId}`;
+                if (window.location.hash !== cleanHash) {
+                    window.location.hash = cleanHash.substring(1);
+                }
+            } else {
+                // No active chapter; go to default with clean hash
+                navigateToChapter(DEFAULT_CHAPTER, { updateHash: true });
+            }
         });
         languageInitDone = true;
     }
