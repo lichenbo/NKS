@@ -1,0 +1,3 @@
+# Number randomness
+
+Numerical randomness refers to a statistically nearly random sequence of bits that occurs as a result of simple arithmetic iterations. For example, when you repeatedly multiply by 3 or logarithmically take the decimal part, you can get a digital stream that is difficult to compress and passes common randomness tests. This chapter emphasizes that this “seemingly random” behavior requires no external noise and is the result of information generated internally by simple rules.

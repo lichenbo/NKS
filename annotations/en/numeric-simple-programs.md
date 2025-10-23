@@ -1,0 +1,3 @@
+# Simple program for digitization
+
+"Simple programs" are used in this chapter to refer to algorithms that involve only the most basic arithmetic or rule tables, such as repeatedly adding one, multiplying by a fixed constant, or switching operations based on parity. They can produce richly structured patterns on digital bit patterns without the need for complex control processes. Wolfram used this to emphasize that when numbers are viewed as sequences of manipulable symbols, the arithmetic process itself is a simple program capable of reproducing the same spectrum of complex behaviors as classical cellular automata.

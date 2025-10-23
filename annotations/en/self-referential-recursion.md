@@ -1,0 +1,3 @@
+# Self-referential recursive sequence
+
+Self-referential recursive sequences are defined so that a generated value can be used to determine where to refer next, such as `f(n) = f(n - f(n-1)) + f(n - f(n-2))`. This dependency structure means that index depth changes with evolutionary history, introducing extremely strong feedback. The results often manifest as non-smooth growth, unpredictable fluctuations, and behavior that is highly sensitive to initial conditions.

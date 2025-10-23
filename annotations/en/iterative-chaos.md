@@ -1,0 +1,3 @@
+# Iterate chaos
+
+Iterative chaos describes: in iterative mapping, extremely small differences in initial values ​​are exponentially amplified after multiple iterations, resulting in complete numerical separation of trajectories. Although the update rules are completely deterministic, the output exhibits statistical characteristics like random noise. Using examples such as shift mappings and multiplication by 3/2 mappings, Wolfram emphasizes that this chaos is a new flow of information generated internally by number operations.

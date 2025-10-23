@@ -1,0 +1,3 @@
+# Continued fraction representation
+
+Continued fractions write any real number as a nested integer plus reciprocal form: `a_0 + 1/(a_1 + 1/(a_2 + ...))`, where `a_i` is an integer. For rational numbers, the sequence of coefficients terminates after a finite number of steps; for quadratic irrational numbers like √2, a periodic repeating pattern appears; and for transcendental numbers such as π, the coefficient sequence neither terminates nor periodizes, showing a high degree of irregular complexity. Continued fractions are therefore a powerful tool for examining the structure and complexity of numbers themselves, in contrast to standard decimal or binary expansions.

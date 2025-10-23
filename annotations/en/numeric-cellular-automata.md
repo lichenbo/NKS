@@ -1,0 +1,3 @@
+# Cellular automata from a digital perspective
+
+In the context of Chapter 4 of A New Science, "cellular automata" refers to a type of computational process that emerges naturally when numbers are represented by strings of bits (such as binary sequences): each step updates the sequence according to the numerical pattern in the local neighborhood. They illustrate that even if the initial rules are extremely simple (such as just adding or shifting left), one- or two-dimensional arrays of numbers can generate complex phenomena such as fractals, random textures, and local structures. This provides an intuitive example that "numbers themselves can evolve like programs."

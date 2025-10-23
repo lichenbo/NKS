@@ -1,0 +1,3 @@
+# Pattern beyond numerical order
+
+Numeric expansions of constants such as π, e, √2, etc. exhibit statistical properties similar to those of a truly random sequence: equal frequency distribution, lack of short-term repetition, and passing common randomness tests. Wolfram saw this "transcendence of number order" as evidence of the inherent complexity of numerical systems, emphasizing that the incompressible structure remains under different representations (decimal, binary, continued fractions).

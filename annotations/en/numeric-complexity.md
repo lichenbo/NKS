@@ -1,0 +1,3 @@
+# Number complexity
+
+Numerical complexity describes: when we track the bit sequence of a number in a certain base, even if the starting point and rules are extremely simple, the evolved patterns may still be highly sophisticated and difficult to predict. This complexity can manifest as nested fractals, long-range correlations, or pseudo-randomness in a statistical sense, demonstrating that complex behavior is an inherent property of number operations and not limited to geometric or physical systems.

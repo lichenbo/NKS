@@ -1,0 +1,3 @@
+# Continuous Value Cellular Automata
+
+Continuous-valued cellular automata allow each cell to take on a real number or grayscale within an interval, rather than a binary state. The local update rules are still simple, such as linear/nonlinear transformation based on neighborhood average or threshold. Such small changes allow the system to generate textures, local peaks, and long-range structures in a continuous background, demonstrating that complexity does not depend on discreteness.

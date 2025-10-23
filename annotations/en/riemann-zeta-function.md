@@ -1,0 +1,3 @@
+# Riemann Zeta function
+
+The Riemannian Zeta function, usually denoted `\zeta(s)`, is initially defined as the series `\sum_{n=1}^{\infty} 1/n^s` in the complex plane with a real part greater than 1, and can be extended by analytic continuation to complex numbers other than `s = 1`. It is closely connected to the distribution of prime numbers: the power of primes over the structure of `\zeta(s)` can be directly seen through Euler's product formula `\prod_{p}(1 - p^{-s})^{-1}`, whose zero-point pattern encodes the details of the spacing between primes. Unsolved problems such as the Riemann Hypothesis arise from understanding the precise location of these zeros, so the zeta function is a central example of how complexity arises in classical analysis.

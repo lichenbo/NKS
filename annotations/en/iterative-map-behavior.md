@@ -1,0 +1,3 @@
+# Behavior of iterative mapping
+
+Iterative mapping refers to a system that repeatedly applies the same calculation (such as `x_{n+1} = F(x_n)`) in discrete time. Depending on parameter selection, they can exhibit chaotic behavior that converges to a fixed point, periodic orbits, densely filled intervals, or exponential separation. Chapter 4 focuses on how sequences of digital bits evolve under these mappings, revealing that arithmetic rules can also generate rich dynamics.

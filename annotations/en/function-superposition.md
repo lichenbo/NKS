@@ -1,0 +1,3 @@
+# Complexity of function superposition
+
+When several simple analytic functions (such as sinusoids or polynomials) are linearly superimposed, the behavior of the resulting function can become highly complex: the waveform does not repeat periodically, the spectrum exhibits a dense structure, and is sensitive to parameters. Chapter 4 borrows `Sin[x] + Sin[√2 x]` to illustrate that even if the components are individually solvable and predictable, their superposition can still exhibit approximately random overall characteristics.
