@@ -37,6 +37,7 @@ window.APP = window.APP || {};
      */
     const translations = {
         en: {
+            preface: 'Preface',
             author: 'Stephen Wolfram',
             title: 'A New Kind of Science',
             subtitle: 'Personal notes and annotations',
