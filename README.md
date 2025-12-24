@@ -1,138 +1,94 @@
-# A New Kind of Science - Interactive Notes
+# 《一种新科学》（A New Kind of Science, NKS）互动笔记与注释（中文）
 
-A client-side web application presenting personal notes and annotations for Stephen Wolfram's groundbreaking book "A New Kind of Science". This project creates an immersive reading experience with a three-column layout featuring chapter outlines, main content, and detailed annotations.
+English version: `README.en.md`
 
-## 🌐 Live Demo
+如果你在 Google 搜索 **“一种新科学 中文版”**、**“A New Kind of Science 中文版”** 或 **“NKS 中文”**，这个仓库提供的是：围绕 Stephen Wolfram 著作《A New Kind of Science》（中文常译《一种新科学》）的 **中文/多语言互动阅读笔记与注释站点**（非官方、非原书全文）。
 
-**[View the Interactive Notes](https://lichenbo.github.io/NKS/)**
+## 在线体验（Live Demo）
 
-## ✨ Features
+**https://lichenbo.github.io/NKS/**
 
-- **Three-Column Layout**: Chapter outline, main content, and detailed annotations
-- **Interactive Annotations**: Click on highlighted terms to view detailed explanations with typewriter effects
-- **Cellular Automata Background**: Live implementation of Wolfram's Rule 30 creating dynamic visual patterns
-- **Responsive Design**: Optimized for desktop, tablet, and mobile viewing
-- **Glass-Morphism UI**: Modern design with subtle animations and hover effects
-- **Markdown-Based Content**: Easy-to-edit chapter content stored as individual `.md` files
+**https://nks.binarythink.net/**
 
-## 🏗️ Architecture
+## 这是什么
 
-- **Pure Vanilla JavaScript** - No frameworks or build tools required
-- **Static File Serving** - All content served as static files, perfect for GitHub Pages
-- **Client-Side Rendering** - Uses `marked.js` library for markdown parsing
-- **Animation Libraries** - AOS (Animate On Scroll) and Typed.js for visual effects
+一个纯前端（HTML/CSS/JavaScript）的静态站点，用三栏布局呈现：
 
-## 📁 Project Structure
+- 左侧：章节/导航大纲
+- 中间：章节正文（以 Markdown 存储与渲染）
+- 右侧：术语注释与延伸说明（可点击展开，含打字机效果）
+
+目标是把《一种新科学 / A New Kind of Science》的关键概念（元胞自动机、计算等价性、涌现、普适性等）用更可交互的方式组织起来，方便学习、回看与索引。
+
+## 主要特性
+
+- **三栏布局**：章节大纲 / 主内容 / 注释并列
+- **可交互注释**：点击高亮词条查看详细解释（带打字机效果）
+- **元胞自动机背景**：实时实现 Wolfram Rule 30 生成动态背景
+- **响应式设计**：桌面、平板、手机自适应
+- **玻璃拟态 UI**：细腻动画与悬浮交互
+- **Markdown 内容源**：章节与注释以独立 `.md` 文件维护，方便增量编辑
+
+## 项目结构
 
 ```
 /
-├── index.html              # Main HTML structure
-├── script.js               # Core JavaScript functionality
-├── styles.css              # CSS with modern grid layout
-├── chapters/               # Chapter content as markdown files
-│   ├── chapter1.md
-│   ├── chapter2.md
-│   └── chapter3.md
-├── annotations/            # Detailed annotation files
-│   ├── cellular-automata.md
-│   ├── computational-equivalence.md
-│   ├── emergence.md
-│   ├── paradigm-shift.md
-│   ├── universality.md
-│   └── wolfram-timeline.md
-└── reference/              # Static assets
-    └── a-new-kind-of-science-cover.png
+├── index.html              # 页面骨架与三栏布局
+├── script.js               # 核心交互逻辑
+├── styles.css              # 样式与布局
+├── js/                     # 多语言/工具脚本（如 translations）
+├── chapters/               # 章节笔记（Markdown，按语言分目录）
+│   ├── en/
+│   ├── zh/
+│   └── ja/
+├── annotations/            # 注释与扩展说明（Markdown，按语言分目录）
+│   ├── en/
+│   ├── zh/
+│   └── ja/
+├── demos/                  # 章节引用的交互演示
+├── images/                 # 图片资源
+└── interactive/            # 额外交互页面
 ```
 
-## 🚀 Local Development
+## 本地运行
 
-Since this is a static HTML/CSS/JS project, you can run it locally using any static file server:
+这是静态项目，用任意静态文件服务器即可：
 
 ```bash
-# Using Python (recommended)
 python -m http.server 8000
-
-# Using Node.js
-npx serve
-
-# Using PHP
-php -S localhost:8000
 ```
 
-Then open `http://localhost:8000` in your browser.
+然后打开 `http://localhost:8000`。
 
-## 📝 Content Management
+## 内容维护
 
-### Adding New Chapters
-1. Create a new `.md` file in the `chapters/` directory following the pattern `chapter[N].md`
-2. Update the chapter list in `index.html`
-3. Add any new annotations to the `annotations/` directory
+### 添加新章节
+1. 在 `chapters/` 新建 `chapter[N].md`
+2. 在 `index.html` 中补充章节入口
+3. 如有新术语注释，在 `annotations/` 中新增对应 `.md`
 
-### Creating Annotations
-- Add new annotation files to the `annotations/` directory
-- Link annotations in markdown using the syntax: `[text](annotation:key)`
-- The annotation system automatically processes these links before markdown parsing
+### 注释链接语法
 
-### Annotation Linking System
-In your markdown files, you can link to annotations like this:
+在 Markdown 中用 `annotation:` 链接到注释条目：
+
 ```markdown
-The concept of [computational equivalence](annotation:computational-equivalence) suggests that...
+关于[计算等价性](annotation:computational-equivalence)的讨论指出……
 ```
 
-## 🎨 Key Technical Features
+## 常见问题（FAQ）
 
-### Cellular Automata Background
-- Continuous implementation of Wolfram's Rule 30
-- Creates dynamic, ever-changing visual patterns
-- Optimized for performance across devices
+### 这是不是《一种新科学》中文版全文？
 
-### Typewriter Animation System
-- Uses Typed.js for smooth typewriter effects
-- Enhances the reading experience with progressive text revelation
-- Customizable timing and styling
+不是。本项目是个人笔记/注释与交互式导读页面，用于学习与索引；原书版权归 Stephen Wolfram 所有。
 
-### Responsive Grid Layout
-- CSS Grid-based three-column layout
-- Gracefully adapts to different screen sizes
-- Sticky sidebars for enhanced navigation
 
-## 🛠️ Technologies Used
+## 版权与声明
 
-- **HTML5** - Semantic structure
-- **CSS3** - Modern grid layout, animations, glass-morphism effects
-- **Vanilla JavaScript** - Core functionality, no framework dependencies
-- **[Marked.js](https://marked.js.org/)** - Markdown parsing
-- **[Typed.js](https://mattboldt.com/demos/typed-js/)** - Typewriter effects
-- **[AOS](https://michalsnik.github.io/aos/)** - Animate On Scroll library
-- **Google Fonts** - Inter and JetBrains Mono typography
+- 本项目仅用于学习与个人研究用途。
+- 《A New Kind of Science》（《一种新科学》）版权归 Stephen Wolfram 所有。
 
-## 📚 About "A New Kind of Science"
+## 相关链接
 
-Stephen Wolfram's "A New Kind of Science" is a comprehensive exploration of computational systems and their implications for understanding natural and artificial phenomena. This interactive notes project aims to make the complex concepts more accessible through:
-
-- **Visual Learning**: Animated backgrounds demonstrating cellular automata principles
-- **Interactive Exploration**: Clickable annotations for deeper understanding
-- **Structured Navigation**: Clear chapter organization and progress tracking
-
-## 🤝 Contributing
-
-This is a personal notes project, but suggestions and improvements are welcome:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your improvements
-4. Submit a pull request
-
-## 📄 License
-
-This project is for educational and personal use. "A New Kind of Science" is copyrighted by Stephen Wolfram.
-
-## 🔗 Related Links
-
-- [Stephen Wolfram's Official Website](https://www.stephenwolfram.com/)
-- [Wolfram Science](https://www.wolframscience.com/)
-- [A New Kind of Science Online](https://www.wolframscience.com/nks/)
-
----
-
-*Experience the intersection of computation, mathematics, and natural phenomena through interactive exploration.*
+- https://www.stephenwolfram.com/
+- https://www.wolframscience.com/
+- https://www.wolframscience.com/nks/
